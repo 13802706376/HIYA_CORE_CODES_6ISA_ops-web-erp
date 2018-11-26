@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.visit.dao.ErpServiceCountDao">
+    <select id="findServiceCount" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpServiceCount">
+	    SELECT
+			team.id as teamId,
+			team.agent_id as agentId,
+			team.team_name as teamName,
+			team.company_type as teamType,
+			(
+				select
+					count( erpDelivery.id ) as curCount
+				from
+					erp_delivery_service erpDelivery
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpDelivery.order_id = erpOrder.id
+				where
+					erpDelivery.service_type = 'INTO_PIECES'
+					and erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+					and EXISTS(
+						SELECT
+							1
+						from
+							erp_order_flow_user erpFlow
+						where
+							erpFlow.order_id = erpOrder.id
+							and erpFlow.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = team.id
+							)
+					)
+			) as zhangbeiCount,
+			(
+				select
+					count( erpDelivery.id ) as curCount
+				from
+					erp_delivery_service erpDelivery
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpDelivery.order_id = erpOrder.id
+				where
+					erpDelivery.service_type = 'FMPS'
+					and erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+					and EXISTS(
+						SELECT
+							1
+						from
+							erp_order_flow_user erpFlow
+						where
+							erpFlow.order_id = erpOrder.id
+							and erpFlow.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = team.id
+							)
+					)
+			) as firstVisitCount,
+			(
+				select
+					count( erpDelivery.id ) as curCount
+				from
+					erp_delivery_service erpDelivery
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpDelivery.order_id = erpOrder.id
+				where
+					erpDelivery.service_type = 'JYK'
+					and erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+					and EXISTS(
+						SELECT
+							1
+						from
+							erp_order_flow_user erpFlow
+						where
+							erpFlow.order_id = erpOrder.id
+							and erpFlow.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = team.id
+							)
+					)
+			) as jykCount,
+			(
+				select
+					count( erpDelivery.id ) as curCount
+				from
+					erp_delivery_service erpDelivery
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpDelivery.order_id = erpOrder.id
+				where
+					erpDelivery.service_type = 'FMPS_BASIC'
+					and erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+					and EXISTS(
+						SELECT
+							1
+						from
+							erp_order_flow_user erpFlow
+						where
+							erpFlow.order_id = erpOrder.id
+							and erpFlow.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = team.id
+							)
+					)
+			) as fmpsbasicCount,
+			(
+				select
+					count( erpDelivery.id ) as curCount
+				from
+					erp_delivery_service erpDelivery
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpDelivery.order_id = erpOrder.id
+				where
+					erpDelivery.zhct_type in ('ZHCT','ZHCT_OLD')
+					and erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+					and EXISTS(
+						SELECT
+							1
+						from
+							erp_order_flow_user erpFlow
+						where
+							erpFlow.order_id = erpOrder.id
+							and erpFlow.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = team.id
+							)
+					)
+			) as zhctCount,
+			(
+				select
+					count( erpDelivery.id ) as curCount
+				from
+					erp_delivery_service erpDelivery
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpDelivery.order_id = erpOrder.id
+				where
+					erpDelivery.service_type = 'VC'
+					and erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+					and EXISTS(
+						SELECT
+							1
+						from
+							erp_order_flow_user erpFlow
+						where
+							erpFlow.order_id = erpOrder.id
+							and erpFlow.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = team.id
+							)
+					)
+			) as afterVisitCount,
+			(
+				select
+					count( erpDelivery.id ) as curCount
+				from
+					erp_delivery_service erpDelivery
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpDelivery.order_id = erpOrder.id
+				where
+					erpDelivery.service_type = 'MU'
+					and erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+					and EXISTS(
+						SELECT
+							1
+						from
+							erp_order_flow_user erpFlow
+						where
+							erpFlow.order_id = erpOrder.id
+							and erpFlow.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = team.id
+							)
+					)
+			) as updateMatraCount
+		FROM
+			erp_team team
+		LEFT join erp_team_user teamUser on 
+			teamUser.team_id=team.id
+		where
+			team.del_flag = 0 
+			and teamUser.user_id in(
+				SELECT
+					erpFlow.user_id
+				from
+					erp_order_flow_user erpFlow 
+					LEFT join erp_delivery_service erpDelivery on
+						erpDelivery.proc_ins_id = erpFlow.flow_id 
+					LEFT join erp_order_original_info erpOrder on
+						erpOrder.id = erpDelivery.order_id
+				where
+					erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+				GROUP BY
+					erpFlow.user_id
+			)
+			<if test="teamType != null">
+				and team.company_type = #{teamType}
+			</if>
+			<if test="teamName != null">
+				and team.team_name like LIKE CONCAT('%',#{teamName},'%')
+			</if>
+			<if test="teamIds != null and teamIds.size()> 0">
+		  		AND team.id in
+		  		<foreach item="teamId" index="index" collection="teamIds" open="(" separator="," close=")">  
+		    		#{teamId}
+		    	</foreach>
+		  	</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+	  			AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+	        		#{itemAgentId}
+	        	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+	        		#{itemOrderType}
+	        	</foreach>
+			</if>
+		GROUP BY
+			team.id
+	</select>
+	
+	<select id="serviceCount" resultType="java.lang.Integer">
+	    select
+			count(hiTask.ID_) as curCount
+		from
+			ACT_HI_PROCINST hiTask LEFT JOIN 
+			erp_delivery_service erpDelivery
+			on hiTask.PROC_INST_ID_=erpDelivery.proc_ins_id
+			LEFT JOIN erp_order_original_info erpOrder
+		    on erpDelivery.order_id=erpOrder.id
+		where
+			(erpDelivery.service_type = #{code} or erpDelivery.zhct_type= #{code})
+			and hiTask.END_TIME_ &gt;= #{startDateStr}
+			and hiTask.END_TIME_ &lt;= #{endDateStr}
+			and erpOrder.id in(
+				select
+					erpFlow.order_id
+				from
+					erp_order_flow_user erpFlow
+				where
+					erpFlow.user_id in(
+						select
+							teamUser.user_id
+						from
+							erp_team_user teamUser
+						where
+							teamUser.team_id = #{teamId}
+					)
+			)
+	</select>
+</mapper>

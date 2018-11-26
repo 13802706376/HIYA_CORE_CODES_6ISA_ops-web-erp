@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.message.dao.ErpServiceProgressTemplateDao">
+    
+    <sql id="erpServiceProgressTemplateColumns">
+        a.id AS "id",
+        a.service_type AS "serviceType",
+        a.status AS "status",
+        a.name AS "name",
+        a.type AS "type",
+        a.sort AS "sort",
+        a.content AS "content",
+        a.link_id AS "linkId",
+        a.task_definition_keys AS "taskDefinitionKeys",
+        a.task_key_type AS "taskKeyType",
+        a.service_roles AS "serviceRoles",
+        a.process_version AS "processVersion",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate"
+    </sql>
+
+    <sql id="erpServiceProgressTemplateJoins">
+    </sql>
+    
+    <select id="get" resultType="ErpServiceProgressTemplate">
+        SELECT
+            <include refid="erpServiceProgressTemplateColumns"/>
+        FROM erp_service_progress_template a
+        <include refid="erpServiceProgressTemplateJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="ErpServiceProgressTemplate">
+        SELECT
+            <include refid="erpServiceProgressTemplateColumns"/>
+        FROM erp_service_progress_template a
+        <include refid="erpServiceProgressTemplateJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+            <if test="serviceType != null">
+            	AND a.service_type = #{serviceType}
+            </if>
+            <if test="status != null">
+            	AND a.status = #{status}
+            </if>
+            <if test="processVersion != null">
+            	AND a.process_version = #{processVersion}
+            </if>
+            <if test="taskDefinitionKeys != null">
+            	AND FIND_IN_SET(#{taskDefinitionKeys},a.task_definition_keys)
+            </if>
+            <if test="ids != null and ids.size > 0">
+            	and a.id in
+            		<foreach collection="ids"  item="_id" open="(" separator="," close=")">
+            			#{_id}
+            		</foreach>
+            </if>
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpServiceProgressTemplate">
+        SELECT
+            <include refid="erpServiceProgressTemplateColumns"/>
+        FROM erp_service_progress_template a
+        <include refid="erpServiceProgressTemplateJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO erp_service_progress_template
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="serviceType != null">service_type,</if>
+			<if test="status != null">status,</if>
+			<if test="sort != null">sort,</if>
+			<if test="content != null">content,</if>
+			<if test="linkId != null">link_id,</if>
+			<if test="taskDefinitionKeys != null">task_definition_keys,</if>
+			<if test="serviceRoles != null">service_roles,</if>
+			<if test="processVersion != null">process_version,</if>
+			<if test="remarks != null">remarks,</if>
+			<if test="delFlag != null">del_flag,</if>
+			<if test="createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+			<if test="updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="serviceType != null">#{serviceType},</if>
+			<if test="status != null">#{status},</if>
+			<if test="sort != null">#{sort},</if>
+			<if test="content != null">#{content},</if>
+			<if test="linkId != null">#{linkId},</if>
+			<if test="taskDefinitionKeys != null">#{taskDefinitionKeys},</if>
+			<if test="serviceRoles != null">#{serviceRoles},</if>
+			<if test="processVersion != null">#{processVersion},</if>
+			<if test="remarks != null">#{remarks},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+			<if test="createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+			<if test="updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE erp_service_progress_template
+            <set>
+                <if test="serviceType != null">service_type = #{serviceType},</if>
+                <if test="status != null">status = #{status},</if>
+                <if test="sort != null">sort = #{sort},</if>
+                <if test="content != null">content = #{content},</if>
+                <if test="linkId != null">link_id = #{linkId},</if>
+                <if test="taskDefinitionKeys != null">task_definition_keys = #{taskDefinitionKeys},</if>
+                <if test="serviceRoles != null">service_roles = #{serviceRoles},</if>
+                <if test="processVersion != null">process_version = #{processVersion},</if>
+                <if test="remarks != null">remarks = #{remarks},</if>
+                <if test="updateBy.id != null">update_by = #{updateBy.id},</if>
+                <if test="updateDate != null">update_date = #{updateDate},</if>
+            </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+        UPDATE erp_service_progress_template SET
+            del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 根据条件获取唯一数据 -->
+    <select id="getOnly" resultType="ErpServiceProgressTemplate">
+        SELECT
+            <include refid="erpServiceProgressTemplateColumns"/>
+        FROM erp_service_progress_template a
+        WHERE a.del_flag = '0' AND a.service_type = #{serviceType}  AND a.type = #{type} 
+        	AND a.status = #{status} AND a.process_version = #{processVersion}
+   	</select>
+
+</mapper>

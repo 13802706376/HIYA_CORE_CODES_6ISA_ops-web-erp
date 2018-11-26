@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.acceptance.dao.ErpServiceAcceptanceDao">
+    
+    <sql id="erpServiceAcceptanceColumns">
+        a.id AS "id",
+        a.proc_ins_id AS "procInsId",
+        a.visit_info_id AS "visitInfoId",
+        a.score AS "score",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag",
+        a.service_goal AS "serviceGoal",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate"
+    </sql>
+
+    <sql id="erpServiceAcceptanceJoins">
+    </sql>
+    
+    <select id="get" resultType="ErpServiceAcceptance">
+        SELECT
+            <include refid="erpServiceAcceptanceColumns"/>
+        FROM erp_service_acceptance a
+        <include refid="erpServiceAcceptanceJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="ErpServiceAcceptance">
+        SELECT
+            <include refid="erpServiceAcceptanceColumns"/>
+        FROM erp_service_acceptance a
+        <include refid="erpServiceAcceptanceJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+            <if test="procInsId != null">
+            	AND a.proc_ins_id = #{procInsId}
+            </if>
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpServiceAcceptance">
+        SELECT
+            <include refid="erpServiceAcceptanceColumns"/>
+        FROM erp_service_acceptance a
+        <include refid="erpServiceAcceptanceJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO erp_service_acceptance
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="procInsId != null">proc_ins_id,</if>
+			<if test="score != null">score,</if>
+			<if test="remarks != null">remarks,</if>
+			<if test="delFlag != null">del_flag,</if>
+			<if test="createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+			<if test="updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="procInsId != null">#{procInsId},</if>
+			<if test="score != null">#{score},</if>
+			<if test="remarks != null">#{remarks},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+			<if test="createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+			<if test="updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE erp_service_acceptance
+            <set>
+                <if test="procInsId != null">proc_ins_id = #{procInsId},</if>
+                <if test="score != null">score = #{score},</if>
+                <if test="remarks != null">remarks = #{remarks},</if>
+                <if test="updateBy.id != null">update_by = #{updateBy.id},</if>
+                <if test="updateDate != null">update_date = #{updateDate},</if>
+            </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+        UPDATE erp_service_acceptance SET
+            del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+  
+    <!-- 根据上门信息id 获取 验收及评分 信息 -->
+    <select id="getByVisitId" resultType="ErpServiceAcceptance">
+        SELECT
+            <include refid="erpServiceAcceptanceColumns"/>
+        FROM erp_service_acceptance a
+        WHERE
+            a.del_flag = '0'
+            AND a.visit_info_id = #{visitInfoId}
+    </select>
+	<select id="getAcceptanceInfoByVisitId" resultType="ErpServiceAcceptance">
+        SELECT
+            <include refid="erpServiceAcceptanceColumns"/>
+        FROM erp_service_acceptance a
+        <include refid="erpServiceAcceptanceJoins"/>
+        WHERE 
+        	a.del_flag = '0'
+        	AND a.visit_info_id = #{visitInfoId}
+    </select>
+    
+    <!-- 根据流程id 删除服务验收及评分 -->
+    <update id="deleteByProcInsId">
+    	UPDATE erp_service_acceptance SET
+            del_flag = '1'
+        WHERE proc_ins_id = #{procInsId}
+    </update>
+</mapper>

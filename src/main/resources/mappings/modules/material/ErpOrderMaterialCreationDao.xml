@@ -1,0 +1,451 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.material.dao.ErpOrderMaterialCreationDao">
+    
+	<sql id="erpOrderMaterialCreationColumns">
+		a.id AS "id",
+		a.order_number AS "orderNumber",
+		a.ys_order_id AS "ysOrderId",
+		a.proc_ins_id AS "procInsId",
+		a.provider_name AS "providerName",
+		a.shop_name AS "shopName",
+		a.zhangbei_id AS "zhangbeiId",
+		a.cost AS "cost",
+		a.logistics_number AS "logisticsNumber",
+		a.place_order_time AS "placeOrderTime",
+		a.deliver_time AS "deliverTime",
+		a.layout_name AS "layoutName",
+		a.layout_url AS "layoutUrl",
+		(SELECT flowUser.user_id from erp_order_flow_user flowUser where flowUser.flow_id=a.proc_ins_id and flowUser.flow_user_id='OperationAdviser') AS "operationAdviserId",
+		(SELECT su.name from erp_order_flow_user flowUser,sys_user su where flowUser.flow_id=a.proc_ins_id and flowUser.flow_user_id='OperationAdviser' and su.id=flowUser.user_id) AS "operationAdviserName",
+		a.material_path AS "materialPath",
+		a.status AS "status",
+		a.status_name AS "statusName",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpOrderMaterialCreationJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpOrderMaterialCreation">
+		SELECT 
+			<include refid="erpOrderMaterialCreationColumns"/>
+		FROM erp_order_material_creation a
+		<include refid="erpOrderMaterialCreationJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findAllList" resultType="ErpOrderMaterialCreation">
+		SELECT 
+			<include refid="erpOrderMaterialCreationColumns"/>
+		FROM erp_order_material_creation a
+		<include refid="erpOrderMaterialCreationJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+		
+		<insert id="insert">
+    insert into erp_order_material_creation
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="orderNumber != null">
+        order_number,
+      </if>
+		<if test="ysOrderId != null">
+			ys_order_id,
+		</if>
+      <if test="procInsId != null">
+        proc_ins_id,
+      </if>
+      <if test="providerName != null">
+        provider_name,
+      </if>
+      <if test="shopName != null">
+        shop_name,
+      </if>
+      <if test="zhangbeiId != null">
+        zhangbei_id,
+      </if>
+      <if test="cost != null">
+        cost,
+      </if>
+      <if test="logisticsNumber != null">
+        logistics_number,
+      </if>
+      <if test="placeOrderTime != null">
+        place_order_time,
+      </if>
+      <if test="deliverTime != null">
+        deliver_time,
+      </if>
+      <if test="layoutName != null">
+        layout_name,
+      </if>
+      <if test="layoutUrl != null">
+        layout_url,
+      </if>
+      <if test="operationAdviserId != null">
+        operation_adviser_id,
+      </if>
+      <if test="operationAdviserName != null">
+        operation_adviser_name,
+      </if>
+		<if test="materialPath != null">
+			material_path,
+		</if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="statusName != null">
+        status_name,
+      </if>
+      <if test="createDate != null">
+        create_date,
+      </if>
+      <if test="createBy!= null and createBy.id!=null">
+        create_by,
+      </if>
+      <if test="updateDate != null">
+        update_date,
+      </if>
+      <if test="updateBy != null and updateBy.id!=null">
+        update_by,
+      </if>
+      <if test="remarks != null">
+        remarks,
+      </if>
+      <if test="delFlag != null">
+        del_flag,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+       <if test="id != null">
+        #{id},
+      </if>
+      <if test="orderNumber != null">
+        #{orderNumber},
+      </if>
+		<if test="ysOrderId != null">
+			#{ysOrderId},
+		</if>
+      <if test="procInsId != null">
+        #{procInsId},
+      </if>
+      <if test="providerName != null">
+        #{providerName},
+      </if>
+      <if test="shopName != null">
+        #{shopName},
+      </if>
+       <if test="zhangbeiId != null">
+        #{zhangbeiId},
+      </if>
+      <if test="cost != null">
+        #{cost},
+      </if>
+      <if test="logisticsNumber != null">
+        #{logisticsNumber},
+      </if>
+      <if test="placeOrderTime != null">
+        #{placeOrderTime},
+      </if>
+      <if test="deliverTime != null">
+        #{deliverTime},
+      </if>
+      <if test="layoutName != null">
+        #{layoutName},
+      </if>
+      <if test="layoutUrl != null">
+        #{layoutUrl},
+      </if>
+      <if test="operationAdviserId != null">
+        #{operationAdviserId},
+      </if>
+      <if test="operationAdviserName != null">
+        #{operationAdviserName},
+      </if>
+		<if test="materialPath != null">
+			#{materialPath},
+		</if>
+      <if test="status != null">
+        #{status},
+      </if>
+      <if test="statusName != null">
+        #{statusName},
+      </if>
+      <if test="createDate != null">
+        #{createDate},
+      </if>
+      <if test="createBy!=null and createBy.id != null">
+        #{createBy.id},
+      </if>
+      <if test="updateDate != null">
+        #{updateDate},
+      </if>
+      <if test="updateBy!=null and updateBy.id != null">
+        #{updateBy.id},
+      </if>
+      <if test="remarks != null">
+        #{remarks},
+      </if>
+      <if test="delFlag != null">
+        #{delFlag},
+      </if>
+    </trim>
+	</insert>
+	
+	<update id="update" parameterType="ErpOrderMaterialCreation">
+		UPDATE erp_order_material_creation 
+		<set>
+			<if test="orderNumber!=null and orderNumber!=''">
+				   order_number = #{orderNumber},
+			</if>
+			<if test="ysOrderId!=null and ysOrderId!=''">
+				ys_order_id = #{ysOrderId},
+			</if>
+			<if test="procInsId!=null and procInsId!=''">
+				proc_ins_id = #{procInsId},
+			</if>
+				<if test="providerName!=null and providerName!=''">
+				   provider_name = #{providerName},
+				</if>
+				<if test="shopName!=null and shopName!=''">
+				   shop_name = #{shopName},
+				</if>
+						<if test="zhangbeiId!=null and zhangbeiId!=''">
+				   zhangbei_id = #{zhangbeiId},
+				</if>
+				<if test="cost!=null">
+				   cost = #{cost},
+				</if>
+				<if test="logisticsNumber!=null and logisticsNumber!=''">
+				   logistics_number = #{logisticsNumber},
+				</if>
+				<if test="placeOrderTime!=null">
+				   place_order_time = #{placeOrderTime},
+				</if>
+				<if test="deliverTime!=null">
+				   deliver_time = #{deliverTime},
+				</if>
+					<if test="layoutName!=null and layoutName!=''">
+				   layout_name = #{layoutName},
+				</if>
+				<if test="layoutUrl!=null and layoutUrl!=''">
+				   layout_url = #{layoutUrl},
+				</if>
+				<if test="operationAdviserId!=null and operationAdviserId!=''">
+				   operation_adviser_id = #{operationAdviserId},
+				</if>
+				<if test="operationAdviserName!=null and operationAdviserName!=''">
+				   operation_adviser_name = #{operationAdviserName},
+				</if>
+			/* 允许更新为空串 */
+			<if test="materialPath!=null">
+				material_path = #{materialPath},
+			</if>
+					<if test="status!=null and status!=''">
+				   status = #{status},
+				</if>
+					<if test="statusName!=null and statusName!=''">
+				   status_name = #{statusName},
+				</if>
+						<if test="updateDate!=null">
+				   update_date = #{updateDate},
+				</if>
+					<if test="updateBy!=null and updateBy.id!=null">
+				   update_by = #{updateBy.id},
+				</if>
+				<if test="remarks!=null and remarks!=''">
+				   remarks = #{remarks},
+				</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_order_material_creation SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<sql id="listSql">
+		SELECT
+		<if test="page">
+			<include refid="erpOrderMaterialCreationColumns"/>,b.id AS "shopInfoId"
+		</if>
+		<if test="!page">
+			COUNT(DISTINCT(a.order_number))
+		</if>
+		FROM erp_order_material_creation a
+		LEFT JOIN erp_shop_info b ON b.zhangbei_id=a.zhangbei_id
+		LEFT JOIN erp_order_original_info eooi ON a.order_number = eooi.order_number AND eooi.cancel = 0 AND
+		eooi.del_flag = '0'
+		<where>
+			<trim prefix="(" suffix=")">
+				<choose>
+					<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("material:erpOrderMaterialCreation:all")'>
+						1 = 1
+					</when>
+					<otherwise>
+						1 = 2
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("material:erpOrderMaterialCreation:branchCompany")'>
+							OR eooi.order_type = 1
+						</if>
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("material:erpOrderMaterialCreation:serviceCompany")'>
+							OR eooi.order_type = 2
+						</if>
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("material:erpOrderMaterialCreation:company")'>
+							OR EXISTS (
+							SELECT 1 FROM erp_team et WHERE et.agent_id = eooi.agent_id AND et.company_type != 'head'
+							AND et.del_flag = '0' AND et.id IN (
+							SELECT etu.team_id FROM erp_team_user etu WHERE etu.user_id =
+							'${@com.yunnex.ops.erp.modules.sys.utils.UserUtils@getPrincipal().getId()}'
+							AND etu.del_flag = '0'))
+						</if>
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("material:erpOrderMaterialCreation:personal")'>
+							OR EXISTS (
+							SELECT 1 FROM erp_order_flow_user eofu WHERE eofu.order_id = eooi.id AND eofu.user_id =
+							'${@com.yunnex.ops.erp.modules.sys.utils.UserUtils@getPrincipal().getId()}'
+							AND eofu.del_flag = '0')
+						</if>
+					</otherwise>
+				</choose>
+			</trim>
+			<trim prefix="AND (" suffix=")">
+				a.del_flag ='0'
+				<if test="orderNumber!=null and orderNumber!=''">
+					AND a.order_number LIKE concat('%',#{orderNumber},'%')
+				</if>
+				<if test="operationAdviserId!=null and operationAdviserId!=''">
+					AND a.operation_adviser_id=#{operationAdviserId}
+				</if>
+				<if test="shopName!=null and shopName!=''">
+					AND a.shop_name LIKE concat('%',#{shopName},'%')
+				</if>
+				<if test="providerName!=null and providerName!=''">
+					AND a.provider_name LIKE concat('%',#{providerName},'%')
+				</if>
+				<if test="status!=null and status!=''">
+					AND a.status=#{status}
+				</if>
+				<choose>
+					<when test="placeOrderStartTime != null and placeOrderEndTime != null and placeOrderStartTime != '' and placeOrderEndTime != ''">
+						AND a.place_order_time BETWEEN #{placeOrderStartTime} AND DATE_ADD(#{placeOrderEndTime},INTERVAL
+						1
+						DAY )
+					</when>
+					<when test="placeOrderStartTime != null and placeOrderStartTime != ''">
+						AND a.place_order_time &gt;= #{placeOrderStartTime}
+					</when>
+					<when test="placeOrderEndTime != null and placeOrderEndTime != ''">
+						AND a.place_order_time &lt;= #{placeOrderEndTime}
+					</when>
+				</choose>
+				<choose>
+					<when test="deliverStartTime != null and deliverEndTime != null and deliverStartTime != '' and deliverEndTime != ''">
+						AND a.deliver_time BETWEEN #{deliverStartTime} AND DATE_ADD(#{deliverEndTime},INTERVAL 1 DAY )
+					</when>
+					<when test="deliverStartTime != null and deliverStartTime != ''">
+						AND a.deliver_time &gt;= #{deliverStartTime}
+					</when>
+					<when test="deliverEndTime != null and deliverEndTime != ''">
+						AND a.deliver_time &lt;= #{deliverEndTime}
+					</when>
+				</choose>
+			</trim>
+		</where>
+		<if test="page">
+			GROUP BY a.order_number
+			ORDER BY a.update_date DESC
+			LIMIT #{firstResult}, #{maxResults}
+		</if>
+	</sql>
+	
+	<select id="findByPage"  resultType="ErpOrderMaterialCreation">
+		<include refid="listSql"/>
+	</select>
+	
+	<select id="findMaterialCreation"  resultType="ErpOrderMaterialCreation">
+		SELECT 
+			<include refid="erpOrderMaterialCreationColumns"/>
+		FROM erp_order_material_creation a 
+		where 1=1 and a.proc_ins_id=#{procInsId}
+	</select>
+
+	<select id="count" resultType="long">
+		<include refid="listSql"/>
+	</select>
+	
+	<select id="findByPageWithExcel" resultType="com.yunnex.ops.erp.modules.material.dto.MaterialCreationExcelResponseDto">
+	   <include refid="listSql"/>
+	</select>
+
+	<select id="findByOrderNumber" resultType="ErpOrderMaterialCreation">
+		SELECT
+		<include refid="erpOrderMaterialCreationColumns"/>
+		FROM erp_order_material_creation a
+		where a.order_number = #{orderNumber} and a.del_flag = '0'
+	</select>
+
+	<select id="findByYsOrderId" resultType="ErpOrderMaterialCreation">
+		SELECT
+		<include refid="erpOrderMaterialCreationColumns"/>
+		FROM erp_order_material_creation a
+		where a.ys_order_id=#{ysOrderId} and a.del_flag='0'
+	</select>
+	
+	
+	<!-- 根据流程id 获取唯一物料数据 -->
+	<select id="getByProcInsId" resultType="ErpOrderMaterialCreation">
+		SELECT 
+			<include refid="erpOrderMaterialCreationColumns"/>
+		FROM erp_order_material_creation a 
+		where a.del_flag='0' 
+			AND a.proc_ins_id=#{procInsId}
+	</select>
+	
+	<update id="updateAdviser">
+		update
+			erp_order_material_creation
+		set
+			operation_adviser_id = #{userId},
+			operation_adviser_name =(
+				SELECT
+					g.name
+				from
+					sys_user g
+				where
+					g.id = #{userId}
+					and g.del_flag = '0'
+			)
+		where
+			proc_ins_id = #{procInsId}
+	</update>
+	
+	<update id="changeRoleUser">
+		UPDATE erp_visit_service_info ft SET
+		<if test='roleName=="operationManager"'>
+			ft.audit_user = #{userId}
+		</if>
+		<if test='roleName=="OperationAdviser"'>
+			ft.service_user = #{userId}
+		</if>
+		WHERE ft.proc_ins_id = #{procInsId}
+	</update>
+</mapper>

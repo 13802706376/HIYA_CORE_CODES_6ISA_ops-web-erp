@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.flow.dao.SubTaskByUserDao">
+	<select id="getSubTaskByUser" resultType="com.yunnex.ops.erp.modules.workflow.flow.entity.SubTaskByUser">
+		SELECT
+			RES1.ID_ as taskId,SSU.DEL_FLAG as delFlag
+		FROM
+			ACT_RU_TASK RES1
+		LEFT JOIN sys_user SSU ON
+			SSU.ID=RES1.ASSIGNEE_
+		WHERE
+			RES1.ASSIGNEE_ IN(
+				SELECT
+					RES.ASSIGNEE_
+				FROM
+					ACT_RU_TASK RES
+				WHERE
+					RES.ID_ = #{taskId}
+			)
+	</select>
+</mapper>

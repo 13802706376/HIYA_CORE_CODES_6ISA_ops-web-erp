@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.visit.dao.ErpVisitCountDao">
+    <select id="findByUserId" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitCount">
+	    SELECT
+			team.id as teamId,
+			teamUser.user_id,
+			team.team_name as teamName,
+			(
+			SELECT
+				count(vsi.id)
+			from
+				erp_visit_service_info vsi
+			where
+				vsi.del_flag = '0'
+				and vsi.service_user in (SELECT teamUser1.user_id from erp_team_user teamUser1 where teamUser1.team_id=teamUser.team_id)
+				and vsi.service_goal_code = 7
+				and vsi.service_end_time BETWEEN #{startDateStr} and #{endDateStr}
+			) as firstBasicVisitCount,
+			(
+			SELECT
+				count(vsi.id)
+			from
+				erp_visit_service_info vsi
+			where
+				vsi.del_flag = '0'
+				and vsi.service_user in (SELECT teamUser1.user_id from erp_team_user teamUser1 where teamUser1.team_id=teamUser.team_id)
+				and vsi.service_goal_code = 2
+				and vsi.service_end_time BETWEEN #{startDateStr} and #{endDateStr}
+			) as materialImplCount,
+			(
+			SELECT
+				count(vsi.id)
+			from
+				erp_visit_service_info vsi
+			where
+				vsi.del_flag = '0'
+				and vsi.service_user in (SELECT teamUser1.user_id from erp_team_user teamUser1 where teamUser1.team_id=teamUser.team_id)
+				and vsi.service_goal_code = 1
+				and vsi.service_end_time BETWEEN #{startDateStr} and #{endDateStr}
+			) as firstVisitCount,
+			(
+			SELECT
+				count(vsi.id)
+			from
+				erp_visit_service_info vsi
+			where
+				vsi.del_flag = '0'
+				and vsi.service_user in (SELECT teamUser1.user_id from erp_team_user teamUser1 where teamUser1.team_id=teamUser.team_id)
+				and vsi.service_goal_code = 3
+				and vsi.service_end_time BETWEEN #{startDateStr} and #{endDateStr}
+			) as jykVisitCount,
+			(
+			SELECT
+				count(vsi.id)
+			from
+				erp_visit_service_info vsi
+			where
+				vsi.del_flag = '0'
+				and vsi.service_user in (SELECT teamUser1.user_id from erp_team_user teamUser1 where teamUser1.team_id=teamUser.team_id)
+				and vsi.service_goal_code = 6
+				and vsi.service_end_time BETWEEN #{startDateStr} and #{endDateStr}
+			) as trainingCount,
+			(
+			SELECT
+				count(vsi.id)
+			from
+				erp_visit_service_info vsi
+			where
+				vsi.del_flag = '0'
+				and vsi.service_user in (SELECT teamUser1.user_id from erp_team_user teamUser1 where teamUser1.team_id=teamUser.team_id)
+				and vsi.service_goal_code = 5
+				and vsi.service_end_time BETWEEN #{startDateStr} and #{endDateStr}
+			) as freeTrainingCount,
+			(
+			SELECT
+				count(vsi.id)
+			from
+				erp_visit_service_info vsi
+			where
+				vsi.del_flag = '0'
+				and vsi.service_user in (SELECT teamUser1.user_id from erp_team_user teamUser1 where teamUser1.team_id=teamUser.team_id)
+				and vsi.service_goal_code = 4
+				and vsi.service_end_time BETWEEN #{startDateStr} and #{endDateStr}
+			) as comHandCount,
+			(
+			SELECT
+				count(vsi.id)
+			from
+				erp_visit_service_info vsi
+			where
+				vsi.del_flag = '0'
+				and vsi.service_user in (SELECT teamUser1.user_id from erp_team_user teamUser1 where teamUser1.team_id=teamUser.team_id)
+				and vsi.service_goal_code = 9
+				and vsi.service_end_time BETWEEN #{startDateStr} and #{endDateStr}
+			) as zhctServiceCount,
+			(
+			SELECT
+				count(vsi.id)
+			from
+				erp_visit_service_info vsi
+			where
+				vsi.del_flag = '0'
+				and vsi.service_user in (SELECT teamUser1.user_id from erp_team_user teamUser1 where teamUser1.team_id=teamUser.team_id)
+				and vsi.service_goal_code = 8
+				and vsi.service_end_time BETWEEN #{startDateStr} and #{endDateStr}
+			) as materialUpdateCount
+		from
+			erp_team team 
+			LEFT join erp_team_user teamUser 
+			on teamUser.team_id = team.id
+		where
+			team.del_flag=0
+			and teamUser.user_id in(
+				SELECT
+					visitInfo.service_user
+				from
+					erp_visit_service_info visitInfo
+				where
+					visitInfo.del_flag = '0'
+					and visitInfo.service_end_time BETWEEN #{startDateStr} and #{endDateStr}
+			)
+			<if test="teamIds != null and teamIds.size()> 0">
+		  		AND teamUser.team_id in
+		  		<foreach item="teamId" index="index" collection="teamIds" open="(" separator="," close=")">  
+		    		#{teamId}
+		    	</foreach>
+		  	</if>
+		  	and (
+				<trim prefixOverrides="or">
+					<choose><!-- 权限判断 -->
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:all")'>
+							or team.company_type in ('agent','branch') 
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:serviceCompany")'>
+							or team.company_type = 'agent'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:branchCompany")'>
+							or team.company_type = 'branch'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:company")'>
+							or team.id in (
+								SELECT
+									team1.id
+								from
+									erp_team team1
+								LEFT JOIN erp_team_user teamUser1 on
+									team1.id = teamUser1.team_id
+									and teamUser1.del_flag = '0'
+								where
+									teamUser1.user_id = #{userId}
+									and teamUser1.leader_flag = '1'
+							)
+						</when>
+						<otherwise>
+							or 1=2
+						</otherwise>
+					</choose>
+				</trim>
+			)
+		GROUP by
+			team.id
+	</select>
+	
+	<select id="visitCount" resultType="java.lang.Integer">
+	    select
+			count(visitInfo.id) as curCount
+		from
+			erp_visit_service_info visitInfo 
+		INNER join erp_delivery_service erpDelivery ON
+			visitInfo.proc_ins_id = erpDelivery.proc_ins_id
+		INNER JOIN erp_order_original_info erpOrder on
+			erpOrder.id = erpDelivery.order_id
+		where 
+			visitInfo.audit_status=4
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+			and visitInfo.service_goal_code=#{code}
+			and visitInfo.service_end_time &gt;= #{startDateStr}
+			and visitInfo.service_end_time &lt;= #{endDateStr}
+	</select>
+</mapper>

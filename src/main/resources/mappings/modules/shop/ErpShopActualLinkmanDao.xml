@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.shop.dao.ErpShopActualLinkmanDao">
+    
+	<sql id="erpShopActualLinkmanColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.phone_no AS "phoneNo",
+		a.position AS "position",
+		a.shop_info_id AS "shopInfoId",
+		a.wechatID  AS "wechatID",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpShopActualLinkmanJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpShopActualLinkman">
+		SELECT 
+			<include refid="erpShopActualLinkmanColumns"/>
+		FROM erp_shop_actual_linkman a
+		<include refid="erpShopActualLinkmanJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpShopActualLinkman">
+		SELECT 
+			<include refid="erpShopActualLinkmanColumns"/>
+		FROM erp_shop_actual_linkman a
+		<include refid="erpShopActualLinkmanJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="phoneNo != null and phoneNo != ''">
+				AND a.phone_no LIKE 
+					<if test="dbName == 'oracle'">'%'||#{phoneNo}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{phoneNo}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{phoneNo},'%')</if>
+			</if>
+			<if test="position != null and position != ''">
+				AND a.position LIKE 
+					<if test="dbName == 'oracle'">'%'||#{position}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{position}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{position},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpShopActualLinkman">
+		SELECT 
+			<include refid="erpShopActualLinkmanColumns"/>
+		FROM erp_shop_actual_linkman a
+		<include refid="erpShopActualLinkmanJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_shop_actual_linkman(
+			id,
+			name,
+			phone_no,
+			position,
+			wechatID,
+			shop_info_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{name},
+			#{phoneNo},
+			#{position},
+			#{wechatID},
+			#{shopInfoId},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_shop_actual_linkman SET 	
+			name = #{name},
+			phone_no = #{phoneNo},
+			position = #{position},
+			wechatID  = #{wechatID},  
+			shop_info_id = #{shopInfoId},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_shop_actual_linkman SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findShopLinmanByShopId" resultType="ErpShopActualLinkman">
+		SELECT 
+			<include refid="erpShopActualLinkmanColumns"/>
+		FROM erp_shop_actual_linkman a
+		<where>
+			a.del_flag = #{del} AND a.shop_info_id=#{id}
+		</where>		
+	</select>
+</mapper>

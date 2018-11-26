@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.good.dao.ErpGoodServiceDao">
+    
+	<sql id="erpGoodServiceColumns">
+		a.id AS "id",
+		a.good_id AS "goodId",
+		a.service_item_id AS "serviceItemId",
+		a.service_item_name AS "serviceItemName",
+		a.times AS "times",
+		a.is_deadline AS "isDeadline",
+		a.service_term AS "serviceTerm",
+		a.is_package AS "isPackage",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpGoodServiceJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpGoodService">
+		SELECT 
+			<include refid="erpGoodServiceColumns"/>
+		FROM erp_good_service a
+		<include refid="erpGoodServiceJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpGoodService">
+		SELECT 
+			<include refid="erpGoodServiceColumns"/>
+		FROM erp_good_service a
+		<include refid="erpGoodServiceJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpGoodService">
+		SELECT 
+			<include refid="erpGoodServiceColumns"/>
+		FROM erp_good_service a
+		<include refid="erpGoodServiceJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+    insert into erp_good_service
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="goodId != null">
+        good_id,
+      </if>
+      <if test="serviceItemId != null">
+        service_item_id,
+      </if>
+      <if test="serviceItemName != null">
+        service_item_name,
+      </if>
+      <if test="times != null">
+        times,
+      </if>
+      <if test="isDeadline != null">
+        is_deadline,
+      </if>
+      <if test="serviceTerm != null">
+        service_term,
+      </if>
+      <if test="isPackage != null">
+        is_package,
+      </if>
+      <if test="createDate != null">
+        create_date,
+      </if>
+      <if test="createBy!= null and createBy.id!=null">
+        create_by,
+      </if>
+      <if test="updateDate != null">
+        update_date,
+      </if>
+      <if test="updateBy != null and updateBy.id!=null">
+        update_by,
+      </if>
+      <if test="remarks != null">
+        remarks,
+      </if>
+      <if test="delFlag != null">
+        del_flag,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+       <if test="id != null">
+        #{id},
+      </if>
+      <if test="goodId != null">
+        #{goodId},
+      </if>
+      <if test="serviceItemId != null">
+        #{serviceItemId},
+      </if>
+      <if test="serviceItemName != null">
+        #{serviceItemName},
+      </if>
+      <if test="times != null">
+        #{times},
+      </if>
+      <if test="isDeadline != null">
+        #{isDeadline},
+      </if>
+      <if test="serviceTerm != null">
+        #{serviceTerm},
+      </if>
+      <if test="isPackage != null">
+        #{isPackage},
+      </if>
+      <if test="createDate != null">
+        #{createDate},
+      </if>
+      <if test="createBy!=null and createBy.id != null">
+        #{createBy.id},
+      </if>
+      <if test="updateDate != null">
+        #{updateDate},
+      </if>
+      <if test="updateBy!=null and updateBy.id != null">
+        #{updateBy.id},
+      </if>
+      <if test="remarks != null">
+        #{remarks},
+      </if>
+      <if test="delFlag != null">
+        #{delFlag},
+      </if>
+    </trim>
+	</insert>
+	
+	<update id="update">
+	UPDATE erp_good_service
+	<set>
+	  <if test="goodId!=null and goodId!=''">
+   	  good_id = #{goodId},
+	  </if>
+	  <if test="serviceItemId!=null and serviceItemId!=''">
+   	  service_item_id = #{serviceItemId},
+	  </if>
+	  <if test="serviceItemName!=null and serviceItemName!=''">
+   	 	service_item_name = #{serviceItemName},
+	  </if>
+			<if test="times!=null">
+   	 	times = #{times},
+	  </if>
+	  	<if test="isDeadline!=null">
+   	 		is_deadline = #{isDeadline},
+	  </if>
+	  <if test="serviceTerm!=null">
+   	 	service_term = #{serviceTerm},
+	  </if>
+		<if test="isPackage!=null">
+   	 	is_package = #{isPackage},
+	  </if>
+	  <if test="updateDate!=null">
+   	 	update_date = #{updateDate},
+	  </if>
+	  <if test="updateBy!=null and updateBy.id!=null and updateBy.id!=''">
+   	 update_by = #{updateBy.id},
+	  </if>
+	  <if test="remarks!=null and remarks!=''">
+   		remarks = #{remarks},
+	  </if>
+	</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_good_service SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+<delete id="deleteByGoodId" parameterType="java.lang.String">
+     delete from erp_good_service where good_id=#{goodId}
+	</delete>
+	
+	<select id="findServiceList" resultType="ErpGoodService">
+	   	SELECT 
+			<include refid="erpGoodServiceColumns"/>
+			FROM erp_good_service a
+			<where>
+			   a.del_flag='0'
+			   <if test="goodId!=null and goodId!=''">
+			       and a.good_id=#{goodId}
+			   </if>
+			    <if test="isPackage!=null and isPackage!=''">
+			       and a.is_package=#{isPackage}
+			   </if>
+			</where>
+	</select>
+	
+	<select id="findServiceListByBatch" resultType="ErpGoodService">
+	   	SELECT 
+			<include refid="erpGoodServiceColumns"/>
+			FROM erp_good_service a
+			<where>
+			   a.del_flag='0'
+			    <if test="isPackage!=null and isPackage!=''">
+			       and a.is_package=#{isPackage}
+			   </if>
+			   <if test="goodIds!=null and goodIds.size()>0">
+			       and a.good_id IN 
+			       <foreach collection="goodIds" item="item" open="(" separator="," close=")">  
+            #{item}  
+          </foreach>  
+			   </if>
+			</where>
+	</select>
+</mapper>

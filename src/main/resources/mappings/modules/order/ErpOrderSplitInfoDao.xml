@@ -1,0 +1,1086 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpOrderSplitInfoDao">
+
+
+<resultMap type="com.yunnex.ops.erp.modules.order.entity.ErpOrderSplitInfo" id="erpOrderSplitInfoResutltMap" > 
+        <id property="id" column="id"/> 
+        <result column="orderId" property="orderId"/>
+        <result column="shopId" property="shopId"/>
+        <result column="orderNumber" property="orderNumber"/>
+        <result column="splitId" property="splitId"/>
+        <result column="originalGoodId" property="originalGoodId"/>
+        <result column="goodName" property="goodName"/>
+        <result column="goodTypeId" property="goodTypeId"/>
+        <result column="goodTypeName" property="goodTypeName"/>
+        <result column="num" property="num"/>
+        <result column="price" property="price"/>
+        <result column="status" property="status"/>
+        <result column="createDate" property="createDate"/>
+        <result column="createBy.id" property="createBy.id"/>
+        <result column="updateDate" property="updateDate"/>
+        <result column="updateBy.id" property="updateBy.id"/>
+        <result column="remark" property="remark"/>
+        <result column="sort" property="sort"/>
+        <result column="delFlag" property="delFlag"/>
+        <result column="hurryFlag" property="hurryFlag"/>
+        <result column="planningExpert" property="planningExpert"/>
+        <result column="procInsId" property="procInsId"/>
+        <result column="promotionTime" property="promotionTime"/>
+        <result column="nextContactTime" property="nextContactTime"/>
+        <result column="pendingProdFlag" property="pendingProdFlag"/>
+        <result column="pendingProduced" property="pendingProduced"/>
+        <result column="nextLicenseTime" property="nextLicenseTime"/>
+        <result column="nextQualificationTime" property="nextQualificationTime"/>
+        <result column="publishToWxapp" property="publishToWxapp"/>
+        <result column="commentCount" property="commentCount"/>
+        <result column="onlineUseTime" property="onlineUseTime"/>
+        <result column="pendingReason" property="pendingReason"/>
+        <result column="onlineDate" property="onlineDate"/>
+        <result column="manualDate" property="manualDate"/>
+        <result column="planningName" property="planningName"/>
+        <result column="suspendFlag" property="suspendFlag"/>
+        <result column="suspendReason" property="suspendReason"/>
+	<result column="exceptionReason" property="exceptionReason"/>
+        <result column="suspendReasonContent" property="suspendReasonContent"/>
+        <result column="taskId" property="taskId"/>
+        <result column="lookEffectFlag" property="lookEffectFlag"/>
+        <collection property="erpOrderSplitGoods" ofType="com.yunnex.ops.erp.modules.order.entity.ErpOrderSplitGood"
+         column="{originalSplitId=id}" javaType="ArrayList" select="getErpOrderSplitGoodBySplitId" ></collection> 
+    </resultMap> 
+    
+    <select id="getErpOrderSplitGoodBySplitId" resultType="com.yunnex.ops.erp.modules.order.entity.ErpOrderSplitGood">
+		SELECT
+			id as id ,
+			original_split_id as originalSplitId,
+			original_good_id as originalGoodId,
+			good_name as goodName,
+			good_type_id as goodTypeId,
+			good_type_name as goodTypeName,
+			buy_exposure as buyExposure,
+			donate_exposure as donateExposure,
+			num as num,
+			price as price,
+			remarks as remarks,
+			is_promote AS isPromote,
+			del_flag as delFlag
+		FROM erp_order_split_good  
+		WHERE original_split_id = #{originalSplitId}
+		and del_flag = 0
+	</select>
+	
+	
+	<sql id="erpOrderSplitInfoColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.shop_id AS "shopId",
+		a.order_number AS "orderNumber",
+		a.split_id AS "splitId",
+		a.original_good_id AS "originalGoodId",
+		a.good_name AS "goodName",
+		a.good_type_id AS "goodTypeId",
+		a.good_type_name AS "goodTypeName",
+		a.num AS "num",
+		a.price AS "price",
+		a.status AS "status",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag",
+		a.hurry_flag AS "hurryFlag",
+		a.planning_expert AS "planningExpert",
+		a.PROC_INS_ID AS "procInsId",
+		a.promotion_time AS "promotionTime",
+		a.next_contact_time AS "nextContactTime",
+        a.pending_prod_flag AS "pendingProdFlag",
+        a.pending_produced AS "pendingProduced",
+        a.timeout_flag AS "timeoutFlag",
+		a.next_license_time AS "nextLicenseTime",
+		a.next_qualification_time AS "nextQualificationTime",
+		a.publish_to_wxapp AS "publishToWxapp",
+		a.comment_count AS "commentCount",
+		a.online_use_time AS "onlineUseTime",
+		a.pending_reason AS "pendingReason",
+		a.online_date AS "onlineDate",
+		a.manual_date AS "manualDate",
+		a.suspend_flag AS "suspendFlag",
+		a.suspend_reason AS "suspendReason",
+		a.suspend_reason_content AS "suspendReasonContent",
+		a.process_version,
+		a.look_effect_flag AS "lookEffectFlag",
+		a.exception_reason AS "exceptionReason"
+	</sql>
+	
+	<sql id="erpOrderSplitInfoColumnsUser">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.shop_id AS "shopId",
+		a.order_number AS "orderNumber",
+		a.split_id AS "splitId",
+		a.original_good_id AS "originalGoodId",
+		a.good_name AS "goodName",
+		a.good_type_id AS "goodTypeId",
+		a.good_type_name AS "goodTypeName",
+		a.num AS "num",
+		a.price AS "price",
+		a.status AS "status",
+		a.create_date
+		AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS
+		"updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort
+		AS "sort",
+		a.del_flag AS "delFlag",
+		a.hurry_flag AS "hurryFlag",
+		a.planning_expert AS "planningExpert",
+		a.PROC_INS_ID AS "procInsId",
+		a.promotion_time AS "promotionTime",
+		a.next_contact_time AS "nextContactTime",
+  a.pending_prod_flag AS "pendingProdFlag",
+  a.pending_produced AS "pendingProduced",
+  a.timeout_flag AS "timeoutFlag",
+  a.suspend_flag AS "suspendFlag",
+		a.suspend_reason AS "suspendReason",
+		a.exception_reason AS "exceptionReason",
+		a.suspend_reason_content AS "suspendReasonContent",
+		b.name AS "planningName"
+	</sql>
+	
+	<sql id="erpOrderSplitInfoColumnsTaskid">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.shop_id AS "shopId",
+		a.order_number AS "orderNumber",
+		a.split_id AS "splitId",
+		a.original_good_id AS "originalGoodId",
+		a.good_name AS "goodName",
+		a.good_type_id AS "goodTypeId",
+		a.good_type_name AS "goodTypeName",
+		a.num AS "num",
+		a.price AS "price",
+		a.status AS "status",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag",
+		a.hurry_flag AS "hurryFlag",
+		a.planning_expert AS "planningExpert",
+		a.PROC_INS_ID AS "procInsId",
+		a.promotion_time AS "promotionTime",
+		a.next_contact_time AS "nextContactTime",
+        a.pending_prod_flag AS "pendingProdFlag",
+        a.pending_produced AS "pendingProduced",
+        a.timeout_flag AS "timeoutFlag",
+		a.next_license_time AS "nextLicenseTime",
+		a.next_qualification_time AS "nextQualificationTime",
+		a.ID_ AS "taskId"
+	</sql>
+	
+	
+	<sql id="erpOrderSplitpromotionalMaterials">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.shop_id AS "shopId",
+		a.order_number AS "orderNumber",
+		a.split_id AS "splitId",
+		a.original_good_id AS "originalGoodId",
+		a.good_name AS "goodName",
+		a.good_type_id AS "goodTypeId",
+		a.good_type_name AS "goodTypeName",
+		a.num AS "num",
+		a.status AS "status",
+		a.PROC_INS_ID AS "procInsId"
+	</sql>
+
+	<sql id="erpOrderSplitInfoJoins">
+	</sql>
+
+	<select id="get" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumns" />
+		FROM erp_order_split_info a
+		<include refid="erpOrderSplitInfoJoins" />
+		WHERE a.id = #{id} and a.del_flag='0'
+	</select>
+
+	<select id="getByProcInstId" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumns" />
+		FROM erp_order_split_info a
+		<include refid="erpOrderSplitInfoJoins" />
+		WHERE a.PROC_INS_ID = #{act.procInsId}
+	</select>
+
+	<select id="findList" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumns" />
+		FROM erp_order_split_info a
+		<include refid="erpOrderSplitInfoJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findAllList" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumns" />
+		FROM erp_order_split_info a
+		<include refid="erpOrderSplitInfoJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<insert id="insert">
+		INSERT INTO erp_order_split_info(
+		id,
+		order_id,
+		shop_id,
+		order_number,
+		split_id,
+		original_good_id,
+		good_name,
+		good_type_id,
+		good_type_name,
+		num,
+		price,
+		<if test='status != null'>status,</if>
+		create_date,
+		create_by,
+		update_date,
+		update_by,
+		remark,
+		sort,
+		del_flag,
+		planning_expert,
+		promotion_time ,
+		next_contact_time,
+		online_use_time,
+		pending_reason,
+		online_date,
+		manual_date,
+		process_version
+		) VALUES (
+		#{id},
+		#{orderId},
+		#{shopId},
+		#{orderNumber},
+		#{splitId},
+		#{originalGoodId},
+		#{goodName},
+		#{goodTypeId},
+		#{goodTypeName},
+		#{num},
+		#{price},
+		<if test='status != null'>#{status},</if>
+		#{createDate},
+		#{createBy.id},
+		#{updateDate},
+		#{updateBy.id},
+		#{remark},
+		#{sort},
+		#{delFlag},
+		#{planningExpert},
+		#{promotionTime},
+		#{nextContactTime},
+		#{onlineUseTime},
+		#{pendingReason},
+		#{onlineDate},
+		#{manualDate},
+		#{processVersion}
+		)
+	</insert>
+
+    <!-- 如果“进入过待生产库”标识为"Y"，则更新，否则不更新，因为进入过待生产库就永远进入过了 -->
+	<update id="update">
+		UPDATE erp_order_split_info SET
+		order_id = #{orderId},
+		shop_id = #{shopId},
+		order_number = #{orderNumber},
+		split_id =#{splitId},
+		original_good_id = #{originalGoodId},
+		good_name =#{goodName},
+		good_type_id = #{goodTypeId},
+		good_type_name =#{goodTypeName},
+		num = #{num},
+		price = #{price},
+		<if test='status != null'>status = #{status},</if>
+		update_date = #{updateDate},
+		update_by = #{updateBy.id},
+		remark =#{remark},
+		sort = #{sort},
+		planning_expert=#{planningExpert},
+		promotion_time=#{promotionTime},
+		next_contact_time=#{nextContactTime},
+		pending_prod_flag=#{pendingProdFlag},
+		next_license_time=#{nextLicenseTime},
+		<if test='manualDate != null'>manual_date=#{manualDate}, </if>
+  <if test='pendingProduced == "Y"'> pending_produced = #{pendingProduced}, </if>
+  <if test='activationTime != null'> activation_time = #{activationTime}, </if>
+  <if test='timeoutFlag != null'> timeout_flag = #{timeoutFlag}, </if>
+  <if test='processVersion != null'>process_version=#{processVersion}, </if>
+  <if test='endTime != null'>end_time=#{endTime}, </if>
+		next_qualification_time=#{nextQualificationTime},
+		online_use_time = #{onlineUseTime},
+		pending_reason = #{pendingReason},
+		online_date=#{onlineDate},
+		suspend_flag=#{suspendFlag},
+		suspend_reason=#{suspendReason},
+		suspend_reason_content=#{suspendReasonContent}
+		WHERE id =
+		#{id}
+	</update>
+
+	<update id="delete">
+		UPDATE erp_order_split_info SET
+		del_flag =
+		#{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<delete id="deleteSplitInfoById">
+	DELETE FROM erp_order_split_info  WHERE id = #{id}
+	</delete>
+	
+	
+	<update id="updatePlanningExpert">
+		UPDATE erp_order_split_info SET
+		planning_expert = #{planningExpert}
+		WHERE id = #{splitId}
+	</update>
+
+	<select id="countByOrderId" resultType="int">
+		SELECT IFNULL(MAX(a.split_id),0) FROM erp_order_split_info a
+		<where>
+			a.del_flag = 0 AND order_id = #{orderId}
+		</where>
+	</select>
+
+	<select id="findListByOrderId" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumns" />
+		FROM erp_order_split_info a
+		<include refid="erpOrderSplitInfoJoins" />
+		<where>
+			a.order_id = #{orderId}
+		</where>
+	</select>
+
+	<select id="findListByOrderInfo" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumns" />
+		FROM erp_order_split_info a
+		<include refid="erpOrderSplitInfoJoins" />
+		<where>
+			a.order_id = #{orderId}
+			<if test="goodType != null">
+				and good_type_id = #{goodType}
+			</if>
+		</where>
+	</select>
+
+	<update id="updateNum">
+		UPDATE erp_order_split_info SET
+		num = #{num}
+		WHERE id =
+		#{id}
+	</update>
+
+	<update id="updateHurryFlag">
+		UPDATE erp_order_split_info SET
+		hurry_flag =
+		#{hurryFlag}
+		where id = #{id}
+	</update>
+
+	<select id="findListByParams" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumns" />
+		FROM erp_order_split_info a
+		LEFT JOIN erp_order_original_info i ON a.order_id=i.id
+		LEFT JOIN erp_shop_info s ON i.shop_extension_id=s.zhangbei_id
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="orderNumber != null and orderNumber != ''">
+				AND i.order_number LIKE CONCAT('%',#{orderNumber},'%')
+			</if>
+			<if test="hurryFlag != null and hurryFlag != ''">
+				AND a.hurry_flag=#{hurryFlag}
+			</if>
+			<if test="null != goodTypes and goodTypes.size > 0">
+				AND a.good_type_id IN
+				<foreach collection="goodTypes" index="index" item="item"
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="shopName != null and shopName != ''">
+				AND i.shop_name=#{shopName}
+			</if>
+		</where>
+	</select>
+
+	<select id="findFollowOrderByParams" resultType="string">
+		SELECT DISTINCT a.`PROC_INS_ID` FROM erp_order_split_info a
+		LEFT JOIN erp_order_original_info i ON a.order_id=i.id
+		<where>
+			and a.del_flag = #{DEL_FLAG_NORMAL}
+			and EXISTS (SELECT   1 FROM erp_order_flow_user fu   WHERE a.`id` = fu.`split_id`  AND fu.`user_id`=#{userId} )
+			and a.status=0 and i.cancel=0
+			<if test="orderNumber != null and orderNumber != ''">
+				AND i.order_number LIKE CONCAT('%,', #{orderNumber},',%')
+			</if>
+			<if test="hurryFlag != null and hurryFlag != ''">
+				AND a.hurry_flag=#{hurryFlag}
+			</if>
+			<if test="null != goodTypes and goodTypes.size > 0">
+				AND a.good_type_id IN
+				<foreach collection="goodTypes" index="index" item="item"
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+		</where>
+		ORDER BY a.id DESC
+	</select>
+	
+	
+		<select id="getBystate" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumns" />
+		FROM erp_order_split_info a
+		<include refid="erpOrderSplitInfoJoins" />
+		WHERE a.status = #{status}
+		and EXISTS (SELECT   1 FROM erp_order_flow_user fu   WHERE a.`id` = fu.`split_id`  AND fu.`user_id`=#{userId} )
+	</select>
+	
+	
+	<select id="findcomplete" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumns" />
+		FROM erp_order_split_info a
+		<where>
+			a.del_flag = #{del} AND a.status = #{status}
+			<if test="orderNumber != null and orderNumber != ''">
+				AND a.order_number=#{orderNumber} And a.split_id=#{splitId}
+			</if>
+			<if test="shopId != null and shopId != ''">
+				AND a.shop_id=#{shopId}
+			</if>
+			<if test="hurryFlag != null and hurryFlag != ''">
+				AND a.hurry_flag=#{hurryFlag}
+			</if>
+		</where>
+	</select>
+	
+	
+		<select id="findListByOrderInfoAndUser" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumnsUser" />,
+		c.name AS "createBy.name"
+		FROM erp_order_split_info a
+		LEFT JOIN sys_user b ON b.id=a.planning_expert
+		LEFT JOIN sys_user c ON c.id=a.create_by
+		<where>
+			a.order_id = #{orderId}
+			and a.del_flag = '0'
+		</where>
+	</select>
+
+	<select id="getByOrderId" resultMap="erpOrderSplitInfoResutltMap">
+		select
+			<include refid="erpOrderSplitInfoColumns" />
+		from
+			erp_order_split_info a
+		where
+			order_id = #{orderId}
+	</select>
+
+	<select id="findByOrderId" resultType="ErpOrderSplitInfo">
+		select
+		<include refid="erpOrderSplitInfoColumns"/>
+		from
+		erp_order_split_info a
+		where
+		a.order_id = #{orderId}
+		and
+		a.del_flag = '0'
+	</select>
+
+	<select id="findListOrderInfoAndTask" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+		<include refid="erpOrderSplitInfoColumnsTaskid" />
+		FROM (
+			SELECT eosi.*, art.ID_ FROM ACT_RU_TASK art 
+				LEFT JOIN erp_order_split_info eosi ON art.PROC_INST_ID_ = eosi.PROC_INS_ID 
+				WHERE eosi.id IS NOT NULL
+				<if test="null != userIds and userIds.size > 0">
+					AND art.ASSIGNEE_ IN
+					<foreach collection="userIds" index="index" item="item"
+						open="(" separator="," close=")">
+						#{item}
+					</foreach>
+				</if>
+				) a
+		LEFT JOIN erp_order_original_info i ON a.order_id=i.id
+		LEFT JOIN erp_shop_info s ON i.shop_extension_id=s.zhangbei_id
+		<where>
+			a.del_flag = #{erpOrderSplitInfo.DEL_FLAG_NORMAL}
+			<if test="erpOrderSplitInfo.orderNumber != null and erpOrderSplitInfo.orderNumber != ''">
+				AND i.order_number LIKE CONCAT('%',#{erpOrderSplitInfo.orderNumber},'%')
+			</if>
+			<if test="erpOrderSplitInfo.hurryFlag != null and erpOrderSplitInfo.hurryFlag != ''">
+				AND a.hurry_flag=#{erpOrderSplitInfo.hurryFlag}
+			</if>
+			<if test="null != erpOrderSplitInfo.goodTypes and erpOrderSplitInfo.goodTypes.size > 0">
+				AND a.good_type_id IN
+				<foreach collection="goodTypes" index="index" item="item"
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="erpOrderSplitInfo.shopName != null and erpOrderSplitInfo.shopName != ''">
+				AND i.shop_name=#{erpOrderSplitInfo.shopName}
+			</if>
+		</where>
+	</select>
+
+	<select id="findProcIdListByShopId" resultType="String">
+		SELECT a.PROC_INS_ID
+			FROM erp_order_split_info a
+			WHERE a.shop_id = #{shopId}
+	</select>
+	
+	<select id="WhereShopIdCount" resultType="java.lang.Integer">
+		SELECT 
+			COUNT(*) 
+		FROM `erp_order_split_info` WHERE shop_id=#{shopid} AND create_date&lt;#{date} AND del_flag=#{del}
+	</select>
+	
+	<select id="getOrderSplitInfo" resultMap="erpOrderSplitInfoResutltMap">
+		SELECT
+			splitinfo.id AS "id",
+			splitinfo.order_id AS "orderId",
+			splitinfo.promotion_time AS "promotionTime",
+            orderinfo.shop_name AS "orderInfo.shopName",
+            orderinfo.shop_abbreviation AS "orderInfo.shopAbbreviation",
+            orderinfo.agent_name AS "orderInfo.agentName",
+            orderinfo.contact_name AS "orderInfo.contactName",
+			orderinfo.contact_number AS "orderInfo.contactNumber",
+			orderinfo.promote_phone AS "orderInfo.promotePhone",
+			orderinfo.promote_contact AS "orderInfo.promoteContact",
+			orderinfo.order_version AS "orderInfo.orderVersion",
+			shopinfo.city_level AS "erpShopInfo.cityLevel",
+			shopinfo.id AS "erpShopInfo.id",
+			shopinfo.zhangbei_id AS "erpShopInfo.zhangbeiId"
+		FROM
+			`erp_order_split_info` splitinfo
+		INNER JOIN
+			erp_order_original_info orderinfo
+		ON
+		splitinfo.order_id = orderinfo.id
+		INNER JOIN
+			erp_shop_info shopinfo
+			ON
+			shopinfo.zhangbei_id=splitinfo.shop_id
+		WHERE
+			splitinfo.id = #{splitId}
+	</select>
+
+
+	
+	<update id="publishToWxapp">
+		update erp_order_split_info set publish_to_wxapp = 1 where id = #{id}
+	</update>
+	
+	
+	<select id="promotionalMaterials" resultType="ErpOrderSplitInfo">
+		SELECT
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.order_number AS "orderNumber",
+		a.split_id AS "splitId",
+		a.good_name AS "goodName",
+		a.status AS "status",
+		a.PROC_INS_ID AS "procInsId",
+		s.name AS "shopName"
+		FROM `erp_order_split_info` a 
+		LEFT JOIN `erp_shop_info` s ON a.`shop_id`=s.`zhangbei_id`
+		<where>
+				<if test="orderNumber != null and orderNumber != ''">
+				  	 AND a.order_number LIKE CONCAT('%',#{orderNumber},'%')
+				</if>
+				<if test="shopName != null and shopName != ''">
+				   	AND s.name LIKE CONCAT('%',#{shopName},'%')
+				</if>
+		</where>
+	</select>
+	
+ 	<select id="getDiagnosisTaskInfo" resultType="map">
+		SELECT
+			aht.ID_ AS "taskId",
+			aht.ASSIGNEE_ AS "assignee"
+		FROM
+			erp_order_split_info eosi
+		LEFT JOIN
+			ACT_HI_TASKINST aht
+		ON
+			eosi.PROC_INS_ID = aht.PROC_INST_ID_
+		WHERE
+			eosi.id = #{splitId}
+		AND
+			aht.TASK_DEF_KEY_ like 'management_diagnosis_marketing_planning%'
+		ORDER BY
+			aht.START_TIME_ DESC
+		LIMIT 1
+	</select>
+	
+	<select id="getPromotionEndTime" resultType="java.util.Date">
+ 		SELECT
+ 			aht.END_TIME_
+ 		FROM
+ 			erp_order_split_info eosi
+ 		LEFT JOIN
+ 			`ACT_HI_TASKINST` aht
+ 		ON
+ 			eosi.PROC_INS_ID = aht.PROC_INST_ID_
+ 		WHERE
+ 			eosi.id = #{splitId}
+ 		AND
+ 			aht.TASK_DEF_KEY_ = 'work_data_consolidation_after_promotion'
+ 		ORDER BY
+ 			aht.START_TIME_ DESC
+ 		LIMIT 1
+ 	</select>
+ 	
+ 	<select id="findWhereUnderway" resultType="java.lang.Integer">
+ 	    SELECT 
+		    COUNT(DISTINCT hi.id)
+		FROM
+		    (
+		        SELECT
+		            eosi.id, eosi.proc_ins_id
+		        FROM
+		            erp_order_split_info eosi
+                INNER JOIN
+                    erp_order_original_info eooi 
+                ON
+                    eosi.order_id = eooi.id
+                INNER JOIN 
+                    erp_order_original_good eoog 
+                ON 
+                    eooi.id = eoog.order_id 
+                INNER JOIN
+                    ACT_HI_TASKINST aht
+                ON
+                    eosi.PROC_INS_ID = aht.PROC_INST_ID_
+                WHERE 
+                    eoog.good_type_id = 5 
+                AND 
+                    eooi.cancel = 0
+                AND
+                    eosi.`status` = 0
+                <if test="null != userIds and userIds.size > 0">
+		            AND aht.ASSIGNEE_ IN
+		            <foreach collection="userIds" index="index" item="item"
+		                open="(" separator="," close=")">
+		                #{item}
+		            </foreach>
+		        </if>
+	        ) hi
+		INNER JOIN
+		    ACT_RU_TASK art
+		ON
+		    hi.proc_ins_id = art.PROC_INST_ID_
+ 	</select>
+ 	
+ 	<select id="findWhereQualifications" resultType="java.lang.Integer">
+	 	SELECT 
+		        COUNT(DISTINCT hi.id)
+		FROM
+	        (
+                SELECT
+                        eosi.id, eosi.proc_ins_id
+                FROM
+                        erp_order_split_info eosi
+                INNER JOIN
+                        erp_order_original_info eooi 
+                ON
+                        eosi.order_id = eooi.id
+                INNER JOIN 
+                        erp_order_original_good eoog 
+                ON 
+                        eooi.id = eoog.order_id 
+                INNER JOIN
+                        ACT_HI_TASKINST aht
+                ON
+                        eosi.PROC_INS_ID = aht.PROC_INST_ID_
+                WHERE 
+                        eoog.good_type_id = 5 
+                AND 
+                        eooi.cancel = 0
+                AND
+                        eosi.`status` = 0
+                AND
+                        eosi.`pending_prod_flag`='Y' 
+                AND 
+                        eosi.pending_reason='Q'
+                <if test="null != userIds and userIds.size > 0">
+		            AND aht.ASSIGNEE_ IN
+		            <foreach collection="userIds" index="index" item="item"
+		                open="(" separator="," close=")">
+		                #{item}
+		            </foreach>
+		        </if>
+	        ) hi
+		INNER JOIN
+		        ACT_RU_TASK art
+		ON
+		        hi.proc_ins_id = art.PROC_INST_ID_
+ 	</select>
+     
+ 	<select id="findAllQualifications" resultType="java.lang.Integer">
+        SELECT
+		        COUNT(DISTINCT eosi.id)
+		FROM
+		        erp_order_split_info eosi
+		INNER JOIN
+		        erp_order_original_info eooi 
+		ON
+		        eosi.order_id = eooi.id
+		INNER JOIN 
+		        erp_order_original_good eoog 
+		ON 
+		        eooi.id = eoog.order_id 
+		INNER JOIN
+		        ACT_HI_TASKINST aht
+		ON
+		        eosi.PROC_INS_ID = aht.PROC_INST_ID_
+		WHERE 
+		        eoog.good_type_id = 5 
+		AND 
+		        eooi.cancel = 0
+		AND
+                eosi.`status` = 0
+		AND 
+		        eosi.pending_reason='Q'
+		<if test="null != userIds and userIds.size > 0">
+            AND aht.ASSIGNEE_ IN
+            <foreach collection="userIds" index="index" item="item"
+                open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+ 	</select>
+ 	
+ 	<select id="findAllActiveDelay" resultType="java.lang.Integer">
+        SELECT
+		        COUNT(DISTINCT eosi.id)
+		FROM
+		        erp_order_split_info eosi
+		INNER JOIN
+		        erp_order_original_info eooi 
+		ON
+		        eosi.order_id = eooi.id
+		INNER JOIN 
+		        erp_order_original_good eoog 
+		ON 
+		        eooi.id = eoog.order_id 
+		INNER JOIN
+		        ACT_HI_TASKINST aht
+		ON
+		        eosi.PROC_INS_ID = aht.PROC_INST_ID_
+		WHERE 
+		        eoog.good_type_id = 5 
+		AND 
+		        eooi.cancel = 0
+		AND
+		        eosi.`status` = 0
+		AND 
+		        eosi.pending_reason='D'
+		<if test="null != userIds and userIds.size > 0">
+            AND aht.ASSIGNEE_ IN
+            <foreach collection="userIds" index="index" item="item"
+                open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+ 	</select>
+ 	
+ 	<select id="findWhereActiveDelay" resultType="java.lang.Integer">
+	 	SELECT 
+		        COUNT(DISTINCT hi.id)
+		FROM
+	        (
+                SELECT
+                        eosi.id, eosi.proc_ins_id
+                FROM
+                        erp_order_split_info eosi
+                INNER JOIN
+                        erp_order_original_info eooi 
+                ON
+                        eosi.order_id = eooi.id
+                INNER JOIN 
+                        erp_order_original_good eoog 
+                ON 
+                        eooi.id = eoog.order_id 
+                INNER JOIN
+                        ACT_HI_TASKINST aht
+                ON
+                        eosi.PROC_INS_ID = aht.PROC_INST_ID_
+                WHERE 
+                        eoog.good_type_id = 5 
+                AND 
+                        eooi.cancel = 0
+                AND
+                        eosi.`status` = 0
+                AND 
+                        eosi.`pending_prod_flag`='Y'
+                AND 
+                        eosi.pending_reason='D'
+                <if test="null != userIds and userIds.size > 0">
+		            AND aht.ASSIGNEE_ IN
+		            <foreach collection="userIds" index="index" item="item"
+		                open="(" separator="," close=")">
+		                #{item}
+		            </foreach>
+		        </if>
+	        ) hi
+		INNER JOIN
+		        ACT_RU_TASK art
+		ON
+		        hi.proc_ins_id = art.PROC_INST_ID_
+ 	</select>
+ 	
+ 	<select id="findWhereRiskCount" resultType="java.lang.Integer"> 
+ 	    SELECT 
+		    COUNT(DISTINCT hi.id)
+		FROM
+		    (
+		        SELECT
+		            eosi.id, eosi.proc_ins_id
+		        FROM
+		            erp_order_split_info eosi
+		        INNER JOIN
+		            erp_order_original_info eooi 
+		        ON
+		            eosi.order_id = eooi.id
+		        INNER JOIN 
+		            erp_order_original_good eoog 
+		        ON 
+		            eooi.id = eoog.order_id 
+		        INNER JOIN
+		            ACT_HI_TASKINST aht
+		        ON
+		            eosi.PROC_INS_ID = aht.PROC_INST_ID_
+		        WHERE 
+		            eoog.good_type_id = 5 
+		        AND 
+		            eooi.cancel = 0
+		        AND
+		            eosi.`status` = 0
+		        AND 
+		            eosi.timeout_flag='Y'
+		        AND
+		            eosi.`pending_prod_flag`='N'
+		        <if test="null != userIds and userIds.size > 0">
+		            AND aht.ASSIGNEE_ IN
+		            <foreach collection="userIds" index="index" item="item"
+		                open="(" separator="," close=")">
+		                #{item}
+		            </foreach>
+		        </if>
+		    ) hi
+		INNER JOIN
+		    ACT_RU_TASK art
+		ON
+		    hi.proc_ins_id = art.PROC_INST_ID_
+ 	</select>
+ 	
+ 	<select id="findWheretaskOrder" resultMap="erpOrderSplitInfoResutltMap"> 	
+ 		SELECT 
+	 	b.id AS "id",
+		b.order_id AS "orderId"
+	 	FROM `ACT_RU_TASK` a 
+    LEFT JOIN `ACT_RU_TASK_EXT` arte on a.ID_ = arte.task_id
+		LEFT JOIN `erp_order_split_info` b ON b.`PROC_INS_ID`=a.`PROC_INST_ID_`
+		LEFT JOIN `erp_order_original_info` c ON b.`order_id`=c.`id`
+		WHERE b.`id` IS NOT NULL AND a.`ASSIGNEE_`=#{assignne} AND c.`cancel`=0 and  
+                       arte.pending_prod_flag = 'N'
+		GROUP BY b.`id` 
+ 		
+ 	</select>
+ 	
+ 	<select id="findWherefollowOrder" resultMap="erpOrderSplitInfoResutltMap"> 	
+ 	
+ 		SELECT 
+	 	eosi.id AS "id",
+		eosi.order_id AS "orderId"
+    from ACT_RU_TASK art
+    LEFT JOIN `ACT_RU_TASK_EXT` arte on art.ID_ = arte.task_id
+	LEFT JOIN `erp_order_split_info` eosi ON eosi.`PROC_INS_ID`=art.`PROC_INST_ID_`
+    left JOIN `ACT_HI_TASKINST` aht on eosi.`PROC_INS_ID`=aht.`PROC_INST_ID_`
+	LEFT JOIN `erp_order_original_info` eooi ON eosi.`order_id`=eooi.`id`
+		WHERE  
+			aht.`ASSIGNEE_`=#{assignne} AND
+ 			eosi.`status`=0 AND eooi.`cancel`=0    
+  			 and    arte.`pending_prod_flag`='N' 
+	GROUP BY eosi.`id` 
+ 
+ 	</select>
+     
+ 	<select id="findstatisticsReportNoCancel" resultType="java.lang.Integer">
+	 	SELECT
+		        COUNT(DISTINCT eosi.id)
+		FROM
+		        erp_order_split_info eosi
+		INNER JOIN
+		        erp_order_original_info eooi 
+		ON
+		        eosi.order_id = eooi.id
+		INNER JOIN 
+		        erp_order_original_good eoog 
+		ON 
+		        eooi.id = eoog.order_id 
+		INNER JOIN
+		        ACT_HI_TASKINST aht
+		ON
+		        eosi.PROC_INS_ID = aht.PROC_INST_ID_
+		WHERE 
+		        eoog.good_type_id = 5 
+		AND 
+		        eooi.cancel = 0
+		<if test="null != userIds and userIds.size > 0">
+            AND aht.ASSIGNEE_ IN
+            <foreach collection="userIds" index="index" item="item"
+                open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+	</select>
+	
+	<select id="findstatisticsReportCompete" resultType="java.lang.Integer">
+	 	SELECT
+		        COUNT(DISTINCT eosi.id)
+		FROM
+		        erp_order_split_info eosi
+		INNER JOIN
+		        erp_order_original_info eooi 
+		ON
+		        eosi.order_id = eooi.id
+		INNER JOIN 
+		        erp_order_original_good eoog 
+		ON 
+		        eooi.id = eoog.order_id 
+		INNER JOIN
+		        ACT_HI_TASKINST aht
+		ON
+		        eosi.PROC_INS_ID = aht.PROC_INST_ID_
+		WHERE 
+		        eoog.good_type_id = 5 
+		AND 
+		        eooi.cancel = 0
+		AND eooi.order_status !=-1
+		and eosi.status = '1'
+		<if test="null != userIds and userIds.size > 0">
+            AND aht.ASSIGNEE_ IN
+            <foreach collection="userIds" index="index" item="item"
+                open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+	</select>
+	
+	<select id="findNormalOrders" resultType="java.lang.Integer">
+		SELECT 
+		    COUNT(DISTINCT hi.id)
+		FROM
+	        (
+                SELECT
+                        eosi.id, eosi.proc_ins_id
+                FROM
+                        erp_order_split_info eosi
+                INNER JOIN
+                        erp_order_original_info eooi 
+                ON
+                        eosi.order_id = eooi.id
+                INNER JOIN 
+                        erp_order_original_good eoog 
+                ON 
+                        eooi.id = eoog.order_id 
+                INNER JOIN
+                        ACT_HI_TASKINST aht
+                ON
+                        eosi.PROC_INS_ID = aht.PROC_INST_ID_
+                WHERE 
+                        eoog.good_type_id = 5 
+                AND 
+                        eooi.cancel = 0
+                AND
+                        eosi.`status` = 0
+                AND
+                        eosi.`pending_prod_flag`='N' 
+                AND 
+                        eosi.pending_reason IS NULL
+                <if test="null != userIds and userIds.size > 0">
+		            AND aht.ASSIGNEE_ IN
+		            <foreach collection="userIds" index="index" item="item"
+		                open="(" separator="," close=")">
+		                #{item}
+		            </foreach>
+		        </if>
+	        ) hi
+		INNER JOIN
+		    ACT_RU_TASK art
+		ON
+		    hi.proc_ins_id = art.PROC_INST_ID_
+	</select>
+    
+    <update id="updatePromotionTime">
+        UPDATE erp_order_split_info SET promotion_time = #{promotionTime} WHERE id = #{id}
+    </update>
+    
+    <select id="getOrderSplitInfoById" resultType="ErpOrderSplitInfo">
+    	select order_id from erp_order_split_info where id=#{id}
+    </select>
+
+	<select id="findByOrderNumber" resultType="ErpOrderSplitInfo">
+		SELECT id AS id, shop_id AS "shopId", order_number AS "orderNumber", split_id AS "splitId"
+		FROM erp_order_split_info WHERE order_number = #{orderNumber} and del_flag = '0'
+	</select>
+
+	<update id="updateExceptionReason">
+		<if test="ids != null and ids.size != 0">
+			update erp_order_split_info set exception_reason = #{exception}, status = #{status} where id in
+			<foreach collection="ids" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</update>
+	
+</mapper>

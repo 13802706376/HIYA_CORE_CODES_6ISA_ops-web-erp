@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpOrderGoodServiceInfoDao">
+    
+	<sql id="erpOrderGoodServiceInfoColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.good_name AS "goodName",
+		a.service_item_id AS "serviceItemId",
+		a.service_item_name AS "serviceItemName",
+		a.service_num AS "serviceNum",
+		a.pending_num AS "pendingNum",
+		a.process_num AS "processNum",
+		a.finish_num AS "finishNum",
+		a.service_term AS "serviceTerm",
+		a.expiration_time AS "expirationTime",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpOrderGoodServiceInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpOrderGoodServiceInfo">
+		SELECT 
+			<include refid="erpOrderGoodServiceInfoColumns"/>
+		FROM erp_order_good_service_info a
+		<include refid="erpOrderGoodServiceInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpOrderGoodServiceInfo">
+		SELECT 
+			<include refid="erpOrderGoodServiceInfoColumns"/>
+		FROM erp_order_good_service_info a
+		<include refid="erpOrderGoodServiceInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpOrderGoodServiceInfo">
+		SELECT 
+			<include refid="erpOrderGoodServiceInfoColumns"/>
+		FROM erp_order_good_service_info a
+		<include refid="erpOrderGoodServiceInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_order_good_service_info(
+			id,
+			order_id,
+			good_name,
+			service_item_id,
+			service_item_name,
+			service_num,
+			pending_num,
+			process_num,
+			finish_num,
+			service_term,
+			expiration_time,
+			create_date,
+			create_by,
+			update_date,
+			update_by,
+			remark,
+			del_flag
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{goodName},
+			#{serviceItemId},
+			#{serviceItemName},
+			#{serviceNum},
+			#{pendingNum},
+			#{processNum},
+			#{finishNum},
+			#{serviceTerm},
+			#{expirationTime},
+			#{createDate},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_order_good_service_info SET 	
+			order_id = #{orderId},
+			good_name = #{goodName},
+			service_item_name = #{serviceItemName},
+			service_item_id = #{serviceItemId},
+			service_num = #{serviceNum},
+			pending_num = #{pendingNum},
+			process_num = #{processNum},
+			finish_num = #{finishNum},
+			service_term = #{serviceTerm},
+			expiration_time = #{expirationTime},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remark = #{remark}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_order_good_service_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<insert id="insertBatch">
+   INSERT INTO erp_order_good_service_info(
+			id,
+			order_id,
+			good_name,
+			service_item_id,
+			service_item_name,
+			service_num,
+			pending_num,
+			process_num,
+			finish_num,
+			service_term,
+			expiration_time,
+			create_date,
+			create_by,
+			update_date,
+			update_by,
+			remark,
+			del_flag
+		)
+    VALUES
+  <foreach collection ="list" item="item" separator =",">
+    (
+   #{id},
+			#{orderId},
+			#{goodName},
+			#{serviceItemId},
+			#{serviceItemName},
+			#{serviceNum},
+			#{pendingNum},
+			#{processNum},
+			#{finishNum},
+			#{serviceTerm},
+			#{expirationTime},
+			#{createDate},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{delFlag}
+			)
+    </foreach >
+ </insert>
+ 
+ <select id="getDeliveryServiceByOrderId" resultType="java.util.HashMap">
+     select
+		sil.proc_ins_id procInsId,
+		group_concat(distinct gsi.service_item_name order by gsi.service_item_name desc) serviceItemName,
+		group_concat(distinct (case when ds.service_type = '' or ds.service_type is null then ds.zhct_type else ds.service_type end)) serviceType,
+		group_concat(distinct gc.name order by gc.name desc separator '+') goodType,
+		min(gsi.create_date) startDate,
+		ifnull((select u.name from erp_order_flow_user fu,sys_user u where fu.flow_id = sil.proc_ins_id and fu.del_flag = '0' and fu.flow_user_id = 'OperationAdviser' and u.del_flag = '0' and fu.user_id = u.id),'/') operationAdviser,
+		max(ds.flow_end_time) flowEndTime,
+		ds.order_id orderId,
+		IFNULL(ds.status, 0) status
+	from
+		erp_flow_service_item_link sil,
+		erp_order_good_service_info gsi,
+		erp_good_category gc,
+		erp_delivery_service ds,
+		erp_order_original_good oog
+	where
+		sil.service_source_id = gsi.id
+		and sil.proc_ins_id = ds.proc_ins_id
+		and ds.order_id = oog.order_id
+		and gsi.good_name = oog.good_name
+		and oog.good_type_id = gc.id
+		and sil.del_flag = '0'
+		and gsi.del_flag = '0'
+		and gc.del_flag = '0'
+		and oog.del_flag = '0'
+		and ds.order_id = #{orderId}
+	group by sil.proc_ins_id
+ </select>
+ 
+ <select id="querySum" resultType="map">
+select sum(service_num) as 'serviceNum',
+sum(pending_num) as 'pendingNum',
+sum(process_num) as 'processNum' ,
+sum(finish_num) as 'finishNum' 
+from erp_order_good_service_info 
+where order_id=#{orderId} and del_flag='0' and service_item_name !='聚引客生产服务'
+ </select>
+ 
+	
+ <select id="getOrderGoodServiceByOrderIdSingle"  resultType="ErpOrderGoodServiceInfo">
+     SELECT 
+			<include refid="erpOrderGoodServiceInfoColumns"/>
+		FROM erp_order_good_service_info a
+		WHERE a.order_id = #{orderId} and service_item_id=#{itemId} and del_flag=0 and pending_num > 0 order by service_term ASC limit 1
+ </select>
+ 
+  <select id="getOrderGoodServiceExists"  resultType="ErpOrderGoodServiceInfo">
+     SELECT 
+			<include refid="erpOrderGoodServiceInfoColumns"/>
+		FROM erp_order_good_service_info a
+		WHERE a.order_id = #{orderId} and service_item_id=#{itemId} and del_flag=0 order by service_term ASC limit 1
+ </select>
+ 
+ 	<insert id="addByOrderId">
+ 		insert into erp_order_good_service_info (id,order_id,good_name,service_item_id,service_item_name,service_num,pending_num,service_term,expiration_time,create_date,create_by,update_date,update_by)
+		select
+			uuid(),
+			ooi.id,
+			oog.good_name,
+			gs.service_item_id,
+			gs.service_item_name,
+			gs.times*oog.num,
+			gs.times*oog.num,
+			case when gs.is_deadline = 'Y' then gs.service_term else 1200 end,
+			date_add(ooi.buy_date,interval (case when gs.is_deadline = 'Y' then gs.service_term else 1200 end) month),
+			now(),
+			'',
+			now(),
+			''
+		from
+			erp_good_service gs,
+			erp_order_original_good oog,
+			erp_order_original_info ooi
+		where
+			gs.good_id = oog.good_id
+		and 
+			oog.order_id = ooi.id
+		and 
+			((oog.pack_id is not null and gs.is_package = 'Y') or (oog.pack_id is null and gs.is_package = 'N'))
+		and 
+			gs.del_flag = '0'
+		and 
+			oog.del_flag ='0'
+		and 
+			ooi.del_flag = '0'
+		and 
+			ooi.id = #{orderId}
+ 	</insert>
+ 	
+ 	<update id="deleteRecordByOrderId">
+ 		delete from erp_order_good_service_info where order_id = #{orderId}
+ 	</update>
+
+  <insert id="insertErpFlowServiceItemLink">
+      insert into erp_flow_service_item_link
+      (proc_ins_id,service_source_id,del_flag)
+      values(#{procInsId},#{serviceSourceId},#{delFlag})
+  </insert>
+  
+   <select id="getOrderGoodServiceByOrderId" resultType="ErpOrderGoodServiceInfo">
+     SELECT 
+			<include refid="erpOrderGoodServiceInfoColumns"/>
+		FROM erp_order_good_service_info a
+		WHERE a.order_id = #{orderId}
+ </select> 
+ 
+	 <select id="getOrderGoodServiceByProcInsId" resultType="ErpOrderGoodServiceInfo">
+		select
+			<include refid="erpOrderGoodServiceInfoColumns"/>
+		from
+			erp_order_good_service_info a,
+			erp_flow_service_item_link b
+		where
+			a.del_flag = '0'
+			and a.id = b.service_source_id
+			and b.proc_ins_id = #{procInsId}
+	 </select> 
+	 
+	 <update id="copyServiceItemLink">
+	 	update erp_flow_service_item_link set proc_ins_id = #{newProcInsId} where proc_ins_id = #{oldProcInsId}
+	 </update>
+</mapper>

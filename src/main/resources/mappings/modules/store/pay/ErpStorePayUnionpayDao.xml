@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.store.pay.dao.ErpStorePayUnionpayDao">
+    
+	<sql id="erpStorePayUnionpayColumns">
+		a.id AS "id",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.bank_id AS "bankId",
+		a.lian_dan AS "lianDan",
+		a.store_photo_door_head AS "storePhotoDoorHead",
+		a.store_photo_cashier_desk AS "storePhotoCashierDesk",
+		a.store_photo_environment AS "storePhotoEnvironment",
+		a.additional_photo AS "additionalPhoto",
+		a.number AS "number",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sync_oem AS "syncOem",
+		a.machine_tool_number AS "machineToolNumber",
+		a.multi_account_application_form AS "multiAccountApplicationForm"
+	</sql>
+		<sql id="erpStorePayUnionpayColumnsTwo">
+		a.id AS "id",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.bank_id AS "bankId",
+		a.lian_dan AS "lianDan",
+		a.store_photo_door_head AS "storePhotoDoorHead",
+		a.store_photo_cashier_desk AS "storePhotoCashierDesk",
+		a.store_photo_environment AS "storePhotoEnvironment",
+		a.additional_photo AS "additionalPhoto",
+		a.number AS "number",
+		a.multi_account_application_form AS "multiAccountApplicationForm",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sync_oem AS "syncOem",
+		b.bank_id  AS  "bank.bankId",
+		b.bank_name AS "bank.bankName",
+		b.id AS "bank.id",
+		b.open_account_licence AS "bank.openAccountLicence",
+		b.credit_card_front_photo AS "bank.creditCardFrontPhoto",
+		b.credit_card_reverse_photo AS "bank.creditCardReversePhoto",
+		b.authorize_proxy AS "bank.authorizeProxy",
+		b.account_type AS "bank.accountType",
+		b.open_account_name AS "bank.openAccountName",
+		b.branch_bank_name AS "bank.branchBankName",
+		b.credit_card_no AS "bank.creditCardNo",
+		b.bank_no AS "bank.bankNo",
+		b.zhangbei_bind_count AS "bank.zhangbeiBindCount",
+		b.pay_way AS "bank.payWay",
+		b.province AS "bank.province",
+		b.city AS "bank.city",
+		b.province_name AS "bank.provinceName",
+		b.city_name AS "bank.cityName",
+		b.area AS "bank.area",
+		b.area_name AS "bank.areaName"
+	</sql>
+	
+	<sql id="erpStorePayUnionpayJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpStorePayUnionpay">
+		SELECT 
+			<include refid="erpStorePayUnionpayColumns"/>
+		FROM erp_store_pay_unionpay a
+		<include refid="erpStorePayUnionpayJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpStorePayUnionpay">
+		SELECT 
+			<include refid="erpStorePayUnionpayColumns"/>
+		FROM erp_store_pay_unionpay a
+		<include refid="erpStorePayUnionpayJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="accountType != null and accountType != ''">
+				AND a.account_type = #{accountType}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpStorePayUnionpay">
+		SELECT 
+			<include refid="erpStorePayUnionpayColumns"/>
+		FROM erp_store_pay_unionpay a
+		<include refid="erpStorePayUnionpayJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_store_pay_unionpay(
+			id,
+			audit_status,
+			<if test="auditContent != null">audit_content,</if>
+			bank_id,
+			lian_dan,
+			store_photo_door_head,
+			store_photo_cashier_desk,
+			store_photo_environment,
+			additional_photo,
+			number,
+			machine_tool_number,
+			multi_account_application_form,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			sync_oem
+		) VALUES (
+			#{id},
+			#{auditStatus},
+			<if test="auditContent != null">#{auditContent},</if>
+			#{bankId},
+			#{lianDan},
+			#{storePhotoDoorHead},
+			#{storePhotoCashierDesk},
+			#{storePhotoEnvironment},
+			#{additionalPhoto},
+			#{number},
+			#{machineToolNumber},
+			#{multiAccountApplicationForm},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{syncOem}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_store_pay_unionpay 
+		<set>	
+			<if test="auditStatus != null">audit_status = #{auditStatus},</if>
+			<if test="auditContent != null">audit_content=#{auditContent},</if>
+			<if test="bankId != null">bank_id = #{bankId},</if>
+			<if test="lianDan != null">lian_dan = #{lianDan},</if>
+			<if test="storePhotoDoorHead != null">store_photo_door_head = #{storePhotoDoorHead},</if>
+			<if test="storePhotoCashierDesk != null">store_photo_cashier_desk = #{storePhotoCashierDesk},</if>
+			<if test="storePhotoEnvironment != null">store_photo_environment = #{storePhotoEnvironment},</if>
+			<if test="additionalPhoto != null">additional_photo = #{additionalPhoto},</if>
+			<if test="number != null">number=#{number},</if>
+			<if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+			<if test="updateDate != null">update_date = #{updateDate},</if>
+			<if test="remarks != null">remarks = #{remarks},</if>
+			<if test="machineToolNumber != null">machine_tool_number = #{machineToolNumber},</if>
+			<if test="multiAccountApplicationForm != null">multi_account_application_form = #{multiAccountApplicationForm},</if>
+			<if test="syncOem != null">sync_oem = #{syncOem}</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_store_pay_unionpay SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getPayAndBank" resultType="ErpStorePayUnionpay">
+		SELECT 
+			<include refid="erpStorePayUnionpayColumnsTwo"/>
+		FROM erp_store_pay_unionpay a LEFT JOIN erp_store_bank b ON a.bank_id=b.id
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findunionaudit" resultType="ErpStorePayUnionpay">
+	SELECT 
+		un.id AS "id",
+		un.audit_status AS "auditStatus",
+		un.audit_content AS"auditContent",
+		un.bank_id AS "bankId",
+		un.lian_dan AS "lianDan",
+		un.store_photo_door_head AS "storePhotoDoorHead",
+		un.store_photo_cashier_desk AS "storePhotoCashierDesk",
+		un.store_photo_environment AS "storePhotoEnvironment",
+		un.additional_photo AS "additionalPhoto",
+		un.number AS "number"
+	FROM `erp_store_info` a LEFT JOIN `erp_store_credentials` c ON a.credentials_id=c.id LEFT JOIN `erp_store_pay_unionpay` un ON un.id=a.unionpay_id 
+	LEFT JOIN `erp_store_bank` b ON un.bank_id=b.id
+	WHERE a.shop_info_id=#{shopid} AND a.sync_oem = 'N' <!-- AND un.audit_status=#{auditStatus} --> AND c.register_no=#{registerno} AND b.credit_card_no=#{bankno} 
+
+	</select>
+		
+</mapper>

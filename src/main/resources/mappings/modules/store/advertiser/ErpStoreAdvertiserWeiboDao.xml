@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.store.advertiser.dao.ErpStoreAdvertiserWeiboDao">
+
+	<sql id="erpStoreAdvertiserWeiboColumns">
+		a.id AS "id",
+		a.account_type AS "accountType",
+		a.account_no AS "accountNo",
+		a.account_password AS "accountPassword",
+		a.uid AS "uid",
+		a.nick_name AS "nickName",
+		a.relation_prove_letter AS "relationProveLetter",
+		a.adv_auth_letter AS "advAuthLetter",
+		a.promote_promise_letter AS "promotePromiseLetter",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS "auditContent",
+		a.PROC_INS_ID AS "procInsId",
+		a.open_or_trans AS "openOrTrans",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.proc_ins_id AS "procInsId"
+	</sql>
+	
+	<sql id="erpStoreAdvertiserWeiboJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpStoreAdvertiserWeibo">
+		SELECT 
+			<include refid="erpStoreAdvertiserWeiboColumns"/>
+		FROM erp_store_advertiser_weibo a
+		<include refid="erpStoreAdvertiserWeiboJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpStoreAdvertiserWeibo">
+		SELECT 
+			<include refid="erpStoreAdvertiserWeiboColumns"/>
+		FROM erp_store_advertiser_weibo a
+		<include refid="erpStoreAdvertiserWeiboJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="accountType != null and accountType != ''">
+				AND a.account_type = #{accountType}
+			</if>
+			<if test="accountNo != null and accountNo != ''">
+				AND a.account_no = #{accountNo}
+			</if>
+			<if test="uid != null and uid != ''">
+				AND a.uid = #{uid}
+			</if>
+			<if test="nickName != null and nickName != ''">
+				AND a.nick_name = #{nickName}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpStoreAdvertiserWeibo">
+		SELECT 
+			<include refid="erpStoreAdvertiserWeiboColumns"/>
+		FROM erp_store_advertiser_weibo a
+		<include refid="erpStoreAdvertiserWeiboJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_store_advertiser_weibo(
+			id,
+			<if test="accountType != null">account_type,</if>
+			account_no,
+			account_password,
+			uid,
+			nick_name,
+			relation_prove_letter,
+			adv_auth_letter,
+			promote_promise_letter,
+			audit_status,
+			audit_content,
+			open_or_trans,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			proc_ins_id
+		) VALUES (
+			#{id},
+			<if test="accountType != null">#{accountType},</if>
+			#{accountNo},
+			#{accountPassword},
+			#{uid},
+			#{nickName},
+			#{relationProveLetter},
+			#{advAuthLetter},
+			#{promotePromiseLetter},
+			#{auditStatus},
+			#{auditContent},
+			#{openOrTrans},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{procInsId}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_store_advertiser_weibo SET 	
+			<if test="accountType != null">account_type = #{accountType},</if>
+			account_no = #{accountNo},
+			account_password = #{accountPassword},
+			uid = #{uid},
+			nick_name = #{nickName},
+			relation_prove_letter = #{relationProveLetter},
+			adv_auth_letter = #{advAuthLetter},
+			promote_promise_letter = #{promotePromiseLetter},
+			audit_status=#{auditStatus},
+			audit_content=#{auditContent},
+			open_or_trans=#{openOrTrans},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			proc_ins_id =  #{procInsId},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<update id="updateOpenOrTrans">
+		UPDATE erp_store_advertiser_weibo SET 	
+			open_or_trans = #{openOrTrans}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_store_advertiser_weibo SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getByStoreId" resultType="ErpStoreAdvertiserWeibo">
+		SELECT 
+			<include refid="erpStoreAdvertiserWeiboColumns"/>
+			FROM erp_store_advertiser_weibo a 
+			LEFT JOIN erp_store_info b ON a.id = b.advertiser_weibo_id
+			<where>
+				a.del_flag = 0
+				AND b.id = #{storeId}
+			</where>
+	</select>
+
+	<select id="findByZhangbeiId" resultType="com.yunnex.ops.erp.modules.store.advertiser.dto.ShopWeiboResponseDto">
+		SELECT
+			shop.id AS "shopId", shop.`name` AS "shopName", weibo.account_no AS "weiboAccountNo", weibo.uid AS "weiboUid"
+		FROM
+			erp_shop_info shop
+		LEFT JOIN erp_store_info store ON shop.id = store.shop_info_id
+		LEFT JOIN erp_store_advertiser_weibo weibo ON store.advertiser_weibo_id = weibo.id
+		WHERE
+		    shop.zhangbei_id = #{zhangbeiId}
+		AND shop.del_flag = '0'
+		AND store.del_flag = '0'
+		AND weibo.del_flag = '0'
+	</select>
+	<select id="getByProcInsId" resultType="ErpStoreAdvertiserWeibo">
+		SELECT 
+			<include refid="erpStoreAdvertiserWeiboColumns"/>
+		FROM erp_store_advertiser_weibo a
+		<include refid="erpStoreAdvertiserWeiboJoins"/>
+		WHERE proc_ins_id = #{procInsId}
+	</select>
+	
+	<select id="queryRecordDataAuditStatus" resultType="java.lang.Integer" parameterType="com.yunnex.ops.erp.modules.store.basic.entity.ErpStoreInfo">
+		select
+			d.audit_status
+		from
+			erp_store_info a,
+			erp_store_advertiser_weibo d
+		where
+			a.advertiser_weibo_id = d.id
+			and a.del_flag = '0'
+			and d.del_flag = '0'
+			and d.audit_status != 0
+			and d.account_no = #{weibo.accountNo}
+			and a.shop_info_id = #{shopInfoId}
+			and a.id != #{id}
+		order by
+			d.update_date asc 
+		limit 1
+	</select>
+	
+	<update id="syncAuditStatusByAccount">
+		update
+			erp_store_advertiser_weibo
+		set
+			audit_status = #{auditStatus},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id}
+		where
+			id in(
+				select
+					d.advertiser_weibo_id
+				from
+					erp_store_info d
+				where
+					d.shop_info_id = #{shopInfoId}
+				and 
+					d.del_flag = '0'
+			)
+			and del_flag = '0'
+			and audit_status != 0
+			and account_no = #{accountNo}
+	</update>
+</mapper>

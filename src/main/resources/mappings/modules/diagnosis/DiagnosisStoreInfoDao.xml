@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.diagnosis.dao.DiagnosisStoreInfoDao">
+    
+	<sql id="diagnosisStoreInfoColumns">
+		a.id AS "id",
+		a.store_info_id AS "storeInfoId",
+		a.city_level AS "cityLevel",
+		a.consumption_area AS "consumptionArea",
+		a.consumption_types AS "consumptionTypes",
+		a.traffic_guide AS "trafficGuide",
+		a.person_avg_price_min AS "personAvgPriceMin",
+		a.person_avg_price_max AS "personAvgPriceMax",
+		a.table_avg_person_num_min AS "tableAvgPersonNumMin",
+		a.table_avg_person_num_max AS "tableAvgPersonNumMax",
+		a.gender_distribution AS "genderDistribution",
+		a.occupation_distributions AS "occupationDistributions",
+		a.age_distribution_min AS "ageDistributionMin",
+		a.age_distribution_max AS "ageDistributionMax",
+		a.dianping_store_name AS "dianpingStoreName",
+		a.dianping_link AS "dianpingLink",
+		a.dianping_ranking AS "dianpingRanking",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="diagnosisStoreInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="DiagnosisStoreInfo">
+		SELECT 
+			<include refid="diagnosisStoreInfoColumns"/>
+		FROM diagnosis_store_info a
+		<include refid="diagnosisStoreInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DiagnosisStoreInfo">
+		SELECT 
+			<include refid="diagnosisStoreInfoColumns"/>
+		FROM diagnosis_store_info a
+		<include refid="diagnosisStoreInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DiagnosisStoreInfo">
+		SELECT 
+			<include refid="diagnosisStoreInfoColumns"/>
+		FROM diagnosis_store_info a
+		<include refid="diagnosisStoreInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO diagnosis_store_info(
+			id,
+			store_info_id,
+			city_level,
+			consumption_area,
+			consumption_types,
+			traffic_guide,
+			person_avg_price_min,
+			person_avg_price_max,
+			table_avg_person_num_min,
+			table_avg_person_num_max,
+			gender_distribution,
+			occupation_distributions,
+			age_distribution_min,
+			age_distribution_max,
+			dianping_store_name,
+			dianping_link,
+			dianping_ranking,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{storeInfoId},
+			#{cityLevel},
+			#{consumptionArea},
+			#{consumptionTypes},
+			#{trafficGuide},
+			#{personAvgPriceMin},
+			#{personAvgPriceMax},
+			#{tableAvgPersonNumMin},
+			#{tableAvgPersonNumMax},
+			#{genderDistribution},
+			#{occupationDistributions},
+			#{ageDistributionMin},
+			#{ageDistributionMax},
+			#{dianpingStoreName},
+			#{dianpingLink},
+			#{dianpingRanking},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE diagnosis_store_info SET 	
+			store_info_id = #{storeInfoId},
+			city_level = #{cityLevel},
+			consumption_area = #{consumptionArea},
+			consumption_types = #{consumptionTypes},
+			traffic_guide = #{trafficGuide},
+			person_avg_price_min = #{personAvgPriceMin},
+			person_avg_price_max = #{personAvgPriceMax},
+			table_avg_person_num_min = #{tableAvgPersonNumMin},
+			table_avg_person_num_max = #{tableAvgPersonNumMax},
+			gender_distribution = #{genderDistribution},
+			occupation_distributions = #{occupationDistributions},
+			age_distribution_min = #{ageDistributionMin},
+			age_distribution_max = #{ageDistributionMax},
+			dianping_store_name = #{dianpingStoreName},
+			dianping_link = #{dianpingLink},
+			dianping_ranking = #{dianpingRanking},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE diagnosis_store_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+    
+    <!-- 不要改变"esi.id AS "storeInfoId"的优先位置, 否则会被覆盖. -->
+    <select id="getPromotionStores" resultType="DiagnosisStoreInfo">
+        SELECT
+            esi.id AS "storeInfoId",
+            <include refid="diagnosisStoreInfoColumns"/>,
+		    esi.short_name AS "erpStoreName",
+            esi.id AS "erpStoreInfo.id",
+		    esi.address AS "erpStoreInfo.address",
+			esi.city AS "erpStoreInfo.city",
+			esi.province AS "erpStoreInfo.province",
+			esi.area AS "erpStoreInfo.area",
+			esi.province_name AS "erpStoreInfo.provinceName",
+			esi.city_name AS "erpStoreInfo.cityName",
+			esi.area_name AS "erpStoreInfo.areaName",
+			esi.telephone AS "erpStoreInfo.telephone"
+		FROM
+			`jyk_order_choice_store` jocs
+		LEFT JOIN
+			erp_store_info esi
+		ON
+			jocs.choice_store = esi.id
+		LEFT JOIN
+			diagnosis_store_info a
+		ON
+			esi.id = a.store_info_id
+		WHERE
+			jocs.split_id = #{splitId}
+		AND
+			jocs.del_flag = 0
+    </select>
+    
+    <select id="findPromotionStore" resultType="DiagnosisStoreInfo">
+        SELECT 
+            <include refid="diagnosisStoreInfoColumns"/> 
+        FROM 
+            diagnosis_store_info a 
+        WHERE 
+            store_info_id = #{storeInfoId}
+        AND 
+            del_flag = 0
+    </select>
+
+</mapper>

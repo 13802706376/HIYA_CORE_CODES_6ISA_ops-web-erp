@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.promotion.dao.ErpPromoteDataWeiboDao">
+    
+	<select id="queryWeiboData" parameterType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataWeibo" resultType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataWeibo">
+		SELECT 
+			a.id AS "id",
+			a.split_order_id AS "splitOrderId",
+			a.data_time AS "dataTime",
+			a.advertising_plan AS "advertisingPlan",
+			a.exposure_num AS "exposureNum",
+			a.thousands_exposure_cost AS "thousandsExposureCost",
+			a.expenditure AS "expenditure",
+			a.propagate_num AS "propagateNum",
+			a.upvote_num AS "upvoteNum",
+			a.comment_num AS "commentNum",
+			a.flow_num AS "flowNum",
+			a.flow_percent AS "flowPercent",
+			a.single_flow_cost AS "singleFlowCost",
+			a.add_attention_num AS "addAttentionNum",
+			a.add_attention_percent AS "addAttentionPercent",
+			a.add_attention_cost AS "addAttentionCost",
+			a.card_click_num AS "cardClickNum",
+			a.interaction_num AS "interactionNum",
+			a.interaction_percent AS "interactionPercent",
+			a.single_interaction_cost AS "singleInteractionCost",
+			a.create_by AS "createBy.id",
+			a.create_date AS "createDate",
+			a.update_by AS "updateBy.id",
+			a.update_date AS "updateDate",
+			a.del_flag AS "delFlag",
+			a.remark AS "remark"
+		FROM erp_promote_data_weibo a
+		WHERE a.split_order_id = #{splitOrderId}
+		<if test="id !=null and id != ''">and a.id=#{id}</if>
+		<choose>
+			<when test="delFlag !=null and delFlag != ''">
+				and a.del_flag = #{delFlag}
+			</when>
+			<otherwise>
+				and a.del_flag = '0'
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.data_time DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_promote_data_weibo(
+			id,
+			split_order_id,
+			data_time,
+			<if test="advertisingPlan !=null">advertising_plan,</if>
+			<if test="exposureNum !=null">exposure_num,</if>
+			<if test="thousandsExposureCost !=null">thousands_exposure_cost,</if>
+			<if test="expenditure !=null">expenditure,</if>
+			<if test="propagateNum !=null">propagate_num,</if>
+			<if test="upvoteNum !=null">upvote_num,</if>
+			<if test="commentNum !=null">comment_num,</if>
+			<if test="flowNum !=null">flow_num,</if>
+			<if test="flowPercent !=null">flow_percent,</if>
+			<if test="singleFlowCost !=null">single_flow_cost,</if>
+			<if test="addAttentionNum !=null">add_attention_num,</if>
+			<if test="addAttentionPercent !=null">add_attention_percent,</if>
+			<if test="addAttentionCost !=null">add_attention_cost,</if>
+			<if test="cardClickNum !=null">card_click_num,</if>
+			<if test="interactionNum !=null">interaction_num,</if>
+			<if test="interactionPercent !=null">interaction_percent,</if>
+			<if test="singleInteractionCost !=null">single_interaction_cost,</if>
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remark
+		) VALUES (
+			#{id},
+			#{splitOrderId},
+			#{dataTime},
+			<if test="advertisingPlan !=null">#{advertisingPlan},</if>
+			<if test="exposureNum !=null">#{exposureNum},</if>
+			<if test="thousandsExposureCost !=null">#{thousandsExposureCost},</if>
+			<if test="expenditure !=null">#{expenditure},</if>
+			<if test="propagateNum !=null">#{propagateNum},</if>
+			<if test="upvoteNum !=null">#{upvoteNum},</if>
+			<if test="commentNum !=null">#{commentNum},</if>
+			<if test="flowNum !=null">#{flowNum},</if>
+			<if test="flowPercent !=null">#{flowPercent},</if>
+			<if test="singleFlowCost !=null">#{singleFlowCost},</if>
+			<if test="addAttentionNum !=null">#{addAttentionNum},</if>
+			<if test="addAttentionPercent !=null">#{addAttentionPercent},</if>
+			<if test="addAttentionCost !=null">#{addAttentionCost},</if>
+			<if test="cardClickNum !=null">#{cardClickNum},</if>
+			<if test="interactionNum !=null">#{interactionNum},</if>
+			<if test="interactionPercent !=null">#{interactionPercent},</if>
+			<if test="singleInteractionCost !=null">#{singleInteractionCost},</if>
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remark}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_promote_data_weibo 
+		<set>	
+			<if test="advertisingPlan !=null">advertising_plan = #{advertisingPlan},</if>
+			<if test="exposureNum !=null">exposure_num = #{exposureNum},</if>
+			<if test="thousandsExposureCost !=null">thousands_exposure_cost = #{thousandsExposureCost},</if>
+			<if test="expenditure !=null">expenditure = #{expenditure},</if>
+			<if test="propagateNum !=null">propagate_num = #{propagateNum},</if>
+			<if test="upvoteNum !=null">upvote_num = #{upvoteNum},</if>
+			<if test="commentNum !=null">comment_num = #{commentNum},</if>
+			<if test="flowNum !=null">flow_num = #{flowNum},</if>
+			<if test="flowPercent !=null">flow_percent = #{flowPercent},</if>
+			<if test="singleFlowCost !=null">single_flow_cost = #{singleFlowCost},</if>
+			<if test="addAttentionNum !=null">add_attention_num = #{addAttentionNum},</if>
+			<if test="addAttentionPercent !=null">add_attention_percent = #{addAttentionPercent},</if>
+			<if test="addAttentionCost !=null">add_attention_cost = #{addAttentionCost},</if>
+			<if test="cardClickNum !=null">card_click_num = #{cardClickNum},</if>
+			<if test="interactionNum !=null">interaction_num = #{interactionNum},</if>
+			<if test="interactionPercent !=null">interaction_percent = #{interactionPercent},</if>
+			<if test="singleInteractionCost !=null">single_interaction_cost = #{singleInteractionCost},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_promote_data_weibo SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="deleteBySplitIdAndDataTime" parameterType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataWeibo">
+		UPDATE erp_promote_data_weibo SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE split_order_id = #{splitOrderId}
+		    AND data_time = #{dataTime}
+	</update>
+	
+	<select id="queryWeiboDataSum" parameterType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataWeibo" resultType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataWeiboSum">
+		select
+			d.split_order_id as splitOrderId,
+			(select opc.promote_status from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '2') as promotionState,
+			(select (case when opc.promote_status='running' then '推广中' when opc.promote_status='success' then '推广结束' else '未开始' end) from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '1') as promotionStateTxt,
+			(select opc.promote_start_date from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '2') as promotionBeginDate,
+			(select opc.promote_end_date from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '2') as promotionEndDate,
+			sum(d.exposure_num) as exposureNumSum,
+			sum(d.expenditure) as expenditureSum,
+			ifnull(sum(d.expenditure)/ sum(d.exposure_num),0) as singleExposureCostSum,
+			sum(d.flow_num) as flowNumSum,
+			ifnull(sum(d.flow_num)/ sum(d.exposure_num),0) as flowSumPercent,
+			sum(d.interaction_num) as interactionNumSum
+		from
+			erp_promote_data_weibo d
+		where
+			d.split_order_id = #{splitOrderId}
+		and 
+			d.del_flag = '0'
+		group by
+			d.split_order_id
+	</select>
+	
+	<insert id="batchInsert">
+		INSERT INTO erp_promote_data_weibo(
+			id,
+			split_order_id,
+			data_time,
+			advertising_plan,
+			exposure_num,
+			thousands_exposure_cost,
+			expenditure,
+			propagate_num,
+			upvote_num,
+			comment_num,
+			flow_num,
+			flow_percent,
+			single_flow_cost,
+			add_attention_num,
+			add_attention_percent,
+			add_attention_cost,
+			card_click_num,
+			interaction_num,
+			interaction_percent,
+			single_interaction_cost,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remark
+		) VALUES 
+		<foreach collection ="list" item="weibo" separator =",">
+		(
+			uuid(),
+			#{splitOrderId},
+			#{weibo.dataTime},
+			<choose>
+				<when test="weibo.advertisingPlan!=null">#{weibo.advertisingPlan}</when>
+				<otherwise>''</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.exposureNum!=null">#{weibo.exposureNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.thousandsExposureCost!=null">#{weibo.thousandsExposureCost}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.expenditure!=null">#{weibo.expenditure}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.propagateNum!=null">#{weibo.propagateNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.upvoteNum!=null">#{weibo.upvoteNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.commentNum!=null">#{weibo.commentNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.flowNum!=null">#{weibo.flowNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.flowPercent!=null">#{weibo.flowPercent}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.singleFlowCost!=null">#{weibo.singleFlowCost}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.addAttentionNum!=null">#{weibo.addAttentionNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.addAttentionPercent!=null">#{weibo.addAttentionPercent}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.addAttentionCost!=null">#{weibo.addAttentionCost}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.cardClickNum!=null">#{weibo.cardClickNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.interactionNum!=null">#{weibo.interactionNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.interactionPercent!=null">#{weibo.interactionPercent}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="weibo.singleInteractionCost!=null">#{weibo.singleInteractionCost}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			#{createBy.id},
+			now(),
+			#{updateBy.id},
+			now(),
+			'importData'
+		)
+		</foreach>
+	</insert>
+	
+	<update id="batchDelete">
+		UPDATE erp_promote_data_weibo SET 
+			del_flag = '1'
+		WHERE split_order_id = #{splitOrderId}
+		    AND data_time in (<foreach collection ="list" item="weibo" separator =",">date(#{weibo.dataTime})</foreach>)
+	</update>
+	
+</mapper>

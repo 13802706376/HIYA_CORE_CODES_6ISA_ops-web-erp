@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.store.basic.dao.ErpStoreLegalPersonDao">
+    
+	<sql id="erpStoreLegalPersonColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.id_card_no AS "idCardNo",
+		a.id_card_start_date AS "idCardStartDate",
+		a.id_card_end_date AS "idCardEndDate",
+		a.id_card_front_photo AS "idCardFrontPhoto",
+		a.id_card_reverse_photo AS "idCardReversePhoto",
+		a.id_card_in_hand_photo AS "idCardInHandPhoto",
+		a.is_longterm AS "isLongterm",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpStoreLegalPersonJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpStoreLegalPerson">
+		SELECT 
+			<include refid="erpStoreLegalPersonColumns"/>
+		FROM erp_store_legal_person a
+		<include refid="erpStoreLegalPersonJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpStoreLegalPerson">
+		SELECT 
+			<include refid="erpStoreLegalPersonColumns"/>
+		FROM erp_store_legal_person a
+		<include refid="erpStoreLegalPersonJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="idCardNo != null and idCardNo != ''">
+				AND a.id_card_no LIKE 
+					<if test="dbName == 'oracle'">'%'||#{idCardNo}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{idCardNo}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{idCardNo},'%')</if>
+			</if>
+			<if test="idCardStartDate != null and idCardStartDate != ''">
+				AND a.id_card_start_date &gt;= #{idCardStartDate}
+			</if>
+			<if test="idCardEndDate != null and idCardEndDate != ''">
+				AND a.id_card_end_date &lt;= #{idCardEndDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpStoreLegalPerson">
+		SELECT 
+			<include refid="erpStoreLegalPersonColumns"/>
+		FROM erp_store_legal_person a
+		<include refid="erpStoreLegalPersonJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_store_legal_person(
+			id,
+			name,
+			<if test="idCardNo != null">id_card_no,</if>
+			id_card_start_date,
+			id_card_end_date,
+			id_card_front_photo,
+			id_card_reverse_photo,
+			id_card_in_hand_photo,
+			is_longterm,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{name},
+			<if test="idCardNo != null">#{idCardNo},</if>
+			#{idCardStartDate},
+			#{idCardEndDate},
+			#{idCardFrontPhoto},
+			#{idCardReversePhoto},
+			#{idCardInHandPhoto},
+			#{isLongterm},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_store_legal_person 
+		<set> 	
+			<if test="name != null">name = #{name},</if>
+			<if test="idCardNo != null">id_card_no = #{idCardNo},</if>
+			<if test="idCardStartDate != null">id_card_start_date = #{idCardStartDate},</if>
+			id_card_end_date = #{idCardEndDate},
+			<if test="idCardFrontPhoto != null">id_card_front_photo = #{idCardFrontPhoto},</if>
+			<if test="idCardReversePhoto != null">id_card_reverse_photo = #{idCardReversePhoto},</if>
+			<if test="idCardInHandPhoto != null">id_card_in_hand_photo = #{idCardInHandPhoto},</if>
+			<if test="isLongterm != null">is_longterm = #{isLongterm},</if>
+			<if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+			<if test="updateDate != null">update_date = #{updateDate},</if>
+			remarks = #{remarks}
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_store_legal_person SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

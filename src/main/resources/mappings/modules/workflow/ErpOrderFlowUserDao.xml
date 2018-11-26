@@ -1,0 +1,938 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+        namespace="com.yunnex.ops.erp.modules.workflow.user.dao.ErpOrderFlowUserDao">
+
+    <sql id="erpOrderFlowUserColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.split_id AS
+		"splitId",
+		a.flow_id AS "flowId",
+		a.user_id AS "user.id",
+		a.create_date
+		AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS
+		"updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.del_flag AS "delFlag",
+		u5.name AS "user.name",
+		a.flow_user_id AS "flowUserId"
+	</sql>
+
+    <sql id="erpOrderFlowUserColumnsTwo">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.split_id AS
+		"splitId",
+		a.flow_id AS "flowId",
+		a.user_id AS "user.id",
+		a.create_date
+		AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS
+		"updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.del_flag AS "delFlag",
+		a.flow_user_id AS "flowUserId"
+	</sql>
+
+    <sql id="erpOrderFlowUserJoins">
+		LEFT JOIN sys_user u5 ON u5.id = a.user_id
+	</sql>
+
+    <select id="get" resultType="ErpOrderFlowUser">
+        SELECT
+        <include refid="erpOrderFlowUserColumns"/>
+        FROM erp_order_flow_user a
+        <include refid="erpOrderFlowUserJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findListByFlowId" resultType="ErpOrderFlowUser">
+        SELECT
+        <include refid="erpOrderFlowUserColumns"/>
+        FROM erp_order_flow_user a
+        <include refid="erpOrderFlowUserJoins"/>
+        WHERE a.flow_id=#{procInsId}
+        and a.flow_user_id =#{flowUserId}
+    </select>
+
+    <select id="findListByFlowIdAndUserId" resultType="ErpOrderFlowUser">
+        SELECT
+        <include refid="erpOrderFlowUserColumns"/>
+        FROM erp_order_flow_user a
+        <include refid="erpOrderFlowUserJoins"/>
+        WHERE a.flow_id=#{procInsId}
+        and a.user_id =#{userId}
+    </select>
+
+    <select id="findBySplitIdAndFlowUser" resultType="ErpOrderFlowUser">
+        SELECT
+        <include refid="erpOrderFlowUserColumns"/>
+        FROM erp_order_flow_user a
+        <include refid="erpOrderFlowUserJoins"/>
+        WHERE a.split_id=#{splitId}
+        and a.flow_user_id =#{flowUserId}
+        and a.del_flag = '0'
+    </select>
+
+    <select id="findByProcInsIdAndRoleName" resultType="ErpOrderFlowUser">
+		SELECT
+			id AS id,
+			user_id AS "user.id",
+			(select u.name from sys_user u where id=user_id) AS "user.name"
+		FROM
+			`erp_order_flow_user`
+		WHERE
+			flow_id = #{procInsId}
+		AND 
+			flow_user_id = #{roleName}
+	</select>
+	
+	 <select id="findByProcInsId" resultType="java.util.Map">
+		SELECT
+			a.flow_user_id as  role,
+			u.id as userId,
+			u.name as name
+		FROM
+			erp_order_flow_user a 
+			left join sys_user u on a.user_id = u.id
+		WHERE
+			a.flow_id = #{procInsId}
+			and a.del_flag = '0'
+	</select>
+
+
+    <select id="findList" resultType="ErpOrderFlowUser">
+        SELECT
+        <include refid="erpOrderFlowUserColumns"/>
+        FROM erp_order_flow_user a
+        <include refid="erpOrderFlowUserJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpOrderFlowUser">
+        SELECT
+        <include refid="erpOrderFlowUserColumns"/>
+        FROM erp_order_flow_user a
+        <include refid="erpOrderFlowUserJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+		INSERT INTO erp_order_flow_user(
+		id,
+		order_id,
+		split_id,
+		flow_id,
+		user_id,
+		flow_user_id,
+		create_date,
+		create_by,
+		update_date,
+		update_by,
+		remark,
+		del_flag
+		) VALUES (
+		#{id},
+		#{orderId},
+		#{splitId},
+		#{flowId},
+		#{user.id},
+		#{flowUserId},
+		#{createDate},
+		#{createBy.id},
+		#{updateDate},
+		#{updateBy.id},
+		#{remark},
+		#{delFlag}
+		)
+	</insert>
+
+    <update id="update">
+		UPDATE erp_order_flow_user SET
+		order_id = #{orderId},
+		split_id = #{splitId},
+		flow_id = #{flowId},
+		user_id = #{user.id},
+		update_date = #{updateDate},
+		update_by = #{updateBy.id},
+		remark =
+		#{remark}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="changeRoleUser">
+		UPDATE erp_order_flow_user ft SET
+		ft.user_id = #{userId}
+		WHERE ft.flow_id = #{procInsId}
+		and ft.flow_user_id=#{roleName}
+	</update>
+
+    <update id="delete">
+		UPDATE erp_order_flow_user SET
+		del_flag =
+		#{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+    <select id="findtest" resultType="ErpOrderFlowUser">
+	SELECT DISTINCT order_id AS "orderId",split_id AS "splitId" FROM `erp_order_flow_user` b 
+	WHERE b.user_id IN(SELECT user_id FROM `erp_team_user` WHERE team_id IN (SELECT a.team_id FROM `erp_team_user` a WHERE  a.leader_flag='1' AND user_id='1'))
+
+	</select>
+
+
+    <select id="findstatistics" resultType="ErpOrderFlowUser">
+        SELECT
+        <!-- <include refid="erpOrderFlowUserColumnsTwo" />, -->
+        s.name AS "planningExpert",s1.name AS "operationAdviser",o.buy_date AS "payDate",o.order_type AS
+        "orderType",o.order_number AS "orderNum",
+        o.shop_name AS "shopName",o.agent_name AS "agentName",os.split_id AS "splitIds",os.good_name AS
+        "goodName",os.num AS "num",os.create_date AS "createDates",GROUP_CONCAT(DISTINCT p.promotion_channel) AS
+        "promotionChannel"
+        ,f.create_date AS "momoDate",f1.create_date AS "friendsDate",os.comment_count AS "commentCount",
+        f2.create_date AS "weiboDate",f3.create_date AS "createPresentation",
+        os.remark AS "remarks",os.hurry_flag AS "hurryFlag",o.order_source AS "orderSource",os.status AS "osStatuss",
+        os.PROC_INS_ID AS "pid",os.id AS "sid",os.shop_id AS "shopid",
+        os.online_use_time AS "onlineUseTime", os.pending_prod_flag AS "pendingProduced", os.pending_reason AS
+        "pendingReason",os.timeout_flag AS "timeoutFlag",max(arte.status) AS "taskStatus",os.online_date AS
+        "onlineDate",os.manual_date AS "manualDate"
+        FROM `erp_order_split_info` os
+        <!-- LEFT JOIN `erp_order_flow_user` a ON a.split_id=os.id -->
+        LEFT JOIN `ACT_HI_TASKINST` aht ON aht.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        LEFT JOIN `ACT_RU_TASK` art ON art.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        <!-- LEFT JOIN `jyk_flow` j ON a.split_id=j.split_id -->
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'PlanningExpert')
+        mix1 ON os.id = mix1.split_id
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'OperationAdviser')
+        mix2 ON os.id = mix2.split_id
+        <!-- LEFT JOIN `erp_order_original_info` o ON a.order_id=o.id   -->
+        LEFT JOIN `erp_order_original_info` o ON os.order_id=o.id
+        <!-- LEFT JOIN `jyk_order_promotion_channel` p ON a.split_id=p.split_id -->
+        LEFT JOIN `jyk_order_promotion_channel` p ON os.id=p.split_id
+        <!-- LEFT JOIN `sys_user` s ON s.id=j.planning_expert -->
+        <!-- LEFT JOIN `sys_user` s1 ON s1.id=j.operation_adviser -->
+        LEFT JOIN `sys_user` s ON s.id = mix1.user_id
+        LEFT JOIN `sys_user` s1 ON s1.id = mix2.user_id
+        LEFT JOIN `ACT_RU_TASK_EXT` arte ON (art.`ID_`=arte.`task_id` AND arte.`status`='3')
+        LEFT JOIN `erp_order_file` f ON (os.PROC_INS_ID=f.proc_ins_id AND
+        f.file_title="陌陌推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f1 ON (os.PROC_INS_ID=f1.proc_ins_id AND
+        f1.file_title="朋友圈推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f2 ON (os.PROC_INS_ID=f2.proc_ins_id AND
+        f2.file_title="微博推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f3 ON (os.PROC_INS_ID=f3.proc_ins_id AND
+        f3.file_title="效果报告")
+        WHERE (aht.`ASSIGNEE_` IN(SELECT user_id FROM `erp_team_user` WHERE team_id IN (SELECT b.team_id FROM
+        `erp_team_user` b WHERE b.leader_flag='1' AND user_id=#{userId}))
+        OR art.`ASSIGNEE_` IN(SELECT user_id FROM `erp_team_user` WHERE team_id IN (SELECT b.team_id FROM
+        `erp_team_user` b WHERE b.leader_flag='1' AND user_id=#{userId})))
+        AND o.cancel=0
+        <if test="orderNum != null and orderNum != ''">
+            AND o.order_number LIKE CONCAT('%',#{orderNum},'%')
+        </if>
+        <if test="shopName != null and shopName != ''">
+            AND o.shop_name LIKE CONCAT('%',#{shopName},'%')
+        </if>
+        <if test="orderType != null and orderType != ''">
+            <if test="orderType == '1'.toString()">
+                AND o.buy_date&gt;=#{starDate} AND o.buy_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '2'.toString()">
+                AND os.create_date&gt;=#{starDate} AND os.create_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '3'.toString()">
+                AND ((os.online_date&gt;=#{starDate} AND os.online_date &lt;=#{endDate}) OR (os.manual_date&gt;=#{starDate}
+                AND os.manual_date &lt;=#{endDate}))
+            </if>
+            <if test="orderType == '4'.toString()">
+                AND os.status='1' AND os.update_date&gt;=#{starDate} AND os.update_date &lt;=#{endDate}
+            </if>
+        </if>
+        GROUP BY os.id,os.`order_id` ORDER BY os.create_date
+    </select>
+    
+    <select id="findstatistics2" resultType="ErpOrderFlowUser">
+        SELECT
+        <!-- <include refid="erpOrderFlowUserColumnsTwo" />, -->
+        s.name AS "planningExpert",s1.name AS "operationAdviser",o.buy_date AS "payDate",o.order_type AS
+        "orderType",o.order_number AS "orderNum",
+        o.shop_name AS "shopName",o.agent_name AS "agentName",os.split_id AS "splitIds",os.good_name AS
+        "goodName",os.num AS "num",os.create_date AS "createDates",GROUP_CONCAT(DISTINCT p.promotion_channel) AS
+        "promotionChannel"
+        ,f.create_date AS "momoDate",f1.create_date AS "friendsDate",os.comment_count AS "commentCount",
+        f2.create_date AS "weiboDate",f3.create_date AS "createPresentation",
+        os.remark AS "remarks",os.hurry_flag AS "hurryFlag",o.order_source AS "orderSource",os.status AS "osStatuss",
+        os.PROC_INS_ID AS "pid",os.id AS "sid",os.shop_id AS "shopid",
+        os.online_use_time AS "onlineUseTime", os.pending_prod_flag AS "pendingProduced", os.pending_reason AS
+        "pendingReason",os.timeout_flag AS "timeoutFlag",max(arte.status) AS "taskStatus",os.online_date AS
+        "onlineDate",os.manual_date AS "manualDate"
+        FROM `erp_order_split_info` os
+        <!-- LEFT JOIN `erp_order_flow_user` a ON a.split_id=os.id -->
+        LEFT JOIN `ACT_HI_TASKINST` aht ON aht.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        LEFT JOIN `ACT_RU_TASK` art ON art.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        <!-- LEFT JOIN `jyk_flow` j ON a.split_id=j.split_id -->
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'PlanningExpert')
+        mix1 ON os.id = mix1.split_id
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'OperationAdviser')
+        mix2 ON os.id = mix2.split_id
+        <!-- LEFT JOIN `erp_order_original_info` o ON a.order_id=o.id   -->
+        LEFT JOIN `erp_order_original_info` o ON os.order_id=o.id
+        <!-- LEFT JOIN `jyk_order_promotion_channel` p ON a.split_id=p.split_id -->
+        LEFT JOIN `jyk_order_promotion_channel` p ON os.id=p.split_id
+        <!-- LEFT JOIN `sys_user` s ON s.id=j.planning_expert -->
+        <!-- LEFT JOIN `sys_user` s1 ON s1.id=j.operation_adviser -->
+        LEFT JOIN `sys_user` s ON s.id = mix1.user_id
+        LEFT JOIN `sys_user` s1 ON s1.id = mix2.user_id
+        LEFT JOIN `ACT_RU_TASK_EXT` arte ON (art.`ID_`=arte.`task_id` AND arte.`status`='3')
+        LEFT JOIN `erp_order_file` f ON (os.PROC_INS_ID=f.proc_ins_id AND
+        f.file_title="陌陌推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f1 ON (os.PROC_INS_ID=f1.proc_ins_id AND
+        f1.file_title="朋友圈推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f2 ON (os.PROC_INS_ID=f2.proc_ins_id AND
+        f2.file_title="微博推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f3 ON (os.PROC_INS_ID=f3.proc_ins_id AND
+        f3.file_title="效果报告")
+        WHERE (aht.`ASSIGNEE_` IN(SELECT user_id FROM `erp_team_user` WHERE team_id IN (SELECT b.team_id FROM
+        `erp_team_user` b WHERE b.leader_flag='1' AND user_id=#{userId}))
+        OR art.`ASSIGNEE_` IN(SELECT user_id FROM `erp_team_user` WHERE team_id IN (SELECT b.team_id FROM
+        `erp_team_user` b WHERE b.leader_flag='1' AND user_id=#{userId})))
+        AND o.cancel=0
+        and o.order_status !=-1
+        and os.status ='1'
+        <if test="orderNum != null and orderNum != ''">
+            AND o.order_number LIKE CONCAT('%',#{orderNum},'%')
+        </if>
+        <if test="shopName != null and shopName != ''">
+            AND o.shop_name LIKE CONCAT('%',#{shopName},'%')
+        </if>
+        <if test="orderType != null and orderType != ''">
+            <if test="orderType == '1'.toString()">
+                AND o.buy_date&gt;=#{starDate} AND o.buy_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '2'.toString()">
+                AND os.create_date&gt;=#{starDate} AND os.create_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '3'.toString()">
+                AND ((os.online_date&gt;=#{starDate} AND os.online_date &lt;=#{endDate}) OR (os.manual_date&gt;=#{starDate}
+                AND os.manual_date &lt;=#{endDate}))
+            </if>
+            <if test="orderType == '4'.toString()">
+                AND os.status='1' AND os.update_date&gt;=#{starDate} AND os.update_date &lt;=#{endDate}
+            </if>
+        </if>
+        GROUP BY os.id,os.`order_id` ORDER BY os.create_date
+    </select>
+    
+    <!--针对执行中的任务存在超时的订单数  -->
+    <select id="findoverTimestatistics" resultType="ErpOrderFlowUser">
+        SELECT
+        <!-- <include refid="erpOrderFlowUserColumnsTwo" />, -->
+        s.name AS "planningExpert",s1.name AS "operationAdviser",o.buy_date AS "payDate",o.order_type AS
+        "orderType",o.order_number AS "orderNum",
+        o.shop_name AS "shopName",o.agent_name AS "agentName",os.split_id AS "splitIds",os.good_name AS
+        "goodName",os.num AS "num",os.create_date AS "createDates",GROUP_CONCAT(DISTINCT p.promotion_channel) AS
+        "promotionChannel"
+        ,f.create_date AS "momoDate",f1.create_date AS "friendsDate",os.comment_count AS "commentCount",
+        f2.create_date AS "weiboDate",f3.create_date AS "createPresentation",
+        os.remark AS "remarks",os.hurry_flag AS "hurryFlag",o.order_source AS "orderSource",os.status AS "osStatuss",
+        os.PROC_INS_ID AS "pid",os.id AS "sid",os.shop_id AS "shopid",
+        os.online_use_time AS "onlineUseTime", os.pending_prod_flag AS "pendingProduced", os.pending_reason AS
+        "pendingReason",os.timeout_flag AS "timeoutFlag",arte.status AS "taskStatus",os.online_date AS
+        "onlineDate",os.manual_date AS "manualDate"
+        FROM `erp_order_split_info` os
+        <!-- LEFT JOIN `erp_order_flow_user` a ON a.split_id=os.id -->
+        LEFT JOIN `ACT_HI_TASKINST` aht ON aht.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        LEFT JOIN `ACT_RU_TASK` art ON art.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        <!-- LEFT JOIN `jyk_flow` j ON a.split_id=j.split_id -->
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'PlanningExpert')
+        mix1 ON os.id = mix1.split_id
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'OperationAdviser')
+        mix2 ON os.id = mix2.split_id
+        <!-- LEFT JOIN `erp_order_original_info` o ON a.order_id=o.id   -->
+        LEFT JOIN `erp_order_original_info` o ON os.order_id=o.id
+        <!-- LEFT JOIN `jyk_order_promotion_channel` p ON a.split_id=p.split_id -->
+        LEFT JOIN `jyk_order_promotion_channel` p ON os.id=p.split_id
+        <!-- LEFT JOIN `sys_user` s ON s.id=j.planning_expert -->
+        <!-- LEFT JOIN `sys_user` s1 ON s1.id=j.operation_adviser -->
+        LEFT JOIN `sys_user` s ON s.id = mix1.user_id
+        LEFT JOIN `sys_user` s1 ON s1.id = mix2.user_id
+        LEFT JOIN `ACT_RU_TASK_EXT` arte ON art.`ID_`=arte.`task_id`
+        LEFT JOIN `erp_order_file` f ON (os.PROC_INS_ID=f.proc_ins_id AND
+        f.file_title="陌陌推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f1 ON (os.PROC_INS_ID=f1.proc_ins_id AND
+        f1.file_title="朋友圈推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f2 ON (os.PROC_INS_ID=f2.proc_ins_id AND
+        f2.file_title="微博推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f3 ON (os.PROC_INS_ID=f3.proc_ins_id AND
+        f3.file_title="效果报告")
+        WHERE (aht.`ASSIGNEE_` IN(SELECT user_id FROM `erp_team_user` WHERE team_id IN (SELECT b.team_id FROM
+        `erp_team_user` b WHERE b.leader_flag='1' AND user_id=#{userId}))
+        OR art.`ASSIGNEE_` IN(SELECT user_id FROM `erp_team_user` WHERE team_id IN (SELECT b.team_id FROM
+        `erp_team_user` b WHERE b.leader_flag='1' AND user_id=#{userId})))
+        AND o.cancel=0 AND arte.`status`='3'
+        <if test="orderNum != null and orderNum != ''">
+            AND o.order_number LIKE CONCAT('%',#{orderNum},'%')
+        </if>
+        <if test="shopName != null and shopName != ''">
+            AND o.shop_name LIKE CONCAT('%',#{shopName},'%')
+        </if>
+        <if test="orderType != null and orderType != ''">
+            <if test="orderType == '1'.toString()">
+                AND o.buy_date&gt;=#{starDate} AND o.buy_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '2'.toString()">
+                AND os.create_date&gt;=#{starDate} AND os.create_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '3'.toString()">
+                AND ((os.online_date&gt;=#{starDate} AND os.online_date &lt;=#{endDate}) OR (os.manual_date&gt;=#{starDate}
+                AND os.manual_date &lt;=#{endDate}))
+            </if>
+            <if test="orderType == '4'.toString()">
+                AND os.status='1' AND os.update_date&gt;=#{starDate} AND os.update_date &lt;=#{endDate}
+            </if>
+        </if>
+        GROUP BY os.id,os.`order_id` ORDER BY os.create_date
+    </select>
+
+    <!--针对执行中的任务存在超时的订单数  -->
+    <select id="findoverTimewhereteamId" resultType="ErpOrderFlowUser">
+        SELECT
+        <!-- <include refid="erpOrderFlowUserColumnsTwo" />, -->
+        s.name AS "planningExpert",s1.name AS "operationAdviser",o.buy_date AS "payDate",o.order_type AS
+        "orderType",o.order_number AS "orderNum",
+        o.shop_name AS "shopName",o.agent_name AS "agentName",os.split_id AS "splitIds",os.good_name AS
+        "goodName",os.num AS "num",os.create_date AS "createDates",GROUP_CONCAT(DISTINCT p.promotion_channel) AS
+        "promotionChannel"
+        ,f.create_date AS "momoDate",f1.create_date AS "friendsDate",os.comment_count AS "commentCount",
+        f2.create_date AS "weiboDate",f3.create_date AS "createPresentation",
+        os.remark AS "remarks",os.hurry_flag AS "hurryFlag",o.order_source AS "orderSource",os.status AS "osStatuss",
+        os.PROC_INS_ID AS "pid",os.id AS "sid",os.shop_id AS "shopid",
+        os.online_use_time AS "onlineUseTime", os.pending_prod_flag AS "pendingProduced", os.pending_reason AS
+        "pendingReason",os.timeout_flag AS "timeoutFlag",arte.status AS "taskStatus",os.online_date AS
+        "onlineDate",os.manual_date AS "manualDate"
+        FROM `erp_order_split_info` os
+        <!-- LEFT JOIN `erp_order_flow_user` a ON a.split_id=os.id -->
+        LEFT JOIN `ACT_HI_TASKINST` aht ON aht.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        LEFT JOIN `ACT_RU_TASK` art ON art.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        <!-- LEFT JOIN `jyk_flow` j ON a.split_id=j.split_id -->
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'PlanningExpert')
+        mix1 ON os.id = mix1.split_id
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'OperationAdviser')
+        mix2 ON os.id = mix2.split_id
+        <!-- LEFT JOIN `erp_order_original_info` o ON a.order_id=o.id   -->
+        LEFT JOIN `erp_order_original_info` o ON os.order_id=o.id
+        <!-- LEFT JOIN `jyk_order_promotion_channel` p ON a.split_id=p.split_id -->
+        LEFT JOIN `jyk_order_promotion_channel` p ON os.id=p.split_id
+        <!-- LEFT JOIN `sys_user` s ON s.id=j.planning_expert -->
+        <!-- LEFT JOIN `sys_user` s1 ON s1.id=j.operation_adviser -->
+        LEFT JOIN `sys_user` s ON s.id = mix1.user_id
+        LEFT JOIN `sys_user` s1 ON s1.id = mix2.user_id
+        LEFT JOIN `ACT_RU_TASK_EXT` arte ON art.`ID_`=arte.`task_id`
+        LEFT JOIN `erp_order_file` f ON (os.PROC_INS_ID=f.proc_ins_id AND
+        f.file_title="陌陌推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f1 ON (os.PROC_INS_ID=f1.proc_ins_id AND
+        f1.file_title="朋友圈推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f2 ON (os.PROC_INS_ID=f2.proc_ins_id AND
+        f2.file_title="微博推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f3 ON (os.PROC_INS_ID=f3.proc_ins_id AND
+        f3.file_title="效果报告")
+        WHERE (aht.`ASSIGNEE_` IN(SELECT user_id FROM `erp_team_user` WHERE team_id=#{teamId}) OR art.`ASSIGNEE_`
+        IN(SELECT user_id FROM `erp_team_user` WHERE team_id=#{teamId}))
+        AND o.cancel=0 AND arte.`status`='3'
+        <if test="orderNum != null and orderNum != ''">
+            AND o.order_number LIKE CONCAT('%',#{orderNum},'%')
+        </if>
+        <if test="shopName != null and shopName != ''">
+            AND o.shop_name LIKE CONCAT('%',#{shopName},'%')
+        </if>
+        <if test="orderType != null and orderType != ''">
+            <if test="orderType == '1'.toString()">
+                AND o.buy_date&gt;=#{starDate} AND o.buy_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '2'.toString()">
+                AND os.create_date&gt;=#{starDate} AND os.create_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '3'.toString()">
+                AND ((os.online_date&gt;=#{starDate} AND os.online_date &lt;=#{endDate}) OR (os.manual_date&gt;=#{starDate}
+                AND os.manual_date &lt;=#{endDate}))
+            </if>
+            <if test="orderType == '4'.toString()">
+                AND os.status='1' AND os.update_date&gt;=#{starDate} AND os.update_date &lt;=#{endDate}
+            </if>
+        </if>
+        GROUP BY os.id,os.`order_id` ORDER BY os.create_date
+    </select>
+
+    <select id="findstatisticswhereteamId" resultType="ErpOrderFlowUser">
+        SELECT
+        <!-- <include refid="erpOrderFlowUserColumnsTwo" />, -->
+        s.name AS "planningExpert",s1.name AS "operationAdviser",o.buy_date AS "payDate",o.order_type AS
+        "orderType",o.order_number AS "orderNum",
+        o.shop_name AS "shopName",o.agent_name AS "agentName",os.split_id AS "splitIds",os.good_name AS
+        "goodName",os.num AS "num",os.create_date AS "createDates",GROUP_CONCAT(DISTINCT p.promotion_channel) AS
+        "promotionChannel"
+        ,f.create_date AS "momoDate",f1.create_date AS "friendsDate",os.comment_count AS "commentCount",
+        f2.create_date AS "weiboDate",f3.create_date AS "createPresentation",
+        os.remark AS "remarks",os.hurry_flag AS "hurryFlag",o.order_source AS "orderSource",os.status AS "osStatuss",
+        os.PROC_INS_ID AS "pid",os.id AS "sid",os.shop_id AS "shopid",
+        os.online_use_time AS "onlineUseTime", os.pending_prod_flag AS "pendingProduced", os.pending_reason AS
+        "pendingReason",os.timeout_flag AS "timeoutFlag",arte.status AS "taskStatus",os.online_date AS
+        "onlineDate",os.manual_date AS "manualDate"
+        FROM `erp_order_split_info` os
+        <!-- LEFT JOIN `erp_order_flow_user` a ON a.split_id=os.id -->
+        LEFT JOIN `ACT_HI_TASKINST` aht ON aht.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        LEFT JOIN `ACT_RU_TASK` art ON art.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        <!-- LEFT JOIN `jyk_flow` j ON a.split_id=j.split_id -->
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'PlanningExpert')
+        mix1 ON os.id = mix1.split_id
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'OperationAdviser')
+        mix2 ON os.id = mix2.split_id
+        <!-- LEFT JOIN `erp_order_original_info` o ON a.order_id=o.id   -->
+        LEFT JOIN `erp_order_original_info` o ON os.order_id=o.id
+        <!-- LEFT JOIN `jyk_order_promotion_channel` p ON a.split_id=p.split_id -->
+        LEFT JOIN `jyk_order_promotion_channel` p ON os.id=p.split_id
+        <!-- LEFT JOIN `sys_user` s ON s.id=j.planning_expert -->
+        <!-- LEFT JOIN `sys_user` s1 ON s1.id=j.operation_adviser -->
+        LEFT JOIN `sys_user` s ON s.id = mix1.user_id
+        LEFT JOIN `sys_user` s1 ON s1.id = mix2.user_id
+        LEFT JOIN `ACT_RU_TASK_EXT` arte ON (art.`ID_`=arte.`task_id` AND arte.`status`='3')
+        LEFT JOIN `erp_order_file` f ON (os.PROC_INS_ID=f.proc_ins_id AND
+        f.file_title="陌陌推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f1 ON (os.PROC_INS_ID=f1.proc_ins_id AND
+        f1.file_title="朋友圈推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f2 ON (os.PROC_INS_ID=f2.proc_ins_id AND
+        f2.file_title="微博推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f3 ON (os.PROC_INS_ID=f3.proc_ins_id AND
+        f3.file_title="效果报告")
+        WHERE (aht.`ASSIGNEE_` IN(SELECT user_id FROM `erp_team_user` WHERE team_id=#{teamId}) OR art.`ASSIGNEE_`
+        IN(SELECT user_id FROM `erp_team_user` WHERE team_id=#{teamId}))
+        AND o.cancel=0
+        <if test="orderNum != null and orderNum != ''">
+            AND o.order_number LIKE CONCAT('%',#{orderNum},'%')
+        </if>
+        <if test="shopName != null and shopName != ''">
+            AND o.shop_name LIKE CONCAT('%',#{shopName},'%')
+        </if>
+        <if test="orderType != null and orderType != ''">
+            <if test="orderType == '1'.toString()">
+                AND o.buy_date&gt;=#{starDate} AND o.buy_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '2'.toString()">
+                AND os.create_date&gt;=#{starDate} AND os.create_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '3'.toString()">
+                AND ((os.online_date&gt;=#{starDate} AND os.online_date &lt;=#{endDate}) OR (os.manual_date&gt;=#{starDate}
+                AND os.manual_date &lt;=#{endDate}))
+            </if>
+            <if test="orderType == '4'.toString()">
+                AND os.status='1' AND os.update_date&gt;=#{starDate} AND os.update_date &lt;=#{endDate}
+            </if>
+        </if>
+        GROUP BY os.id,os.`order_id` ORDER BY os.create_date
+    </select>
+    
+    <select id="findstatisticswhereteamId2" resultType="ErpOrderFlowUser">
+        SELECT
+        <!-- <include refid="erpOrderFlowUserColumnsTwo" />, -->
+        s.name AS "planningExpert",s1.name AS "operationAdviser",o.buy_date AS "payDate",o.order_type AS
+        "orderType",o.order_number AS "orderNum",
+        o.shop_name AS "shopName",o.agent_name AS "agentName",os.split_id AS "splitIds",os.good_name AS
+        "goodName",os.num AS "num",os.create_date AS "createDates",GROUP_CONCAT(DISTINCT p.promotion_channel) AS
+        "promotionChannel"
+        ,f.create_date AS "momoDate",f1.create_date AS "friendsDate",os.comment_count AS "commentCount",
+        f2.create_date AS "weiboDate",f3.create_date AS "createPresentation",
+        os.remark AS "remarks",os.hurry_flag AS "hurryFlag",o.order_source AS "orderSource",os.status AS "osStatuss",
+        os.PROC_INS_ID AS "pid",os.id AS "sid",os.shop_id AS "shopid",
+        os.online_use_time AS "onlineUseTime", os.pending_prod_flag AS "pendingProduced", os.pending_reason AS
+        "pendingReason",os.timeout_flag AS "timeoutFlag",arte.status AS "taskStatus",os.online_date AS
+        "onlineDate",os.manual_date AS "manualDate"
+        FROM `erp_order_split_info` os
+        <!-- LEFT JOIN `erp_order_flow_user` a ON a.split_id=os.id -->
+        LEFT JOIN `ACT_HI_TASKINST` aht ON aht.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        LEFT JOIN `ACT_RU_TASK` art ON art.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        <!-- LEFT JOIN `jyk_flow` j ON a.split_id=j.split_id -->
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'PlanningExpert')
+        mix1 ON os.id = mix1.split_id
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'OperationAdviser')
+        mix2 ON os.id = mix2.split_id
+        <!-- LEFT JOIN `erp_order_original_info` o ON a.order_id=o.id   -->
+        LEFT JOIN `erp_order_original_info` o ON os.order_id=o.id
+        <!-- LEFT JOIN `jyk_order_promotion_channel` p ON a.split_id=p.split_id -->
+        LEFT JOIN `jyk_order_promotion_channel` p ON os.id=p.split_id
+        <!-- LEFT JOIN `sys_user` s ON s.id=j.planning_expert -->
+        <!-- LEFT JOIN `sys_user` s1 ON s1.id=j.operation_adviser -->
+        LEFT JOIN `sys_user` s ON s.id = mix1.user_id
+        LEFT JOIN `sys_user` s1 ON s1.id = mix2.user_id
+        LEFT JOIN `ACT_RU_TASK_EXT` arte ON (art.`ID_`=arte.`task_id` AND arte.`status`='3')
+        LEFT JOIN `erp_order_file` f ON (os.PROC_INS_ID=f.proc_ins_id AND
+        f.file_title="陌陌推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f1 ON (os.PROC_INS_ID=f1.proc_ins_id AND
+        f1.file_title="朋友圈推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f2 ON (os.PROC_INS_ID=f2.proc_ins_id AND
+        f2.file_title="微博推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f3 ON (os.PROC_INS_ID=f3.proc_ins_id AND
+        f3.file_title="效果报告")
+        WHERE (aht.`ASSIGNEE_` IN(SELECT user_id FROM `erp_team_user` WHERE team_id=#{teamId}) OR art.`ASSIGNEE_`
+        IN(SELECT user_id FROM `erp_team_user` WHERE team_id=#{teamId}))
+        AND o.cancel=0
+        AND o.order_status !=-1
+        and os.status ='1'
+        <if test="orderNum != null and orderNum != ''">
+            AND o.order_number LIKE CONCAT('%',#{orderNum},'%')
+        </if>
+        <if test="shopName != null and shopName != ''">
+            AND o.shop_name LIKE CONCAT('%',#{shopName},'%')
+        </if>
+        <if test="orderType != null and orderType != ''">
+            <if test="orderType == '1'.toString()">
+                AND o.buy_date&gt;=#{starDate} AND o.buy_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '2'.toString()">
+                AND os.create_date&gt;=#{starDate} AND os.create_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '3'.toString()">
+                AND ((os.online_date&gt;=#{starDate} AND os.online_date &lt;=#{endDate}) OR (os.manual_date&gt;=#{starDate}
+                AND os.manual_date &lt;=#{endDate}))
+            </if>
+            <if test="orderType == '4'.toString()">
+                AND os.status='1' AND os.update_date&gt;=#{starDate} AND os.update_date &lt;=#{endDate}
+            </if>
+        </if>
+        GROUP BY os.id,os.`order_id` ORDER BY os.create_date
+    </select>
+
+
+    <select id="findstatisticswhereuserId" resultType="ErpOrderFlowUser">
+        SELECT
+        <!-- <include refid="erpOrderFlowUserColumnsTwo" />, -->
+        s.name AS "planningExpert",s1.name AS "operationAdviser",o.buy_date AS "payDate",o.order_type AS
+        "orderType",o.order_number AS "orderNum",
+        o.shop_name AS "shopName",o.agent_name AS "agentName",os.split_id AS "splitIds",os.good_name AS
+        "goodName",os.num AS "num",os.create_date AS "createDates",GROUP_CONCAT(DISTINCT p.promotion_channel) AS
+        "promotionChannel"
+        ,f.create_date AS "momoDate",f1.create_date AS "friendsDate",os.comment_count AS "commentCount",
+        f2.create_date AS "weiboDate",f3.create_date AS "createPresentation",
+        os.remark AS "remarks",os.hurry_flag AS "hurryFlag",o.order_source AS "orderSource",os.status AS "osStatuss",
+        os.PROC_INS_ID AS "pid",os.id AS "sid",
+        os.online_use_time AS "onlineUseTime", os.pending_prod_flag AS "pendingProduced", os.pending_reason AS
+        "pendingReason",os.timeout_flag AS "timeoutFlag",arte.status AS "taskStatus",os.online_date AS
+        "onlineDate",os.manual_date AS "manualDate"
+        FROM `erp_order_split_info` os
+        <!-- LEFT JOIN `erp_order_flow_user` a ON a.split_id=os.id -->
+        LEFT JOIN `ACT_HI_TASKINST` aht ON aht.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        LEFT JOIN `ACT_RU_TASK` art ON art.`PROC_INST_ID_`=os.`PROC_INS_ID`
+        <!-- LEFT JOIN `jyk_flow` j ON a.split_id=j.split_id -->
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'PlanningExpert')
+        mix1 ON os.id = mix1.split_id
+        LEFT JOIN (select eu.split_id, eu.user_id from erp_order_flow_user eu where flow_user_id = 'OperationAdviser')
+        mix2 ON os.id = mix2.split_id
+        <!-- LEFT JOIN `erp_order_original_info` o ON a.order_id=o.id  -->
+        LEFT JOIN `erp_order_original_info` o ON os.order_id=o.id
+        <!-- LEFT JOIN `jyk_order_promotion_channel` p ON a.split_id=p.split_id -->
+        LEFT JOIN `jyk_order_promotion_channel` p ON os.id=p.split_id
+        <!-- LEFT JOIN `sys_user` s ON s.id=j.planning_expert -->
+        <!-- LEFT JOIN `sys_user` s1 ON s1.id=j.operation_adviser -->
+        LEFT JOIN `sys_user` s ON s.id = mix1.user_id
+        LEFT JOIN `sys_user` s1 ON s1.id = mix2.user_id
+        LEFT JOIN `ACT_RU_TASK_EXT` arte ON (art.`ID_`=arte.`task_id` AND arte.`status`='3')
+        LEFT JOIN `erp_order_file` f ON (os.PROC_INS_ID=f.proc_ins_id AND
+        f.file_title="陌陌推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f1 ON (os.PROC_INS_ID=f1.proc_ins_id AND
+        f1.file_title="朋友圈推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f2 ON (os.PROC_INS_ID=f2.proc_ins_id AND
+        f2.file_title="微博推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f3 ON (os.PROC_INS_ID=f3.proc_ins_id AND
+        f3.file_title="效果报告")
+        WHERE (aht.`ASSIGNEE_`=#{userId} OR art.`ASSIGNEE_`=#{userId})
+        AND o.cancel=0
+        <if test="orderNum != null and orderNum != ''">
+            AND o.order_number LIKE CONCAT('%',#{orderNum},'%')
+        </if>
+        <if test="shopName != null and shopName != ''">
+            AND o.shop_name LIKE CONCAT('%',#{shopName},'%')
+        </if>
+        <if test="orderType != null and orderType != ''">
+            <if test="orderType == '1'.toString()">
+                AND o.buy_date&gt;=#{starDate} AND o.buy_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '2'.toString()">
+                AND os.create_date&gt;=#{starDate} AND os.create_date &lt;=#{endDate}
+            </if>
+            <if test="orderType == '3'.toString()">
+                AND ((os.online_date&gt;=#{starDate} AND os.online_date &lt;=#{endDate}) OR (os.manual_date&gt;=#{starDate}
+                AND os.manual_date &lt;=#{endDate}))
+            </if>
+            <if test="orderType == '4'.toString()">
+                AND os.status='1' os.update_date&gt;=#{starDate} AND os.update_date &lt;=#{endDate}
+            </if>
+        </if>
+        GROUP BY os.id,os.`order_id` ORDER BY os.create_date
+    </select>
+
+
+    <select id="findstatisticsReport" resultType="ErpOrderFlowUser">
+        SELECT
+        <include refid="erpOrderFlowUserColumnsTwo"/>,
+        s.name AS "planningExpert",s1.name AS "operationAdviser",o.buy_date AS "payDate",o.order_type AS
+        "orderType",o.order_number AS "orderNum",
+        o.shop_name AS "shopName",o.agent_name AS "agentName",os.split_id AS "splitIds",os.good_name AS
+        "goodName",os.num AS "num",os.create_date AS "createDates",GROUP_CONCAT(DISTINCT p.promotion_channel) AS
+        "promotionChannel"
+        ,f.create_date AS "momoDate",f1.create_date AS "friendsDate",os.comment_count AS "commentCount",
+        f2.create_date AS "weiboDate",f3.create_date AS "createPresentation",
+        os.remark AS "remarks",os.hurry_flag AS "hurryFlag",o.order_source AS "orderSource",os.status AS "osStatuss",
+        os.PROC_INS_ID AS "pid",os.id AS "sid",os.shop_id AS "shopid",os.online_use_time AS "onlineUseTime"
+        FROM `erp_order_split_info` os
+        LEFT JOIN `erp_order_flow_user` a ON a.split_id=os.id
+        LEFT JOIN `jyk_flow` j ON a.split_id=j.split_id
+        LEFT JOIN `erp_order_original_info` o ON a.order_id=o.id
+        LEFT JOIN `jyk_order_promotion_channel` p ON a.split_id=p.split_id
+        LEFT JOIN `sys_user` s ON s.id=j.planning_expert
+        LEFT JOIN `sys_user` s1 ON s1.id=j.operation_adviser
+        LEFT JOIN `erp_order_file` f ON (os.PROC_INS_ID=f.proc_ins_id AND
+        f.file_title="陌陌推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f1 ON (os.PROC_INS_ID=f1.proc_ins_id AND
+        f1.file_title="朋友圈推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f2 ON (os.PROC_INS_ID=f2.proc_ins_id AND
+        f2.file_title="微博推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f3 ON (os.PROC_INS_ID=f3.proc_ins_id AND
+        f3.file_title="效果报告")
+        WHERE a.user_id IN(SELECT user_id FROM `erp_team_user`
+        WHERE team_id IN (SELECT b.team_id FROM `erp_team_user` b WHERE b.leader_flag='1' AND user_id=#{userId}))
+        AND o.cancel=0
+        AND os.create_date&gt;=#{starDate} AND os.create_date &lt;=#{endDate}
+        GROUP BY a.order_id,a.split_id ORDER BY a.create_date
+    </select>
+
+
+    <select id="findstatisticsReportOnline" resultType="ErpOrderFlowUser">
+        SELECT
+        <include refid="erpOrderFlowUserColumnsTwo"/>,
+        s.name AS "planningExpert",s1.name AS "operationAdviser",o.buy_date AS "payDate",o.order_type AS
+        "orderType",o.order_number AS "orderNum",
+        o.shop_name AS "shopName",o.agent_name AS "agentName",os.split_id AS "splitIds",os.good_name AS
+        "goodName",os.num AS "num",os.create_date AS "createDates",GROUP_CONCAT(DISTINCT p.promotion_channel) AS
+        "promotionChannel"
+        ,f.create_date AS "momoDate",f1.create_date AS "friendsDate",os.comment_count AS "commentCount",
+        f2.create_date AS "weiboDate",f3.create_date AS "createPresentation",
+        os.remark AS "remarks",os.hurry_flag AS "hurryFlag",o.order_source AS "orderSource",os.status AS "osStatuss",
+        os.PROC_INS_ID AS "pid",os.id AS "sid",os.shop_id AS "shopid",os.online_use_time AS "onlineUseTime"
+        FROM `erp_order_split_info` os
+        LEFT JOIN `erp_order_flow_user` a ON a.split_id=os.id
+        LEFT JOIN `jyk_flow` j ON a.split_id=j.split_id
+        LEFT JOIN `erp_order_original_info` o ON a.order_id=o.id
+        LEFT JOIN `jyk_order_promotion_channel` p ON a.split_id=p.split_id
+        LEFT JOIN `sys_user` s ON s.id=j.planning_expert
+        LEFT JOIN `sys_user` s1 ON s1.id=j.operation_adviser
+        LEFT JOIN `erp_order_file` f ON (os.PROC_INS_ID=f.proc_ins_id AND
+        f.file_title="陌陌推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f1 ON (os.PROC_INS_ID=f1.proc_ins_id AND
+        f1.file_title="朋友圈推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f2 ON (os.PROC_INS_ID=f2.proc_ins_id AND
+        f2.file_title="微博推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f3 ON (os.PROC_INS_ID=f3.proc_ins_id AND
+        f3.file_title="效果报告")
+        WHERE a.user_id IN(SELECT user_id FROM `erp_team_user`
+        WHERE team_id IN (SELECT b.team_id FROM `erp_team_user` b WHERE b.leader_flag='1' AND user_id=#{userId}))
+        AND o.cancel=0
+        AND ((a.flow_user_id='assignConsultant' AND a.create_date&gt;=#{starDate} AND a.create_date &lt;=#{endDate}) OR
+        (os.`status`=1 AND os.update_date&gt;=#{starDate} AND os.update_date &lt;=#{endDate}))
+        GROUP BY a.order_id,a.split_id ORDER BY a.create_date
+    </select>
+
+
+    <select id="findstatisticsReportNoCancel" resultType="ErpOrderFlowUser">
+        SELECT
+        <include refid="erpOrderFlowUserColumnsTwo"/>,
+        s.name AS "planningExpert",s1.name AS "operationAdviser",o.buy_date AS "payDate",o.order_type AS
+        "orderType",o.order_number AS "orderNum",
+        o.shop_name AS "shopName",o.agent_name AS "agentName",os.split_id AS "splitIds",os.good_name AS
+        "goodName",os.num AS "num",os.create_date AS "createDates",GROUP_CONCAT(DISTINCT p.promotion_channel) AS
+        "promotionChannel"
+        ,f.create_date AS "momoDate",f1.create_date AS "friendsDate",os.comment_count AS "commentCount",
+        f2.create_date AS "weiboDate",f3.create_date AS "createPresentation",
+        os.remark AS "remarks",os.hurry_flag AS "hurryFlag",o.order_source AS "orderSource",os.status AS "osStatuss",
+        os.PROC_INS_ID AS "pid",os.id AS "sid",os.shop_id AS "shopid",os.online_use_time AS "onlineUseTime"
+        FROM `erp_order_split_info` os
+        LEFT JOIN `erp_order_flow_user` a ON a.split_id=os.id
+        LEFT JOIN `jyk_flow` j ON a.split_id=j.split_id
+        LEFT JOIN `erp_order_original_info` o ON a.order_id=o.id
+        LEFT JOIN `jyk_order_promotion_channel` p ON a.split_id=p.split_id
+        LEFT JOIN `sys_user` s ON s.id=j.planning_expert
+        LEFT JOIN `sys_user` s1 ON s1.id=j.operation_adviser
+        LEFT JOIN `erp_order_file` f ON (os.PROC_INS_ID=f.proc_ins_id AND
+        f.file_title="陌陌推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f1 ON (os.PROC_INS_ID=f1.proc_ins_id AND
+        f1.file_title="朋友圈推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f2 ON (os.PROC_INS_ID=f2.proc_ins_id AND
+        f2.file_title="微博推广终稿预览截图")
+        LEFT JOIN `erp_order_file` f3 ON (os.PROC_INS_ID=f3.proc_ins_id AND
+        f3.file_title="效果报告")
+        WHERE a.user_id IN(SELECT user_id FROM `erp_team_user`
+        WHERE team_id IN (SELECT b.team_id FROM `erp_team_user` b WHERE b.leader_flag='1' AND user_id=#{userId}))
+        AND o.cancel=0
+        GROUP BY a.order_id,a.split_id ORDER BY a.create_date
+    </select>
+
+    <select id="findstatisticsFollowOrder" resultType="com.yunnex.ops.erp.modules.statistics.entity.ErpTeamFollowOrder">
+		SELECT 
+			a.user_id AS "userId",d.name AS "userName",GROUP_CONCAT(DISTINCT  c.`name`) AS "userRole"
+		FROM `erp_team_user` a
+		LEFT JOIN `sys_user_role` b ON a.`user_id`=b.`user_id`
+		LEFT JOIN `sys_role` c ON (b.`role_id`=c.`id` AND c.`name`!="普通用户")
+		LEFT JOIN `sys_user` d ON a.`user_id`=d.`id`
+		WHERE a.user_id IN(SELECT user_id FROM `erp_team_user` 
+		WHERE team_id IN (SELECT b.team_id FROM `erp_team_user` b WHERE  b.leader_flag='1' AND user_id=#{userId}))
+		AND c.name IS NOT NULL
+		GROUP BY a.`user_id`	
+	</select>
+
+    <select id="findstatisticsFollowOrderWhereTeamId"
+            resultType="com.yunnex.ops.erp.modules.statistics.entity.ErpTeamFollowOrder">
+		SELECT 
+			a.user_id AS "userId",d.name AS "userName",GROUP_CONCAT(DISTINCT  c.`name`) AS "userRole"
+		FROM `erp_team_user` a
+		LEFT JOIN `sys_user_role` b ON a.`user_id`=b.`user_id`
+		LEFT JOIN `sys_role` c ON (b.`role_id`=c.`id` AND c.`name`!="普通用户")
+		LEFT JOIN `sys_user` d ON a.`user_id`=d.`id`
+		WHERE a.user_id IN(SELECT user_id FROM `erp_team_user` WHERE team_id=#{teamId})
+		AND c.name IS NOT NULL
+		GROUP BY a.`user_id`	
+	</select>
+
+    <select id="statisticsWeekAndMonth" parameterType="Map" resultType="java.util.LinkedHashMap">
+        SELECT
+        (SELECT COUNT(a.id)
+        FROM erp_order_split_info a
+        LEFT JOIN erp_order_original_info c ON(a.order_id = c.id)
+        WHERE 1=1
+        AND c.cancel = 0
+        AND a.PROC_INS_ID IN (SELECT b.PROC_INST_ID_ FROM ACT_HI_TASKINST b WHERE b.PROC_INST_ID_ = a.PROC_INS_ID
+        AND b.ASSIGNEE_ IN
+        <foreach collection="userIds" index="index" item="item1"
+                 open="(" separator="," close=")">
+            #{item1}
+        </foreach>
+        )
+        AND a.create_date &gt;= #{startDate} AND a.create_date &lt;= #{endDate}) AS 'newCount',
+        (SELECT COUNT(a.id)
+        FROM erp_order_split_info a
+        LEFT JOIN erp_order_original_info c ON(a.order_id = c.id)
+        WHERE 1=1
+        AND c.cancel = 0
+        AND a.PROC_INS_ID IN (SELECT b.PROC_INST_ID_ FROM ACT_HI_TASKINST b WHERE b.PROC_INST_ID_ = a.PROC_INS_ID
+        AND b.ASSIGNEE_ IN
+        <foreach collection="userIds" index="index" item="item2"
+                 open="(" separator="," close=")">
+            #{item2}
+        </foreach>
+        )
+        AND a.online_date &gt;= #{startDate} AND a.online_date &lt;= #{endDate} AND a.manual_date IS NULL) AS
+         'onlineCount1',
+        (SELECT COUNT(a.id)
+        FROM erp_order_split_info a
+        LEFT JOIN erp_order_original_info c ON(a.order_id = c.id)
+        WHERE 1=1
+        AND c.cancel = 0
+        AND a.PROC_INS_ID IN (SELECT b.PROC_INST_ID_ FROM ACT_HI_TASKINST b WHERE b.PROC_INST_ID_ = a.PROC_INS_ID
+        AND b.ASSIGNEE_ IN
+        <foreach collection="userIds" index="index" item="item3"
+                 open="(" separator="," close=")">
+            #{item3}
+        </foreach>
+        )
+        AND a.manual_date &gt;= #{startDate} AND a.manual_date &lt;= #{endDate}) AS 'onlineCount2',
+        (SELECT COUNT(a.id)
+        FROM erp_order_split_info a
+        LEFT JOIN erp_order_original_info c ON(a.order_id = c.id)
+        WHERE 1=1
+        AND c.cancel = 0
+        AND a.PROC_INS_ID IN (SELECT b.PROC_INST_ID_ FROM ACT_HI_TASKINST b WHERE b.PROC_INST_ID_ = a.PROC_INS_ID
+        AND b.ASSIGNEE_ IN
+        <foreach collection="userIds" index="index" item="item4"
+                 open="(" separator="," close=")">
+            #{item4}
+        </foreach>
+        )
+        AND a.online_date &gt;= #{startDate} AND a.online_date &lt;= #{endDate} AND (a.pending_reason IS NULL OR
+        a.pending_reason = '') AND a.manual_date IS NULL
+        AND 21600 &lt;= (TIMESTAMPDIFF(MINUTE, c.buy_date, a.online_date) - (SELECT COUNT(*)*24*60 FROM erp_holidays
+        WHERE holiday_date BETWEEN c.buy_date AND a.online_date AND del_flag = 0))) AS 'onlineOverCount',
+        (SELECT CASE WHEN SUM(a.online_use_time) IS NULL THEN 0 ELSE SUM(a.online_use_time) END
+        FROM erp_order_split_info a
+        LEFT JOIN erp_order_original_info c ON(a.order_id = c.id)
+        WHERE 1=1
+        AND c.cancel = 0
+        AND a.PROC_INS_ID IN (SELECT b.PROC_INST_ID_ FROM ACT_HI_TASKINST b WHERE b.PROC_INST_ID_ = a.PROC_INS_ID
+        AND b.ASSIGNEE_ IN
+        <foreach collection="userIds" index="index" item="item5"
+                 open="(" separator="," close=")">
+            #{item5}
+        </foreach>
+        )
+        AND a.online_date &gt;= #{startDate} AND a.online_date &lt;= #{endDate} AND a.manual_date IS NULL) AS
+        'usedTotalTime'
+        FROM DUAL
+    </select>
+    
+    <update id="copyFlowUsers">
+		update erp_order_flow_user set flow_id = #{newProcInsId} where flow_id = #{oldProcInsId} and flow_user_id != 'operationManager'
+    </update>
+    
+    <update id="deleteByProcInsId">
+		delete from erp_order_flow_user where flow_id = #{procInsId} and flow_user_id != 'operationManager'
+    </update>
+
+    <select id="findByOrderId" resultType="ErpOrderFlowUser">
+        SELECT
+        <include refid="erpOrderFlowUserColumns"/>
+        FROM erp_order_flow_user a
+        WHERE a.order_id = #{orderId}
+    </select>
+    
+    <select id="getDeliveryFlowUserByOrderId" resultType="ErpOrderFlowUser">
+    	select
+			fu.flow_user_id as "flowUserId",
+			(case when fu.update_date = max(fu.update_date) then fu.user_id end) as "user.id"
+		from
+			erp_order_flow_user fu
+		where
+			fu.flow_id in(
+				select
+					ds.proc_ins_id
+				from
+					erp_delivery_service ds
+				where
+					ds.order_id = #{orderId}
+			)
+			and fu.del_flag = '0'
+		group by
+			fu.flow_user_id
+    </select>
+	
+</mapper>

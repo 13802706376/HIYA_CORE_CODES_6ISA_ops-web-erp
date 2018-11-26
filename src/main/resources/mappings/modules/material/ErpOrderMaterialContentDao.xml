@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.material.dao.ErpOrderMaterialContentDao">
+
+    <sql id="erpOrderMaterialContentColumns">
+        a.id AS "id",
+        a.order_number AS "orderNumber",
+		a.ys_order_id AS "ysOrderId",
+        a.scenario_type AS "scenarioType",
+        a.material_type_name AS "materialTypeName",
+        a.material_quality AS "materialQuality",
+        a.material_amount AS "materialAmount",
+        a.size AS "size",
+        a.front_name AS "frontName",
+        a.reverse_name AS "reverseName",
+        a.front_image AS "frontImage",
+        a.reverse_image AS "reverseImage",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag"
+    </sql>
+
+    <sql id="erpOrderMaterialContentJoins">
+    </sql>
+    
+    <select id="get" resultType="ErpOrderMaterialContent">
+        SELECT
+            <include refid="erpOrderMaterialContentColumns"/>
+        FROM erp_order_material_content a
+        <include refid="erpOrderMaterialContentJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="ErpOrderMaterialContent">
+        SELECT
+            <include refid="erpOrderMaterialContentColumns"/>
+        FROM erp_order_material_content a
+        <include refid="erpOrderMaterialContentJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpOrderMaterialContent">
+        SELECT
+            <include refid="erpOrderMaterialContentColumns"/>
+        FROM erp_order_material_content a
+        <include refid="erpOrderMaterialContentJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO erp_order_material_content
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="orderNumber != null">order_number,</if>
+            <if test="ysOrderId != null">ys_order_id,</if>
+            <if test="scenarioType != null">scenario_type,</if>
+            <if test="materialTypeName != null">material_type_name,</if>
+			<if test="materialQuality != null">material_quality,</if>
+            <if test="materialAmount != null">material_amount,</if>
+			<if test="size != null">size,</if>
+            <if test="frontName != null">front_name,</if>
+            <if test="reverseName != null">reverse_name,</if>
+            <if test="frontImage != null">front_image,</if>
+            <if test="reverseImage != null">reverse_image,</if>
+            <if test="createBy != null and createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+            <if test="updateBy != null and updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+			<if test="remarks != null">remarks,</if>
+			<if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="orderNumber != null">#{orderNumber},</if>
+            <if test="ysOrderId != null">#{ysOrderId},</if>
+            <if test="scenarioType != null">#{scenarioType},</if>
+            <if test="materialTypeName != null">#{materialTypeName},</if>
+            <if test="materialQuality != null">#{materialQuality},</if>
+            <if test="materialAmount != null">#{materialAmount},</if>
+			<if test="size != null">#{size},</if>
+            <if test="frontName != null">#{frontName},</if>
+            <if test="reverseName != null">#{reverseName},</if>
+			<if test="frontImage != null">#{frontImage},</if>
+			<if test="reverseImage != null">#{reverseImage},</if>
+            <if test="createBy != null and createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+            <if test="updateBy != null and updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+			<if test="remarks != null">#{remarks},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE erp_order_material_content
+            <set>
+                <if test="orderNumber != null">order_number = #{orderNumber},</if>
+                <if test="ysOrderId != null">ys_order_id = #{ysOrderId},</if>
+                <if test="materialQuality != null">material_quality = #{materialQuality},</if>
+                <if test="scenarioType != null">scenario_type = #{scenarioType},</if>
+                <if test="materialTypeName != null">material_type_name = #{materialTypeName},</if>
+                <if test="materialAmount != null">material_amount = #{materialAmount},</if>
+                <if test="size != null">size = #{size},</if>
+                <if test="frontName != null">front_name = #{frontName},</if>
+                <if test="reverseName != null">reverse_name = #{reverseName},</if>
+                <if test="frontImage != null">front_image = #{frontImage},</if>
+                <if test="reverseImage != null">reverse_image = #{reverseImage},</if>
+                <if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+                <if test="updateDate != null">update_date = #{updateDate},</if>
+                <if test="remarks != null">remarks = #{remarks},</if>
+            </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+        UPDATE erp_order_material_content SET
+            del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findByOrderNumber" resultType="ErpOrderMaterialContent">
+        SELECT
+        <include refid="erpOrderMaterialContentColumns"/>
+        FROM erp_order_material_content a
+        WHERE a.order_number = #{orderNumber}
+        <if test="delFlag != null">and a.del_flag = #{delFlag}</if>
+    </select>
+
+    <select id="findByYsOrderId" resultType="ErpOrderMaterialContent">
+        SELECT
+        <include refid="erpOrderMaterialContentColumns"/>
+        FROM erp_order_material_content a
+        WHERE a.ys_order_id = #{ysOrderId} and a.del_flag = #{delFlag}
+    </select>
+
+    <delete id="deleteByOrderNumber">
+        delete from erp_order_material_content where order_number = #{orderNumber}
+    </delete>
+
+    <delete id="deleteByYsOrderId">
+        delete from erp_order_material_content where ys_order_id = #{ysOrderId}
+    </delete>
+
+    <insert id="saveBatch">
+        INSERT INTO erp_order_material_content
+        (
+        `id`, `order_number`, `ys_order_id`, `scenario_type`, `material_type_name`, `material_quality`,
+        `material_amount`,
+        `size`, `front_name`, `reverse_name`, `front_image`, `reverse_image`, `create_date`, `update_date`
+        )
+        VALUES
+        <foreach collection="list" item="material" separator=",">
+            (
+            #{material.id}, #{material.orderNumber}, #{material.ysOrderId}, #{material.scenarioType},
+            #{material.materialTypeName}, #{material.materialQuality}, #{material.materialAmount}, #{material.size},
+            #{material.frontName}, #{material.reverseName}, #{material.frontImage}, #{material.reverseImage},
+            #{material.createDate}, #{material.updateDate}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.flow.dao.ErpShopDataInputSubTaskDao">
+    
+	<sql id="erpShopDataInputSubTaskColumns">
+		a.id AS "id",
+		a.sdi_id AS "sdiId",
+		a.task_id AS "taskId",
+		a.sub_task_id AS "subTaskId",
+		a.state AS "state",
+		a.sub_task_person AS "subTaskPerson",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag",
+		a.sub_task_detail as "subTaskDetail"
+	</sql>
+	
+	<sql id="erpShopDataInputSubTaskJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpShopDataInputSubTask">
+		SELECT 
+			<include refid="erpShopDataInputSubTaskColumns"/>
+		FROM erp_shop_data_input_sub_task a
+		<include refid="erpShopDataInputSubTaskJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="getSubTask" resultType="ErpShopDataInputSubTask">
+		SELECT 
+			<include refid="erpShopDataInputSubTaskColumns"/>
+		FROM erp_shop_data_input_sub_task a
+		<include refid="erpShopDataInputSubTaskJoins"/>
+		WHERE a.task_id = #{taskId}
+		and a.sub_task_id= #{subTaskValue}
+	</select>
+	
+	<select id="getSubTaskList" resultType="ErpShopDataInputSubTask">
+		SELECT 
+			<include refid="erpShopDataInputSubTaskColumns"/>
+		FROM erp_shop_data_input_sub_task a
+		<include refid="erpShopDataInputSubTaskJoins"/>
+		WHERE a.task_id = #{taskId}
+		ORDER BY a.sub_task_id asc
+	</select>
+	
+	<select id="findList" resultType="ErpShopDataInputSubTask">
+		SELECT 
+			<include refid="erpShopDataInputSubTaskColumns"/>
+		FROM erp_shop_data_input_sub_task a
+		<include refid="erpShopDataInputSubTaskJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpShopDataInputSubTask">
+		SELECT 
+			<include refid="erpShopDataInputSubTaskColumns"/>
+		FROM erp_shop_data_input_sub_task a
+		<include refid="erpShopDataInputSubTaskJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_shop_data_input_sub_task(
+			id,
+			sdi_id,
+			task_id,
+			sub_task_id,
+			state,
+			sub_task_person,
+			update_date,
+			update_by,
+			remark,
+			sort,
+			del_flag,
+			sub_Task_Detail
+		) VALUES (
+			#{id},
+			#{sdiId},
+			#{taskId},
+			#{subTaskId},
+			#{state},
+			#{subTaskPerson},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{sort},
+			#{delFlag},
+			#{subTaskDetail}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_shop_data_input_sub_task SET 	
+			sdi_id = #{sdiId},
+			task_id = #{taskId},
+			sub_task_id = #{subTaskId},
+			state = #{state},
+			sub_task_person = #{subTaskPerson},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remark = #{remark},
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_shop_data_input_sub_task SET
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateTaskState">
+		update
+			erp_shop_data_input_sub_task
+		set
+			state = #{state}
+		where
+			task_id = #{taskId}
+	</update>
+	
+	<update id="updateTaskRemark">
+		update
+			erp_shop_data_input_sub_task
+		set
+			remark = #{remark}
+		where
+			task_id = #{taskId}
+		and 
+			sub_task_id = #{subTaskId}
+	</update>
+	
+</mapper>

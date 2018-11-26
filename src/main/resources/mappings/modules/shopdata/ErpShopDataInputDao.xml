@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunnex.ops.erp.modules.shopdata.dao.ErpShopDataInputDao" >
+	
+	<sql id="erpShopDataInputColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.shop_id AS "shopId",
+		a.order_number AS "orderNumber",
+		a.shop_name AS "shopName",
+		a.source AS "source",
+		a.order_type AS "orderType",
+		a.address AS "address",
+		a.planning_expert AS "planningExpert",
+		a.proc_ins_id AS "procInsId",
+		a.remark AS "remark",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id"
+	</sql>
+	
+	<sql id="erpShopDataInputJoins">
+	</sql>
+  	
+  	<select id="get" resultType="ErpShopDataInput">
+	    select 
+	    <include refid="erpShopDataInputColumns" />
+	    from erp_shop_data_input a
+	    <include refid="erpShopDataInputJoins" />
+	    where id = #{id,jdbcType=VARCHAR}
+  	</select>
+  	
+  	<delete id="delete">
+	    delete from erp_shop_data_input
+	    where id = #{id,jdbcType=VARCHAR}
+  	</delete>
+  	
+  	<insert id="insert">
+	    insert into erp_shop_data_input (
+	    	id, 
+	    	order_id, 
+	    	shop_id, 
+	      	order_number, 
+	      	shop_name, 
+	      	source, 
+	      	order_type, 
+	      	address, 
+	      	planning_expert, 
+	      	proc_ins_id, 
+	      	remark, 
+	      	create_date
+	      ) values (
+	      	#{id,jdbcType=VARCHAR}, 
+	      	#{orderId,jdbcType=VARCHAR}, 
+	      	#{shopId,jdbcType=VARCHAR}, 
+	      	#{orderNumber,jdbcType=VARCHAR}, 
+	      	#{shopName,jdbcType=VARCHAR}, 
+	      	#{source,jdbcType=VARCHAR}, 
+	      	#{orderType,jdbcType=BIT}, 
+	      	#{address,jdbcType=VARCHAR}, 
+	      	#{planningExpert,jdbcType=VARCHAR}, 
+	      	#{procInsId,jdbcType=VARCHAR}, 
+	      	#{remark,jdbcType=VARCHAR}, 
+	      	#{createDate,jdbcType=TIMESTAMP}
+	      )
+  	</insert>
+ 	
+  	<update id="update">
+    	update erp_shop_data_input set 
+    		order_id = #{orderId,jdbcType=VARCHAR},
+      		shop_id = #{shopId,jdbcType=VARCHAR},
+      		order_number = #{orderNumber,jdbcType=VARCHAR},
+      		shop_name = #{shopName,jdbcType=VARCHAR},
+      		source = #{source,jdbcType=VARCHAR},
+      		order_type = #{orderType,jdbcType=BIT},
+      		address = #{address,jdbcType=VARCHAR},
+      		planning_expert = #{planningExpert,jdbcType=VARCHAR},
+      		PROC_INS_ID = #{procInsId,jdbcType=VARCHAR},
+      		remark = #{remark,jdbcType=VARCHAR},
+      		update_by = #{updateBy.id,jdbcType=VARCHAR},
+      		update_date = #{updateDate,jdbcType=TIMESTAMP}
+    	where id = #{id,jdbcType=VARCHAR}
+  	</update>
+  	
+  	<select id="findListByParams" resultType="ErpShopDataInput">
+  		SELECT
+		<include refid="erpShopDataInputColumns" />
+		FROM erp_shop_data_input a
+			LEFT JOIN erp_order_original_info i ON a.order_id=i.id
+			LEFT JOIN sdi_flow s ON a.order_id = s.order_id
+		<where>
+			and (s.operation_manager = #{userId} or s.operation_adviser = #{userId})
+			and i.cancel=0
+			<if test="orderNumber != null and orderNumber != ''">
+				AND i.order_number LIKE CONCAT('%', #{orderNumber}, '%')
+			</if>
+			<if test="shopName != null and shopName != ''">
+				AND a.shop_name LIKE CONCAT('%', #{shopName}, '%')
+			</if>
+		</where>
+		ORDER BY a.id DESC
+  	</select>
+  	
+  	<select id="getByProsIncId" resultType="ErpShopDataInput">
+		SELECT
+		<include refid="erpShopDataInputColumns" />
+		FROM erp_shop_data_input a
+		<include refid="erpShopDataInputJoins" />
+		WHERE a.proc_ins_id = #{procInsId}
+	</select>
+  	
+  	<select id="findFollowByParams" resultType="string">
+		SELECT DISTINCT a.proc_ins_id FROM erp_shop_data_input a
+			LEFT JOIN erp_order_original_info i ON a.order_id=i.id
+			LEFT JOIN sdi_flow s ON a.order_id = s.order_id
+		<where>
+			and (s.operation_manager = #{userId} or s.operation_adviser = #{userId})
+			and i.cancel=0
+			<if test="orderNumber != null and orderNumber != ''">
+				AND i.order_number LIKE CONCAT('%', #{orderNumber}, '%')
+			</if>
+			<if test="shopName != null and shopName != ''">
+				AND a.shop_name LIKE CONCAT('%', #{shopName}, '%')
+			</if>
+		</where>
+		ORDER BY a.id DESC
+	</select>
+  	
+  	<select id="countByShopId" resultType="int">
+		SELECT COUNT(a.id) FROM erp_shop_data_input a
+		<where>
+			shop_id = #{shopId}
+		</where>
+	</select>
+  	
+  	<select id="getByShopId" resultType="ErpShopDataInput">
+		SELECT
+		<include refid="erpShopDataInputColumns" />
+		FROM erp_shop_data_input a
+		<include refid="erpShopDataInputJoins" />
+		WHERE a.shop_id = #{shopId}
+	</select>
+  	
+  	<select id="getByOrderId" resultType="ErpShopDataInput">
+		SELECT
+		<include refid="erpShopDataInputColumns" />
+		FROM erp_shop_data_input a
+		WHERE a.order_id = #{orderId}
+	</select>
+  	
+  	<select id="findTaskId" resultType="String">
+		SELECT aa.ID_ FROM ACT_RU_TASK aa 
+			LEFT JOIN erp_shop_data_input a ON aa.PROC_INST_ID_ = a.proc_ins_id
+    	  WHERE a.shop_id = #{zhangbeiId}
+	</select>
+  	
+</mapper>

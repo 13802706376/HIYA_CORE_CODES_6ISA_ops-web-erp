@@ -1,0 +1,653 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpOrderOriginalInfoDao">
+    
+	<sql id="erpOrderOriginalInfoColumns">
+		a.id AS "id",
+		a.order_number AS "orderNumber",
+		a.order_version AS "orderVersion",
+		a.buy_date AS "buyDate",
+		a.pay_date AS "payDate",
+		a.create_at AS "createAt",
+		a.shop_id AS "shopId",
+		a.shop_name AS "shopName",
+		a.shop_abbreviation AS "shopAbbreviation",
+		a.shop_number AS "shopNumber",
+		a.shop_extension_id AS "shopExtensionId",
+		a.pre_price AS "prePrice",
+		a.real_price AS "realPrice",
+		a.contact_name AS "contactName",
+		a.source AS "source",
+		a.contact_number AS "contactNumber",
+		a.order_status AS "orderStatus",
+		CASE a.cancel
+        WHEN '0' THEN '正常'
+        WHEN '1' THEN '作废订单'
+        WHEN '2' THEN '结束订单'
+        ELSE '' END AS "orderStatusStr",
+        <!--a.pending_num AS "pendingNum",
+            a.process_num AS "processNum",
+        a.finish_num AS "finishNum", -->
+		a.order_type AS "orderType",
+		CASE a.order_type
+        WHEN '1' THEN '直销'
+        WHEN '2' THEN '渠道'
+        ELSE '' END AS "orderTypeStr",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag",
+		a.promote_phone AS "promotePhone",
+		a.promote_contact AS "promoteContact",
+		a.sale_person AS "salePerson",
+		a.cancel AS "cancel", 
+		a.industry_type AS "industryType", 
+		a.agent_name AS "agentName", 
+		a.agent_id AS "agentId",
+		a.order_source AS "orderSource",
+		a.is_newshop AS "isNewShop",
+		a.proc_ins_id as "procInsId",
+		a.audit_status as "auditStatus",
+		a.order_category AS "orderCategory",
+		a.ys_order_id AS "ysOrderId",
+		a.ys_order_buy_time AS "ysOrderBuyTime",
+		a.ys_order_real_price AS "ysOrderRealPrice",
+		a.is_audit_order AS "isAuditOrder",
+		a.up_order_number AS "upOrderNumber",
+		(select su.name  from sys_user su where su.del_flag = '0' and su.id = a.create_by) as "createByName",
+		(SELECT COUNT(c.id) FROM erp_order_split_info c WHERE a.id = c.order_id) AS 'splitCount',
+		(SELECT COUNT(d.id) FROM erp_shop_data_input d WHERE a.id = d.order_id) AS "sdiCount",
+		(select case when count(1) > 0 then 6 else 5 end  from erp_order_original_good og where og.good_type_id = 6 and og.del_flag = '0' and og.order_id = a.id) as goodType
+	</sql>
+	
+	<sql id="erpOrderOriginalInfoColumnsTwo">
+		a.id AS "id",
+		a.order_number AS "orderNumber",
+		a.order_version AS "orderVersion",
+		a.buy_date AS "buyDate",
+		a.pay_date AS "payDate",
+		a.create_at AS "createAt",
+		a.shop_id AS "shopId",
+		a.shop_name AS "shopName",
+		a.shop_abbreviation AS "shopAbbreviation",
+		a.shop_number AS "shopNumber",
+		a.shop_extension_id AS "shopExtensionId",
+		a.pre_price AS "prePrice",
+		a.real_price AS "realPrice",
+		a.contact_name AS "contactName",
+		a.source AS "source",
+		a.contact_number AS "contactNumber",
+		a.order_status AS "orderStatus",
+		<!-- a.pending_num AS "pendingNum",
+		a.process_num AS "processNum",
+		a.finish_num AS "finishNum", -->
+		a.order_type AS "orderType",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag",
+		a.promote_phone AS "promotePhone",
+		a.promote_contact AS "promoteContact",
+		a.sale_person AS "salePerson",
+		a.cancel AS "cancel", 
+		a.industry_type AS "industryType", 
+		a.agent_name AS "agentName", 
+		a.agent_id AS "agentId",
+		a.order_source AS "orderSource",
+		a.proc_ins_id as "procInsId",
+		a.audit_status as "auditStatus",
+		(select su.name  from sys_user su where su.del_flag = '0' and su.id = a.create_by) as "createByName",
+		a.is_newshop AS "isNewShop",
+		a.order_category AS "orderCategory",
+		a.ys_order_id AS "ysOrderId",
+		a.ys_order_buy_time AS "ysOrderBuyTime",
+		a.ys_order_real_price AS "ysOrderRealPrice",
+		a.up_order_number AS "upOrderNumber",
+		a.is_audit_order AS "isAuditOrder"
+	</sql>
+	
+	
+	<sql id="erpOrderOriginalInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpOrderOriginalInfo">
+		SELECT 
+			<include refid="erpOrderOriginalInfoColumns"/>,
+			IFNULL(a.pending_num,0) AS "pendingNum",
+			IFNULL(a.process_num,0) AS "processNum",
+			IFNULL(a.finish_num,0) AS "finishNum"
+		FROM erp_order_original_info a
+		<include refid="erpOrderOriginalInfoJoins"/>
+		WHERE a.id = #{id} 
+	</select>
+	
+	<select id="getDetail" resultType="ErpOrderOriginalInfo">
+		SELECT 
+			<include refid="erpOrderOriginalInfoColumns"/>,
+			SUM(b.pending_num) AS "pendingNum",
+			SUM(b.process_num) AS "processNum",
+			SUM(b.finish_num) AS "finishNum" 
+		FROM erp_order_original_info a LEFT JOIN erp_order_original_good b ON a.id = b.order_id  
+		WHERE a.id = #{id} 
+		GROUP BY a.id
+	</select>
+	
+	<select id="getCalcInfo" resultType="ErpOrderOriginalInfo">
+		SELECT 
+			<include refid="erpOrderOriginalInfoColumns"/>,
+			SUM(b.real_price) AS "real_price",
+			SUM(b.pending_num) AS "pendingNum",
+			SUM(b.process_num) AS "processNum",
+			SUM(b.finish_num) AS "finishNum" 
+		FROM erp_order_original_info a LEFT JOIN erp_order_original_good b ON a.id = b.order_id  
+		<where>
+			a.id = #{id} 
+<!-- 			<if test="goodType != null"> --><!-- 贝蚁2.1屏蔽，智慧餐厅类型无法在get方法中获取，根据goodType类型查询无法获取对应详情数据 -->
+<!-- 				and good_type_id = #{goodType} -->
+<!-- 			</if> -->
+		</where>
+		GROUP BY a.id
+	</select>
+	
+	<sql id="findPageSql">
+	   SELECT 
+			<include refid="erpOrderOriginalInfoColumns"/> 
+		FROM erp_order_original_info a LEFT JOIN erp_order_original_good b ON a.id = b.order_id and b.del_flag = #{DEL_FLAG_NORMAL}
+		<include refid="erpOrderOriginalInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			and a.audit_status = '2' <!-- 贝蚁2.0：客常来订单审核流程中，订单列表不可见 -->
+			<if test="orderNumber != null and orderNumber != ''">
+				AND a.order_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{orderNumber}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{orderNumber}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{orderNumber},'%')</if>
+			</if>
+			<choose>
+				<when test="beginBuyDate != null and endBuyDate != null and beginBuyDate != '' and endBuyDate != ''">
+					AND a.buy_date BETWEEN #{beginBuyDate} AND DATE_ADD(#{endBuyDate}, INTERVAL 1 DAY)
+				</when>
+				<when test="beginBuyDate != null and beginBuyDate != ''">
+					AND a.buy_date &gt;= #{beginBuyDate}
+				</when>
+				<when test="endBuyDate != null and endBuyDate != ''">
+					AND a.buy_date &lt;= DATE_ADD(#{endBuyDate}, INTERVAL 1 DAY)
+				</when>
+			</choose>
+			<if test="shopName != null and shopName != ''">
+				AND a.shop_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{shopName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{shopName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{shopName},'%')</if>
+			</if>
+			<if test="contactName != null and contactName != ''">
+				AND a.contact_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{contactName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{contactName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{contactName},'%')</if>
+			</if>
+			<if test="contactNumber != null and contactNumber != ''">
+				AND a.contact_number LIKE 
+					<if test="dbName == 'oracle'">'%'||#{contactNumber}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{contactNumber}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{contactNumber},'%')</if>
+			</if>
+			<if test="orderType != null and orderType != ''">
+				AND a.order_type=#{orderType}
+			</if>
+			<if test="null != goodTypeValues and goodTypeValues.length > 0">
+				AND b.good_type_id IN
+				<foreach collection="goodTypeValues" index="index" item="item"
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="null != orderStatusValues and orderStatusValues.length > 0">
+				AND a.order_status IN
+				<foreach collection="orderStatusValues" index="index" item="item"
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<choose><!-- 权限判断 -->
+				<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpOrderOriginalInfo:view")'>
+					<trim prefixOverrides="and |or" prefix="and (" suffix=")">
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpOrderOriginalInfo:all")'>
+							1=1
+						</if>
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpOrderOriginalInfo:branchCompany")'>
+							or a.order_type = 1
+						</if>
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpOrderOriginalInfo:serviceCompany")'>
+							or a.order_type = 2
+						</if>
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpOrderOriginalInfo:company")'>
+							or exists (select 1 from erp_team et where et.del_flag = '0' and et.company_type <![CDATA[<>]]> 'head' and et.agent_id = a.agent_id and et.id in (select tu.team_id from erp_team_user tu where tu.user_id = #{updateBy.id} and tu.del_flag = '0'))
+						</if>
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpOrderOriginalInfo:personal")'>
+							or exists (select 1 from erp_order_flow_user ofu where ofu.del_flag = '0' and ofu.order_id = a.id and ofu.user_id = #{updateBy.id})
+						</if>
+					</trim>
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+		GROUP BY a.id
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.buy_date DESC
+			</otherwise>
+		</choose>
+	</sql>
+	<select id="findList" resultType="ErpOrderOriginalInfo">
+		   	<include refid="findPageSql"/>
+	</select>
+	
+	<select id="findByPageWithExcel" resultType="com.yunnex.ops.erp.modules.order.dto.OrderExcelResponseDto">
+	   <include refid="findPageSql"/>
+	</select>
+	
+	<select id="findAllList" resultType="ErpOrderOriginalInfo">
+		SELECT 
+			<include refid="erpOrderOriginalInfoColumns"/>
+		FROM erp_order_original_info a
+		<include refid="erpOrderOriginalInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+        INSERT INTO erp_order_original_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+			<if test="orderNumber != null">order_number,</if>
+			<if test="orderVersion != null">order_version,</if>
+			<if test="buyDate != null">buy_date,</if>
+			<if test="payDate != null">pay_date,</if>
+			<if test="createAt != null">create_at,</if>
+			<if test="shopId != null">shop_id,</if>
+			<if test="shopName != null">shop_name,</if>
+			<if test="shopAbbreviation != null">shop_abbreviation,</if>
+			<if test="shopNumber != null">shop_number,</if>
+			<if test="shopExtensionId != null">shop_extension_id,</if>
+			<if test="prePrice != null">pre_price,</if>
+			<if test="realPrice != null">real_price,</if>
+			<if test="contactName != null">contact_name,</if>
+			<if test="source != null">source,</if>
+			<if test="contactNumber != null">contact_number,</if>
+			<if test="pendingNum != null">pending_num,</if>
+			<if test="processNum != null">process_num,</if>
+			<if test="finishNum != null">finish_num,</if>
+			<if test="orderType != null">order_type,</if>
+			<if test="sort != null">sort,</if>
+			<if test="delFlag != null">del_flag,</if>
+			<if test="orderStatus != null">order_status,</if>
+			<if test="promotePhone != null">promote_phone,</if>
+			<if test="promoteContact != null">promote_contact,</if>
+			<if test="salePerson != null">sale_person,</if>
+			<if test="cancel != null">cancel,</if> 
+			<if test="industryType != null">industry_type,</if>
+			<if test="orderSource != null">order_source,</if>
+			<if test="agentName != null">agent_name,</if>
+			<if test="agentId != null">agent_id,</if>
+			<if test="isNewShop != null">is_newshop,</if>
+			<if test="procInsId != null">proc_ins_id,</if>
+			<if test="auditStatus != null">audit_status,</if>
+			<if test="createDate != null">create_date,</if>
+			<if test="createBy != null and createBy.id != null">create_by,</if>
+			<if test="updateDate != null">update_date,</if>
+			<if test="updateBy != null and updateBy.id != null">update_by,</if>
+            <if test="orderCategory != null">order_category,</if>
+            <if test="ysOrderId != null">ys_order_id,</if>
+            <if test="ysOrderBuyTime != null">ys_order_buy_time,</if>
+            <if test="ysOrderRealPrice != null">ys_order_real_price,</if>
+            <if test="isAuditOrder != null">is_audit_order,</if>
+            <if test="remark != null">remark,</if>
+            <if test="upOrderNumber != null">up_order_number,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+			<if test="orderNumber != null">#{orderNumber},</if>
+			<if test="orderVersion != null">#{orderVersion},</if>
+			<if test="buyDate != null">#{buyDate},</if>
+			<if test="payDate != null">#{payDate},</if>
+			<if test="createAt != null">#{createAt},</if>
+			<if test="shopId != null">#{shopId},</if>
+			<if test="shopName != null">#{shopName},</if>
+			<if test="shopAbbreviation != null">#{shopAbbreviation},</if>
+			<if test="shopNumber != null">#{shopNumber},</if>
+			<if test="shopExtensionId != null">#{shopExtensionId},</if>
+			<if test="prePrice != null">#{prePrice},</if>
+			<if test="realPrice != null">#{realPrice},</if>
+			<if test="contactName != null">#{contactName},</if>
+			<if test="source != null">#{source},</if>
+			<if test="contactNumber != null">#{contactNumber},</if>
+			<if test="pendingNum != null">#{pendingNum},</if>
+			<if test="processNum != null">#{processNum},</if>
+			<if test="finishNum != null">#{finishNum},</if>
+			<if test="orderType != null">#{orderType},</if>
+			<if test="sort != null">#{sort},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+			<if test="orderStatus != null">#{orderStatus},</if>
+			<if test="promotePhone != null">#{promotePhone},</if>
+			<if test="promoteContact != null">#{promoteContact},</if>
+			<if test="salePerson != null">#{salePerson},</if>
+			<if test="cancel != null">#{cancel}, </if>
+			<if test="industryType != null">#{industryType},</if>
+			<if test="orderSource != null">#{orderSource},</if>
+			<if test="agentName != null">#{agentName},</if>
+			<if test="agentId != null">#{agentId},</if>
+			<if test="isNewShop != null">#{isNewShop},</if>
+			<if test="procInsId != null">#{procInsId},</if>
+			<if test="auditStatus != null">#{auditStatus},</if>
+			<if test="createDate != null">#{createDate},</if>
+			<if test="createBy != null and createBy.id != null">#{createBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+			<if test="updateBy != null and updateBy.id != null">#{updateBy.id},</if>
+            <if test="orderCategory != null">#{orderCategory},</if>
+            <if test="ysOrderId != null">#{ysOrderId},</if>
+            <if test="ysOrderBuyTime != null">#{ysOrderBuyTime},</if>
+            <if test="ysOrderRealPrice != null">#{ysOrderRealPrice},</if>
+            <if test="isAuditOrder != null">#{isAuditOrder},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="upOrderNumber != null">#{upOrderNumber},</if>
+        </trim>
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_order_original_info
+		<set>
+			<if test="orderNumber != null">order_number = #{orderNumber},</if>
+			<if test="buyDate != null">buy_date = #{buyDate},</if>
+			<if test="payDate != null">pay_date = #{payDate},</if>
+			<if test="createAt != null">create_at = #{createAt},</if>
+			<if test="shopId != null">shop_id = #{shopId},</if>
+			<if test="shopName != null">shop_name = #{shopName},</if>
+			<if test="shopAbbreviation != null">shop_abbreviation = #{shopAbbreviation},</if>
+			<if test="shopNumber != null">shop_number = #{shopNumber},</if>
+			<if test="shopExtensionId != null">shop_extension_id = #{shopExtensionId},</if>
+			<if test="prePrice != null">pre_price = #{prePrice},</if>
+			<if test="realPrice != null">real_price = #{realPrice},</if>
+			<if test="contactName != null">contact_name = #{contactName},</if>
+			<if test="source != null">source = #{source},</if>
+			<if test="contactNumber != null">contact_number = #{contactNumber},</if>
+			<if test="pendingNum != null">pending_num = #{pendingNum},</if>
+			<if test="processNum != null">process_num = #{processNum},</if>
+			<if test="finishNum != null">finish_num = #{finishNum},</if>
+			<if test="orderType != null">order_type = #{orderType},</if>
+			<if test="orderStatus != null">order_status = #{orderStatus},</if>
+			<if test="updateDate != null">update_date = #{updateDate},</if>
+			<if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+			<if test="sort != null">sort = #{sort},</if>
+			<if test="promotePhone != null">promote_phone=#{promotePhone},</if>
+			<if test="promoteContact != null">promote_contact=#{promoteContact},</if>
+			<if test="salePerson != null">sale_person=#{salePerson},</if>
+			<if test="cancel != null">cancel=#{cancel},</if> 
+			<if test="industryType != null">industry_type=#{industryType},</if>
+			<if test="orderSource != null">order_source=#{orderSource},</if>
+			<if test="orderStatus != null">order_status=#{orderStatus},</if>
+			<if test="agentName != null">agent_name=#{agentName},</if>
+			<if test="agentId != null">agent_id=#{agentId},</if>
+			<if test="isNewShop != null">is_newshop=#{isNewShop},</if>
+			<if test="procInsId != null">proc_ins_id=#{procInsId},</if>
+			<if test="auditStatus != null">audit_status=#{auditStatus},</if>
+			<if test="orderCategory != null">order_category=#{orderCategory},</if>
+			<if test="ysOrderId != null">ys_order_id = #{ysOrderId},</if>
+			<if test="ysOrderBuyTime != null">ys_order_buy_time = #{ysOrderBuyTime},</if>
+			<if test="ysOrderRealPrice != null">ys_order_real_price = #{ysOrderRealPrice},</if>
+			<if test="isAuditOrder != null">is_audit_order = #{isAuditOrder},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			<if test="upOrderNumber != null">up_order_number = #{upOrderNumber},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_order_original_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateOrderStatus">
+		UPDATE erp_order_original_info SET 
+			order_status = #{orderStatus}
+		WHERE order_number = #{orderNumber} 
+	</update>
+	
+	<select id="countByOrderNumber" resultType="int">
+		SELECT COUNT(a.id)
+		FROM erp_order_original_info a
+		WHERE a.order_number = #{orderNumber}  
+	</select>
+
+	<select id="countOrderUnCancel" resultType="int">
+		SELECT count(*)
+		FROM `erp_order_original_info` a
+		WHERE a.order_number = #{orderNumber} AND cancel = 0 AND del_flag = '0'
+	</select>
+
+	<select id="findUnCancelOrders" resultType="ErpOrderOriginalInfo">
+		SELECT
+		<include refid="erpOrderOriginalInfoColumnsTwo"/>
+		FROM `erp_order_original_info` a
+		WHERE a.order_number = #{orderNumber} AND cancel = 0 AND del_flag = '0'
+	</select>
+
+	<select id="countByYsOrderId" resultType="int">
+		SELECT count(*)
+ 		FROM `erp_order_original_info` a
+		WHERE a.ys_order_id = #{ysOrderId} AND a.cancel = 0 AND a.del_flag = '0'
+	</select>
+
+	<select id="findByYsOrderId" resultType="ErpOrderOriginalInfo">
+		SELECT
+		<include refid="erpOrderOriginalInfoColumnsTwo"/>
+		FROM `erp_order_original_info` a
+		WHERE a.ys_order_id = #{ysOrderId} AND a.cancel = 0 AND a.del_flag = '0'
+	</select>
+
+	<select id="countByCreateDate" resultType="int">
+		SELECT COUNT(a.id)
+		FROM erp_order_original_info a
+		WHERE a.create_at between #{startAt} AND #{endAt}
+	</select>
+	
+	<select id="getCancelOrderByOrderNo" resultType="ErpOrderOriginalInfo">
+		SELECT 
+			<include refid="erpOrderOriginalInfoColumns"/>
+		FROM erp_order_original_info a
+		WHERE a.order_number = #{orderNumber} and a.cancel = 0
+	</select>
+	
+	<update id="cancelOrder">
+		UPDATE erp_order_original_info SET 
+			cancel = #{cancel}
+		WHERE id = #{orderId} 
+	</update>
+	
+	<delete id="deleteById">
+		DELETE FROM erp_order_original_info 
+			WHERE id = #{id}
+	</delete>
+	
+	<select id="findWhereShopId" resultType="ErpOrderOriginalInfo">
+		SELECT 
+			<include refid="erpOrderOriginalInfoColumns"/>
+		FROM erp_order_original_info a
+		WHERE a.del_flag=#{del} AND a.shop_id=#{shopid}
+	</select>
+	
+	<select id="findSDIFlowOrderList" resultType="ErpOrderOriginalInfo">
+		SELECT 
+			<include refid="erpOrderOriginalInfoColumns"/>
+		FROM erp_order_original_info a
+			LEFT JOIN erp_shop_info b ON a.shop_id = b.zhangbei_id
+			LEFT JOIN erp_shop_data_input c ON a.shop_id = c.shop_id
+		<include refid="erpOrderOriginalInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND a.order_type = '1'
+			AND c.id IS NULL
+		</where>		
+	</select>
+	
+	<select id="getAgentId" resultType="ErpOrderOriginalInfo">
+		SELECT 
+			<include refid="erpOrderOriginalInfoColumns"/>
+		FROM erp_order_original_info a 
+		WHERE a.shop_id=#{shopid} AND a.del_flag=#{del} ORDER BY buy_date DESC
+	</select>
+	
+	<update id="updateShopInfoByShopId">
+		UPDATE erp_order_original_info SET 
+			shop_name = #{shopName},
+			shop_abbreviation = #{shopAbbreviation},
+			shop_number = #{shopNumber}
+		WHERE shop_id = #{shopId} 
+	</update>
+	
+	<update id="updateOrderVersion">
+ 		UPDATE erp_order_original_info SET 
+ 			order_version = #{orderVersion}
+ 		WHERE id = #{orderId} 
+ 	</update>
+ 	
+ 	<!-- 根据包含 商品类型id 和 不包含商品类型id 获取订单信息 -->
+ 	<select id="getByGoodTypeIdInAndNotIn"  resultType="ErpOrderOriginalInfo">
+ 		select <include refid="erpOrderOriginalInfoColumnsTwo"/> 
+ 		from erp_order_original_info a 
+ 		LEFT JOIN erp_order_original_good orderGood on a.id = orderGood.order_id AND  orderGood.del_flag = 0
+		where a.id = #{id}  
+		<if test="goodTypeIdIn != null and goodTypeIdIn.size() > 0">
+			AND orderGood.good_type_id in 
+			<foreach item="itemGoodTypeId" index="index" collection="goodTypeIdIn" open="(" separator="," close=")">
+				#{itemGoodTypeId}
+			</foreach>
+		</if>
+		<if test="goodTypeIdNotIn != null and goodTypeIdNotIn.size() > 0">
+			AND orderGood.good_type_id not in 
+			<foreach item="itemGoodTypeIdNot" index="index" collection="goodTypeIdNotIn" open="(" separator="," close=")">
+				#{itemGoodTypeIdNot}
+			</foreach>
+		</if>
+ 	</select>
+ 	
+ 	<select id="queryAuditList" resultType="com.yunnex.ops.erp.modules.order.entity.ErpOrderOriginalInfo">
+ 		select
+ 			o.id as id,
+			o.order_number as orderNumber,
+			o.shop_name as shopName,
+			o.agent_name as agentName,
+			u.name as createByName,
+			o.buy_date as buyDate,
+			(case 
+				when o.audit_status = '0' then '待首次审核'
+				when o.audit_status = '1' then '待二次审核'
+				when o.audit_status = '3' then '审核不通过'
+			end) as auditStatusTxt,
+			audit_status as 	auditStatus
+		from
+			erp_order_original_info o
+		left join
+			sys_user u
+		on
+			o.create_by = u.id and u.del_flag = '0'
+		where
+			o.del_flag = '0'
+		and
+		  	o.cancel = '0'
+		and 
+			o.audit_status in (
+			<trim suffixOverrides=",">
+			"-999",
+				<!-- 权限判断 -->
+				<if test='@org.apache.shiro.SecurityUtils@getSubject().hasRole("first_order_auditor")'>
+					'0',
+				</if>
+				<if test='@org.apache.shiro.SecurityUtils@getSubject().hasRole("second_order_auditor")'>
+					'1',
+				</if>
+				<if test='@org.apache.shiro.SecurityUtils@getSubject().hasRole("order_creator")'>
+					'0','1','3',
+				</if>
+			</trim>
+			)
+		<if test="paramObj.orderNumber != null and paramObj.orderNumber != ''">
+		and 
+			o.order_number like concat('%',#{paramObj.orderNumber},'%')
+		</if>
+		<if test="paramObj.shopName != null and paramObj.shopName != ''">
+		and 
+			o.shop_name like concat('%',#{paramObj.shopName},'%')
+		</if>
+		<if test="paramObj.agentName != null and paramObj.agentName != ''">
+		and 
+			o.agent_name like concat('%',#{paramObj.agentName},'%')
+		</if>
+		<if test="paramObj.auditStatus != null and paramObj.auditStatus != ''">
+		and 
+		 	o.audit_status = #{paramObj.auditStatus}
+		</if>
+		<if test="paramObj.findBuyStartDate != null">
+		and 
+			o.buy_date <![CDATA[>=]]> #{paramObj.findBuyStartDate}
+		</if>
+		<if test="paramObj.findBuyEndDate != null">
+		and 
+			o.buy_date <![CDATA[<=]]> #{paramObj.findBuyEndDate}
+		</if>
+ 	</select>
+
+	<update id="updateMaterialOrderInfo">
+		UPDATE erp_order_original_info
+		<set>
+			<if test="orderCategory != null">order_category=#{orderCategory},</if>
+			<if test="ysOrderId != null">ys_order_id = #{ysOrderId},</if>
+			<if test="ysOrderBuyTime != null">ys_order_buy_time = #{ysOrderBuyTime},</if>
+			<if test="ysOrderRealPrice != null">ys_order_real_price = #{ysOrderRealPrice},</if>
+			<if test="updateDate != null">update_date = #{updateDate},</if>
+			<if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+		</set>
+		WHERE order_number = #{orderNumber} and cancel = 0 and del_flag = '0'
+	</update>
+
+	<update id="updateAuditOrdersToNo">
+		UPDATE erp_order_original_info SET is_audit_order = 'N'
+		WHERE shop_id = #{shopId} AND is_audit_order = 'Y' AND del_flag = '0'
+	</update>
+
+	<select id="findAuditOrder" resultType="ErpOrderOriginalInfo">
+		SELECT id, order_number AS orderNumber, order_status AS "orderStatus" FROM erp_order_original_info
+		WHERE shop_id=#{zhangbeiId} AND is_audit_order = 'Y' AND del_flag='0'
+	</select>
+	<select id="findOrderInfoByUpOrderNumber" resultType="ErpOrderOriginalInfo">
+		SELECT 
+			<include refid="erpOrderOriginalInfoColumns"/>
+		FROM erp_order_original_info a
+		WHERE a.del_flag='0' AND a.up_order_number=#{upOrderNumber}
+		LIMIT 1
+	</select>
+
+
+
+</mapper>

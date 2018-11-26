@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpPromotionMaterialLogDao">
+    
+	<sql id="erpPromotionMaterialLogColumns">
+		a.id AS "id",
+		a.split_id AS "splitId",
+		a.promotion_materials_id AS "promotionMaterialsId",
+		a.operator AS "operator",
+		a.operate_time AS "operateTime",
+		a.operate_type AS "operateType",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpPromotionMaterialLogJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpPromotionMaterialLog">
+		SELECT 
+			<include refid="erpPromotionMaterialLogColumns"/>
+		FROM erp_promotion_material_log a
+		<include refid="erpPromotionMaterialLogJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpPromotionMaterialLog">
+		SELECT 
+			<include refid="erpPromotionMaterialLogColumns"/>
+		FROM erp_promotion_material_log a
+		<include refid="erpPromotionMaterialLogJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpPromotionMaterialLog">
+		SELECT 
+			<include refid="erpPromotionMaterialLogColumns"/>
+		FROM erp_promotion_material_log a
+		<include refid="erpPromotionMaterialLogJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getPromotionMaterialLogs" resultType="ErpPromotionMaterialLog">
+		SELECT 
+			<include refid="erpPromotionMaterialLogColumns"/>,s.name AS operatorName
+		FROM erp_promotion_material_log a 
+		LEFT JOIN sys_user s
+		ON s.id=a.operator
+		<include refid="erpPromotionMaterialLogJoins"/>
+		<where>
+			a.del_flag = '0'
+			<if test="splitId!=null and splitId!=''">
+			   AND a.split_id=#{splitId}
+			</if>
+			<if test="promotionMaterialsId!=null and promotionMaterialsId!=''">
+			   AND a.promotion_materials_id=#{promotionMaterialsId}
+			</if>
+		</where>		
+		order by a.operate_time DESC
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_promotion_material_log(
+			id,
+			split_id,
+			promotion_materials_id,
+			operator,
+			operate_time,
+			operate_type,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{splitId},
+			#{promotionMaterialsId},
+			#{operator},
+			#{operateTime},
+			#{operateType},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_promotion_material_log SET 	
+			split_id = #{splitId},
+			promotion_materials_id = #{promotionMaterialsId},
+			operator = #{operator},
+			operate_time = #{operateTime},
+			operate_type = #{operateType},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_promotion_material_log SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

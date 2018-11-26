@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpOrderSendInfoDao">
+    
+    <sql id="erpOrderSendInfoColumns">
+        a.id AS "id",
+        a.order_number AS "orderNumber",
+        a.ys_order_id AS "ysOrderId",
+        a.link_man AS "linkMan",
+        a.link_phone AS "linkPhone",
+        a.receive_address AS "receiveAddress",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag"
+    </sql>
+
+    <sql id="erpOrderSendInfoJoins">
+    </sql>
+    
+    <select id="get" resultType="ErpOrderSendInfo">
+        SELECT
+            <include refid="erpOrderSendInfoColumns"/>
+        FROM erp_order_send_info a
+        <include refid="erpOrderSendInfoJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="ErpOrderSendInfo">
+        SELECT
+            <include refid="erpOrderSendInfoColumns"/>
+        FROM erp_order_send_info a
+        <include refid="erpOrderSendInfoJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpOrderSendInfo">
+        SELECT
+            <include refid="erpOrderSendInfoColumns"/>
+        FROM erp_order_send_info a
+        <include refid="erpOrderSendInfoJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO erp_order_send_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="orderNumber != null">order_number,</if>
+            <if test="ysOrderId != null">ys_order_id,</if>
+			<if test="linkMan != null">link_man,</if>
+			<if test="linkPhone != null">link_phone,</if>
+			<if test="receiveAddress != null">receive_address,</if>
+            <if test="createBy != null and createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+            <if test="updateBy != null and updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+			<if test="remarks != null">remarks,</if>
+			<if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="orderNumber != null">#{orderNumber},</if>
+            <if test="ysOrderId != null">#{ysOrderId},</if>
+			<if test="linkMan != null">#{linkMan},</if>
+			<if test="linkPhone != null">#{linkPhone},</if>
+			<if test="receiveAddress != null">#{receiveAddress},</if>
+            <if test="createBy != null and createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+            <if test="updateBy != null and updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+			<if test="remarks != null">#{remarks},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE erp_order_send_info
+            <set>
+                <if test="orderNumber != null">order_number = #{orderNumber},</if>
+                <if test="ysOrderId != null">ys_order_id = #{ysOrderId},</if>
+                <if test="linkMan != null">link_man = #{linkMan},</if>
+                <if test="linkPhone != null">link_phone = #{linkPhone},</if>
+                <if test="receiveAddress != null">receive_address = #{receiveAddress},</if>
+                <if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+                <if test="updateDate != null">update_date = #{updateDate},</if>
+                <if test="remarks != null">remarks = #{remarks},</if>
+            </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+        UPDATE erp_order_send_info SET
+            del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findByOrderNumber" resultType="ErpOrderSendInfo">
+        SELECT
+        <include refid="erpOrderSendInfoColumns"/>
+        FROM erp_order_send_info a
+        WHERE a.order_number = #{orderNumber} and a.del_flag = '0'
+    </select>
+
+    <select id="findByYsOrderId" resultType="ErpOrderSendInfo">
+        SELECT
+        <include refid="erpOrderSendInfoColumns"/>
+        FROM erp_order_send_info a
+        WHERE a.ys_order_id = #{ysOrderId} and a.del_flag = '0'
+    </select>
+
+</mapper>

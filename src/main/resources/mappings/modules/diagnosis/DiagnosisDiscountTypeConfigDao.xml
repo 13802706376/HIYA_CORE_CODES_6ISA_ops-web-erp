@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.diagnosis.dao.DiagnosisDiscountTypeConfigDao">
+    
+	<sql id="diagnosisDiscountTypeConfigColumns">
+		a.id AS "id",
+		a.industry_attribute_id AS "industryAttributeId",
+		a.activity_requirement_id AS "activityRequirementId",
+		a.discount_type_id AS "discountTypeId",
+		a.score AS "score",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="diagnosisDiscountTypeConfigJoins">
+	</sql>
+    
+	<select id="get" resultType="DiagnosisDiscountTypeConfig">
+		SELECT 
+			<include refid="diagnosisDiscountTypeConfigColumns"/>
+		FROM diagnosis_discount_type_config a
+		<include refid="diagnosisDiscountTypeConfigJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DiagnosisDiscountTypeConfig">
+		SELECT 
+			<include refid="diagnosisDiscountTypeConfigColumns"/>
+		FROM diagnosis_discount_type_config a
+		<include refid="diagnosisDiscountTypeConfigJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DiagnosisDiscountTypeConfig">
+		SELECT 
+			<include refid="diagnosisDiscountTypeConfigColumns"/>
+		FROM diagnosis_discount_type_config a
+		<include refid="diagnosisDiscountTypeConfigJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO diagnosis_discount_type_config(
+			id,
+			industry_attribute_id,
+			activity_requirement_id,
+			discount_type_id,
+			score,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{industryAttributeId},
+			#{activityRequirementId},
+			#{discountTypeId},
+			#{score},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE diagnosis_discount_type_config SET 	
+			industry_attribute_id = #{industryAttributeId},
+			activity_requirement_id = #{activityRequirementId},
+			discount_type_id = #{discountTypeId},
+			score = #{score},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE diagnosis_discount_type_config SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

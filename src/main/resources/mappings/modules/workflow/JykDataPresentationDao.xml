@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.data.dao.JykDataPresentationDao">
+    
+	<sql id="jykDataPresentationColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.split_id AS "splitId",
+		a.proc_ins_id AS "procInsId",
+		a.data_type AS "dataType",
+		a.pdf_url AS "pdfUrl",
+		a.pdf_name AS "pdfName",
+		a.state AS "state",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="jykDataPresentationJoins">
+	</sql>
+    
+	<select id="get" resultType="JykDataPresentation">
+		SELECT 
+			<include refid="jykDataPresentationColumns"/>
+		FROM jyk_data_presentation a
+		<include refid="jykDataPresentationJoins"/>
+		WHERE a.del_flag = 0 AND a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="JykDataPresentation">
+		SELECT 
+			<include refid="jykDataPresentationColumns"/>
+		FROM jyk_data_presentation a
+		<include refid="jykDataPresentationJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="JykDataPresentation">
+		SELECT 
+			<include refid="jykDataPresentationColumns"/>
+		FROM jyk_data_presentation a
+		<include refid="jykDataPresentationJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO jyk_data_presentation(
+			id,
+			order_id,
+			split_id,
+			proc_ins_id,
+			data_type,
+			pdf_url,
+			pdf_name,
+			state,
+			create_date,
+			create_by,
+			update_date,
+			update_by,
+			remark,
+			sort,
+			del_flag
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{splitId},
+			#{procInsId},
+			#{dataType},
+			#{pdfUrl},
+			#{pdfName},
+			#{state},
+			#{createDate},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{sort},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE jyk_data_presentation SET 	
+			order_id = #{orderId},
+			split_id = #{splitId},
+			proc_ins_id = #{procInsId},
+			data_type = #{dataType},
+			pdf_url = #{pdfUrl},
+			pdf_name = #{pdfName},
+			state = #{state},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remark = #{remark},
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE jyk_data_presentation SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findListBySplitId" resultType="JykDataPresentation">
+		SELECT 
+			<include refid="jykDataPresentationColumns"/>
+		FROM jyk_data_presentation a
+		<include refid="jykDataPresentationJoins"/>
+		WHERE a.del_flag = 0 
+			AND a.split_id = #{splitId}
+	</select>
+	
+	<select id="findListBySplitIdAndState" resultType="JykDataPresentation">
+		SELECT 
+			<include refid="jykDataPresentationColumns"/>
+		FROM jyk_data_presentation a
+		<include refid="jykDataPresentationJoins"/>
+		WHERE a.del_flag = 0 
+			AND a.split_id = #{splitId}
+			AND a.state = #{state}
+	</select>
+	
+	<select id="getOnlyOne" resultType="JykDataPresentation">
+		SELECT 
+			<include refid="jykDataPresentationColumns"/>
+		FROM jyk_data_presentation a
+		<include refid="jykDataPresentationJoins"/>
+		WHERE a.del_flag = 0 
+			AND a.split_id = #{splitId}
+			AND a.state = #{state}
+			AND a.data_type = #{dataType}
+	</select>
+	
+	<update id="deleteBefore">
+		UPDATE jyk_data_presentation SET 
+			del_flag = 1
+		WHERE split_id = #{splitId}
+			AND data_type = #{dataType}
+	</update>
+	
+	<update id="updateState">
+		UPDATE jyk_data_presentation SET 
+			state = #{state}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getByProcInsId" resultType="JykDataPresentation">
+		SELECT 
+			<include refid="jykDataPresentationColumns"/>
+		FROM jyk_data_presentation a
+		<include refid="jykDataPresentationJoins"/>
+		WHERE a.del_flag = 0 AND a.state NOT IN ('0') AND a.proc_ins_id = #{procInsId} AND data_type = #{dataType}
+	</select>
+	
+</mapper>

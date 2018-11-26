@@ -1,0 +1,1054 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.team.dao.ErpTeamTotalDao">
+	<select id="findListByTeam" resultType="com.yunnex.ops.erp.modules.team.entity.ErpTeamTotal">
+		SELECT
+			teamAll.id as teamId,
+			teamAll.team_name as teamName,
+			count(erpOrder.id) as newCountAll,
+			(
+				select
+					count( erpOrder.id ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+					and erpOrder.buy_date BETWEEN #{startDateStr} and #{endDateStr} 
+					and EXISTS(
+						SELECT
+							1
+						from
+							erp_order_flow_user erpOrder1,erp_team_user teamUser
+						where
+							erpDelivery.proc_ins_id = erpOrder1.flow_id
+							and erpOrder1.user_id =teamUser.user_id
+							and teamUser.team_id = teamAll.id
+					)
+			) as newCount,
+			(
+				select
+					count( erpOrder.id ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+					and erpDelivery.should_flow_end_time BETWEEN #{startDateStr} and #{endDateStr} 
+					and EXISTS(
+						select
+							1
+						from
+							erp_order_flow_user erpOrder2,erp_team_user teamUser
+						where
+							erpDelivery.proc_ins_id = erpOrder2.flow_id
+							and erpOrder2.user_id=teamUser.user_id
+							and teamUser.team_id = teamAll.id
+					)
+			) as shouldFlowCount,
+			(
+				select
+					count( erpOrder.id ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+					and erpDelivery.flow_end_time BETWEEN #{startDateStr} and #{endDateStr} 
+					and EXISTS(
+						select
+							1
+						from
+							erp_order_flow_user erpOrder3,erp_team_user teamUser
+						where
+							erpDelivery.proc_ins_id = erpOrder3.flow_id
+							and erpOrder3.user_id =teamUser.user_id
+								and teamUser.team_id = teamAll.id
+					)
+			) as flowEndCount,
+			(
+				select
+					count( 1 ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+					and erpDelivery.should_flow_end_time BETWEEN #{startDateStr} and #{endDateStr} 
+					AND DATEDIFF(
+						if(
+							erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+							erpDelivery.flow_end_time,
+							NOW()
+						),
+						if(
+							erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',
+							erpDelivery.should_flow_end_time,
+							NOW()
+						)
+					)&gt; 0
+					and if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N')='N'
+					and EXISTS(
+						select
+							1
+						from
+							erp_order_flow_user erpOrder4,erp_team_user teamUser
+						where
+							erpDelivery.proc_ins_id = erpOrder4.flow_id
+							and erpOrder4.user_id =teamUser.user_id
+							and teamUser.team_id = teamAll.id
+					)
+			) as noCompleteCount,
+			(
+				select
+					count( 1 ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+					and erpDelivery.flow_end_time BETWEEN #{startDateStr} and #{endDateStr} 
+					AND DATEDIFF(
+						if(
+							erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+							erpDelivery.flow_end_time,
+							NOW()
+						),
+						if(
+							erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',
+							erpDelivery.should_flow_end_time,
+							NOW()
+						)
+					)&gt; 0
+					and if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N')='Y'
+					and EXISTS(
+						select
+							1
+						from
+							erp_order_flow_user erpOrder5,erp_team_user teamUser
+						where
+							erpDelivery.proc_ins_id = erpOrder5.flow_id
+							and erpOrder5.user_id =teamUser.user_id
+							and teamUser.team_id = teamAll.id
+					)
+			) as completeCount,
+			(
+				select
+					count( 1 ) as curCount from erp_order_original_info erpOrder, erp_delivery_service erpDelivery
+				where erpDelivery.order_id = erpOrder.id and erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+					and erpDelivery.flow_end_time BETWEEN #{startDateStr} and #{endDateStr} and erpDelivery.excption_logo is null
+					AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),
+						if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())
+					)&gt; 0
+					and if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N')='Y'
+					and EXISTS(select 1 from erp_order_flow_user erpOrder6,erp_team_user teamUser
+						where erpDelivery.proc_ins_id = erpOrder6.flow_id and erpOrder6.user_id =teamUser.user_id and teamUser.team_id = teamAll.id
+					)
+			) as completeExCount
+		from
+			erp_team_user teamUserAll
+			LEFT JOIN erp_team teamAll on
+			teamUserAll.team_id = teamAll.id
+			and teamAll.del_flag = 0
+			LEFT JOIN erp_order_flow_user erpFlow on
+			erpFlow.user_id = teamUserAll.user_id
+			LEFT JOIN erp_delivery_service erpDelivery on
+			erpDelivery.proc_ins_id = erpFlow.flow_id
+			LEFT JOIN erp_order_original_info erpOrder on
+			erpOrder.id = erpDelivery.order_id
+		where
+			erpOrder.buy_date BETWEEN #{startDateStr} and #{endDateStr}
+			and teamAll.del_flag = '0'
+			<if test="teamIds != null and teamIds.size()> 0">
+				AND teamUserAll.team_id in
+		  		<foreach item="teamId" index="index" collection="teamIds" open="(" separator="," close=")">  
+		    		#{teamId}
+		    	</foreach>
+			</if>
+			and (
+				<trim prefixOverrides="or">
+					<choose><!-- 权限判断 -->
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:all")'>
+							or teamAll.company_type in ('agent','branch') 
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:serviceCompany")'>
+							or teamAll.company_type = 'agent'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:branchCompany")'>
+							or teamAll.company_type = 'branch'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:company")'>
+							or teamAll.agent_id in (
+								SELECT
+									team.agent_id
+								from
+									erp_team team
+								LEFT JOIN erp_team_user teamUser on
+									team.id = teamUser.team_id
+									and teamUser.del_flag = '0'
+								where
+									teamUser.user_id = #{userId}
+									and teamUser.leader_flag = '1'
+							)
+						</when>
+						<otherwise>
+							or 1=2
+						</otherwise>
+					</choose>
+				</trim>
+			)
+		GROUP BY
+			teamUserAll.team_id
+	</select>
+	
+	<select id="findListByTeamByCount" resultType="long">
+		SELECT count(*) from (
+			SELECT
+				teamAll.id as teamId
+			from
+				erp_team_user teamUserAll
+				LEFT JOIN erp_team teamAll on
+				teamUserAll.team_id = teamAll.id
+				and teamAll.del_flag = 0
+				LEFT JOIN erp_order_flow_user erpFlow on
+				erpFlow.user_id = teamUserAll.user_id
+				LEFT JOIN erp_delivery_service erpDelivery on
+				erpDelivery.proc_ins_id = erpFlow.flow_id
+				LEFT JOIN erp_order_original_info erpOrder on
+				erpOrder.id = erpDelivery.order_id
+			where
+				erpOrder.buy_date BETWEEN #{startDateStr} and #{endDateStr}
+				and teamAll.del_flag = '0'
+				<if test="teamIds != null and teamIds.size()> 0">
+					AND teamUserAll.team_id in
+			  		<foreach item="teamId" index="index" collection="teamIds" open="(" separator="," close=")">  
+			    		#{teamId}
+			    	</foreach>
+				</if>
+				and (
+				<trim prefixOverrides="or">
+					<choose><!-- 权限判断 -->
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:all")'>
+							or teamAll.company_type in ('agent','branch') 
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:serviceCompany")'>
+							or teamAll.company_type = 'agent'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:branchCompany")'>
+							or teamAll.company_type = 'branch'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:company")'>
+							or teamAll.agent_id in (
+								SELECT
+									team.agent_id
+								from
+									erp_team team
+								LEFT JOIN erp_team_user teamUser on
+									team.id = teamUser.team_id
+									and teamUser.del_flag = '0'
+								where
+									teamUser.user_id = #{userId}
+									and teamUser.leader_flag = '1'
+							)
+						</when>
+						<otherwise>
+							or 1=2
+						</otherwise>
+					</choose>
+				</trim>
+				)
+			GROUP BY
+				teamUserAll.team_id
+		) as total
+	</select>
+	
+	<select id="getUserByTeamFirst" resultType="com.yunnex.ops.erp.modules.team.entity.ErpTeamTotal">
+		SELECT
+			'FIRST' as serviceType,
+			teamAll.id as teamId,
+			teamAll.team_name as teamName,
+			(
+				select
+					count( erpOrder.id ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpDelivery.service_type in ('JYK','FMPS','FMPS_BASIC','INTO_PIECES')
+					and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+					and erpOrder.id in(
+						select
+							erpOrder.order_id
+						from
+							erp_order_flow_user erpOrder
+						where
+							erpOrder.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = teamAll.id
+							)
+					)
+			) as shouldFlowCount,
+			(
+				select
+					count( erpOrder.id ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpDelivery.service_type in ('JYK','FMPS','FMPS_BASIC','INTO_PIECES')
+					and erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+					and erpOrder.id in(
+						select
+							erpOrder.order_id
+						from
+							erp_order_flow_user erpOrder
+						where
+							erpOrder.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = teamAll.id
+							)
+					)
+					<if test="agentIdList != null and agentIdList.size() > 0">
+				  		AND erpOrder.agent_id in
+				  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+				    		#{itemAgentId}
+				    	</foreach>
+				  	</if>
+				  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+						AND erpOrder.order_type in
+						<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+				    		#{itemOrderType}
+				    	</foreach>
+					</if>
+			) as flowEndCount
+		from
+			erp_team_user teamUserAll,
+			erp_team teamAll
+		where
+			teamUserAll.team_id = teamAll.id
+			and teamUserAll.user_id in(
+				select
+					erpFlow.user_id as userId
+				from
+					erp_delivery_service erpDelivery
+				LEFT JOIN erp_order_flow_user erpFlow on
+					erpFlow.flow_id = erpDelivery.proc_ins_id
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpDelivery.order_id = erpOrder.id
+				where
+					erpFlow.user_id in(
+						select
+							teamUser.user_id
+						from
+							erp_team_user teamUser
+						where
+							teamUser.del_flag = '0'
+					)
+					and erpOrder.buy_date &gt;= #{startDateStr}
+					AND erpOrder.buy_date &lt;= #{endDateStr}
+				GROUP BY
+					erpFlow.user_id
+			)
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+		GROUP BY
+			teamUserAll.team_id
+		UNION ALL
+		SELECT
+			'VC' as serviceType,
+			teamAll.id as teamId,
+			teamAll.team_name as teamName,
+			(
+				select
+					count( erpOrder.id ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpDelivery.service_type in ('VC')
+					and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+					and erpOrder.id in(
+						select
+							erpOrder.order_id
+						from
+							erp_order_flow_user erpOrder
+						where
+							erpOrder.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = teamAll.id
+							)
+					)
+			) as shouldFlowCount,
+			(
+				select
+					count( erpOrder.id ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpDelivery.service_type in ('VC')
+					and erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+					and erpOrder.id in(
+						select
+							erpOrder.order_id
+						from
+							erp_order_flow_user erpOrder
+						where
+							erpOrder.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = teamAll.id
+							)
+					)
+					<if test="agentIdList != null and agentIdList.size() > 0">
+				  		AND erpOrder.agent_id in
+				  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+				    		#{itemAgentId}
+				    	</foreach>
+				  	</if>
+				  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+						AND erpOrder.order_type in
+						<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+				    		#{itemOrderType}
+				    	</foreach>
+					</if>
+			) as flowEndCount
+		from
+			erp_team_user teamUserAll,
+			erp_team teamAll
+		where
+			teamUserAll.team_id = teamAll.id
+			and teamUserAll.user_id in(
+				select
+					erpFlow.user_id as userId
+				from
+					erp_delivery_service erpDelivery
+				LEFT JOIN erp_order_flow_user erpFlow on
+					erpFlow.flow_id = erpDelivery.proc_ins_id
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpDelivery.order_id = erpOrder.id
+				where
+					erpFlow.user_id in(
+						select
+							teamUser.user_id
+						from
+							erp_team_user teamUser
+						where
+							teamUser.del_flag = '0'
+					)
+					and erpOrder.buy_date &gt;= #{startDateStr}
+					AND erpOrder.buy_date &lt;= #{endDateStr}
+				GROUP BY
+					erpFlow.user_id
+			)
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+		GROUP BY
+			teamUserAll.team_id
+		UNION ALL
+		SELECT
+			'MU' as serviceType,
+			teamAll.id as teamId,
+			teamAll.team_name as teamName,
+			(
+				select
+					count( erpOrder.id ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpDelivery.service_type in ('MU')
+					and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+					and erpOrder.id in(
+						select
+							erpOrder.order_id
+						from
+							erp_order_flow_user erpOrder
+						where
+							erpOrder.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = teamAll.id
+							)
+					)
+			) as shouldFlowCount,
+			(
+				select
+					count( erpOrder.id ) as curCount
+				from
+					erp_order_original_info erpOrder,
+					erp_delivery_service erpDelivery
+				where
+					erpDelivery.order_id = erpOrder.id
+					and erpDelivery.service_type in ('MU')
+					and erpDelivery.flow_end_time &gt;= #{startDateStr}
+					and erpDelivery.flow_end_time &lt;= #{endDateStr}
+					and erpOrder.id in(
+						select
+							erpOrder.order_id
+						from
+							erp_order_flow_user erpOrder
+						where
+							erpOrder.user_id in(
+								select
+									teamUser.user_id
+								from
+									erp_team_user teamUser
+								where
+									teamUser.team_id = teamAll.id
+							)
+					)
+					<if test="agentIdList != null and agentIdList.size() > 0">
+				  		AND erpOrder.agent_id in
+				  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+				    		#{itemAgentId}
+				    	</foreach>
+				  	</if>
+				  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+						AND erpOrder.order_type in
+						<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+				    		#{itemOrderType}
+				    	</foreach>
+					</if>
+			) as flowEndCount
+		from
+			erp_team_user teamUserAll,
+			erp_team teamAll
+		where
+			teamUserAll.team_id = teamAll.id
+			and teamUserAll.user_id in(
+				select
+					erpFlow.user_id as userId
+				from
+					erp_delivery_service erpDelivery
+				LEFT JOIN erp_order_flow_user erpFlow on
+					erpFlow.flow_id = erpDelivery.proc_ins_id
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpDelivery.order_id = erpOrder.id
+				where
+					erpFlow.user_id in(
+						select
+							teamUser.user_id
+						from
+							erp_team_user teamUser
+						where
+							teamUser.del_flag = '0'
+					)
+					and erpOrder.buy_date &gt;= #{startDateStr}
+					AND erpOrder.buy_date &lt;= #{endDateStr}
+				GROUP BY
+					erpFlow.user_id
+			)
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+		GROUP BY
+			teamUserAll.team_id
+	</select>
+	
+	<select id="findNewCount" resultType="java.lang.Integer">
+		select
+			count(erpOrder.id) as curCount
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpOrder.buy_date &gt;= #{startDateStr}
+			and erpOrder.buy_date &lt;= #{endDateStr}
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+	</select>
+	
+	<select id="findShouldflowCount" resultType="com.yunnex.ops.erp.modules.team.entity.ErpTeamTotal">
+		select
+			count(erpOrder.id) as curCount,
+			'FIRST' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('JYK','FMPS','FMPS_BASIC','INTO_PIECES')
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+		UNION ALL
+		select
+			count(erpOrder.id) as curCount,
+			'MU' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('MU')
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+		UNION ALL
+		select
+			count(erpOrder.id) as curCount,
+			'VC' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('VC')
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+	</select>
+	
+	<select id="flowEndCount" resultType="com.yunnex.ops.erp.modules.team.entity.ErpTeamTotal">
+		select
+			count(erpOrder.id) as curCount,
+			'FIRST' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('JYK','FMPS','FMPS_BASIC','INTO_PIECES')
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+		UNION ALL
+		select
+			count(erpOrder.id) as curCount,
+			'MU' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('MU')
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+		UNION ALL
+		select
+			count(erpOrder.id) as curCount,
+			'VC' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('VC')
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+	</select>
+	
+	<select id="noCompleteCount" resultType="java.lang.Integer">
+		select
+			count(1) as curCount
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+			AND if(
+				erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+				'Y',
+				'N'
+			)= 'N'
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+	</select>
+	
+	<select id="completeCount" resultType="java.lang.Integer">
+		select
+			count(1) as curCount
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.flow_end_time &lt;= #{endDateStr}
+			AND DATEDIFF(
+				if(
+					erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.flow_end_time,
+					NOW()
+				),
+				if(
+					erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.should_flow_end_time,
+					NOW()
+				)
+			)> 0
+			AND if(
+				erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+				'Y',
+				'N'
+			)= 'Y'
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+	</select>
+	
+	<select id="completeExCount" resultType="java.lang.Integer">
+		select
+			count(1) as curCount
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+		    and erpDelivery.excption_logo is null  
+			and erpDelivery.flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.flow_end_time &lt;= #{endDateStr}
+			AND DATEDIFF(
+				if(
+					erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.flow_end_time,
+					NOW()
+				),
+				if(
+					erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.should_flow_end_time,
+					NOW()
+				)
+			)> 0
+			AND if(
+				erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+				'Y',
+				'N'
+			)= 'Y'
+			<if test="teamId != null">
+				and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id in(
+							select
+								teamUser.user_id
+							from
+								erp_team_user teamUser
+							where
+								teamUser.team_id = #{teamId}
+						)
+				)
+			</if>
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+		    		#{itemAgentId}
+		    	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+		    		#{itemOrderType}
+		    	</foreach>
+			</if>
+	</select>
+</mapper>

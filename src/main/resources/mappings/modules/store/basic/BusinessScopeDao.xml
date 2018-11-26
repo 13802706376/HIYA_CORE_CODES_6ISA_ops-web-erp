@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.store.basic.dao.BusinessScopeDao">
+    
+	<sql id="businessScopeColumns">
+		a.id AS "id",
+		a.text AS "text"
+	</sql>
+	
+	<sql id="businessScopeJoins">
+	</sql>
+    
+	<select id="get" resultType="BusinessScope">
+		SELECT 
+			<include refid="businessScopeColumns"/>
+		FROM business_scope a
+		<include refid="businessScopeJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="queryIdByText" resultType="java.lang.Integer" parameterType="java.lang.String">
+		select d.id from business_scope d where d.text = #{text} limit 1
+	</select>
+	
+	<select id="findList" resultType="BusinessScope">
+		SELECT 
+			<include refid="businessScopeColumns"/>
+		FROM business_scope a
+		<include refid="businessScopeJoins"/>
+		<where>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="BusinessScope">
+		SELECT 
+			<include refid="businessScopeColumns"/>
+		FROM business_scope a
+<!-- 		<include refid="businessScopeJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose> -->
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO business_scope(
+			id,
+			text
+		) VALUES (
+			#{id},
+			#{text}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE business_scope SET 	
+			text = #{text}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM business_scope
+		WHERE id = #{id}
+	</update>
+
+	<select id="findByText" resultType="BusinessScope">
+		SELECT
+		<include refid="businessScopeColumns"/>
+		FROM business_scope a
+		WHERE a.text = #{text}
+	</select>
+	
+</mapper>

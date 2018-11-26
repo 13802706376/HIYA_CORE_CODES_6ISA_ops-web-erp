@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+	<dubbo:consumer version="1.0.0" check="${dubbo.consumer.check}" timeout="${dubbo.consumer.timeout}"
+					loadbalance="${dubbo.consumer.loadbalance}" filter="activelimit"/>
+
+	<dubbo:provider version="1.0.0" timeout="${dubbo.provider.timeout}" loadbalance="${dubbo.provider.loadbalance}"
+					retries="${dubbo.provider.retries}" serialization="${dubbo.provider.serialization}"
+					threads="${dubbo.provider.threads}"/>
+
+	<!-- 声明应用名称 -->
+	<dubbo:application name="app-${app.name}" owner="erp"/>
+
+	<!-- 定义注册中心 zk -->
+	<dubbo:registry protocol="${dubbo.registry.protocol}" timeout="${dubbo.registry.timeout}" address="${ZKSTRING}"
+					file="${user.home}/.dubbo/dubbo-registry-app-${app.name}.cache" register="${dubbo.registry.register}"/>
+
+	<!-- 暴露服务端口 -->
+	<dubbo:protocol name="dubbo" port="36025"/>
+
+	<!-- 监控中心 -->
+	<dubbo:monitor protocol="registry"/>
+
+
+	<dubbo:service interface="com.yunnex.ops.erp.api.facade.order.ErpOrderMaterialFacade"
+				   ref="erpOrderMaterialFacadeImpl"/>
+
+	<!-- 暴露的服务列表 -->
+	<!-- <dubbo:service interface="com.yunnex.ops.erp.api.facade.TestMenuFacade" ref="testMenuFacadeImpl" protocol="dubbo"/> -->
+
+     <!-- 引用的服务列表 -->
+	 <dubbo:reference id="testWxappFacade" interface="com.yunnex.ops.erp.api.facade.TestWxappFacade"/>
+
+	<dubbo:reference id="materialCfgOrderFacade" interface="yunnex.operation.biz.facade.MaterialOrderFacade"/>
+
+</beans>

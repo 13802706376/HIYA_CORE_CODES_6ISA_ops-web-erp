@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunnex.ops.erp.modules.shopdata.dao.ErpPayIntopiecesDao" >
+	
+	<sql id="erpPayIntopiecesColumns">
+		a.id AS "id",
+		a.store_id AS "storeId",
+		a.shop_id AS "shopId",
+		a.intopieces_type AS "intopiecesType",
+		a.intopieces_name AS "intopiecesName",
+		a.short_name AS "shortName",
+		a.charge_person AS "chargePerson",
+		a.proc_ins_id AS "procInsId",
+		a.remark AS "remark",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id"
+	</sql>
+	
+	<sql id="erpPayIntopiecesJoins">
+	</sql>
+  	
+  	<select id="get" resultType="ErpPayIntopieces">
+	    select 
+	    <include refid="erpPayIntopiecesColumns" />
+	    from erp_pay_intopieces a
+	    <include refid="erpPayIntopiecesJoins" />
+	    where id = #{id,jdbcType=VARCHAR}
+  	</select>
+  	
+  	<delete id="delete">
+	    delete from erp_pay_intopieces
+	    where id = #{id,jdbcType=VARCHAR}
+  	</delete>
+  	
+  	<insert id="insert">
+	    insert into erp_pay_intopieces (
+	    	id, 
+	    	store_id,
+			shop_id,
+			intopieces_type,
+			intopieces_name,
+			short_name,
+			charge_person, 
+	      	proc_ins_id, 
+	      	remark, 
+	      	create_date
+	      ) values (
+	      	#{id,jdbcType=VARCHAR}, 
+	      	#{storeId,jdbcType=VARCHAR}, 
+	      	#{shopId,jdbcType=VARCHAR}, 
+	      	#{intopiecesType,jdbcType=VARCHAR}, 
+	      	#{intopiecesName,jdbcType=VARCHAR}, 
+	      	#{shortName,jdbcType=VARCHAR}, 
+	      	#{chargePerson,jdbcType=BIT}, 
+	      	#{procInsId,jdbcType=VARCHAR}, 
+	      	#{remark,jdbcType=VARCHAR}, 
+	      	#{createDate,jdbcType=TIMESTAMP}
+	      )
+  	</insert>
+ 	
+  	<update id="update">
+    	update erp_pay_intopieces set 
+    		store_id = #{storeId,jdbcType=VARCHAR},
+      		shop_id = #{shopId,jdbcType=VARCHAR},
+      		intopieces_type = #{intopiecesType,jdbcType=VARCHAR},
+      		intopieces_name = #{intopiecesName,jdbcType=VARCHAR},
+      		short_name = #{shortName,jdbcType=VARCHAR},
+      		charge_person = #{chargePerson,jdbcType=BIT},
+      		proc_ins_id = #{procInsId,jdbcType=VARCHAR},
+      		remark = #{remark,jdbcType=VARCHAR},
+      		update_by = #{updateBy.id,jdbcType=VARCHAR},
+      		update_date = #{updateDate,jdbcType=TIMESTAMP}
+    	where id = #{id,jdbcType=VARCHAR}
+  	</update>
+  	
+  	<select id="getByProsIncId" resultType="ErpPayIntopieces">
+		SELECT
+		<include refid="erpPayIntopiecesColumns" />
+		FROM erp_pay_intopieces a
+		<include refid="erpPayIntopiecesJoins" />
+		WHERE a.proc_ins_id = #{procInsId}
+	</select>
+	
+	<select id="findListByParams" resultType="ErpPayIntopieces">
+  		SELECT
+		<include refid="erpPayIntopiecesColumns" />
+		FROM erp_pay_intopieces a
+		<where>
+			a.charge_person = #{userId}
+			<if test="orderNumber != null and orderNumber != ''">
+				AND a.intopieces_name LIKE CONCAT('%', #{orderNumber}, '%')
+			</if>
+			<if test="shopName != null and shopName != ''">
+				AND a.short_name LIKE CONCAT('%', #{shopName}, '%')
+			</if>
+		</where>
+		ORDER BY a.id DESC
+  	</select>
+  	
+  	<select id="findTaskId" resultType="String">
+		SELECT aa.ID_ FROM ACT_RU_TASK aa 
+			LEFT JOIN erp_pay_intopieces a ON aa.PROC_INST_ID_ = a.proc_ins_id
+    	  WHERE a.shop_id = #{shopId}
+    	  AND a.intopieces_type = #{intopiecesType}
+	</select>
+  	
+</mapper>

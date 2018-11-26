@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunnex.ops.erp.modules.sys.dao.ServiceOperationDao" >
+	
+	<sql id="serviceOperationColumns">
+		a.id AS "id",
+		a.service_no AS "serviceNo",
+  		a.company_name AS "companyName",
+	  	a.server_address AS "serverAddress",
+	  	a.role_name AS "roleName",
+	  	a.default_manager AS "defaultManager",
+	 	a.default_manager_id AS "defaultManagerId",
+		a.alternative_manager AS "alternativeManager",
+		a.alternative_manager_id AS "alternativeManagerId"
+	</sql>
+	
+	<sql id="serviceOperationJoins">
+	</sql>
+  	
+  	<select id="get" resultType="ServiceOperation">
+	    select 
+	    <include refid="serviceOperationColumns" />
+	    from sys_service_operationmanager a
+	    <include refid="serviceOperationJoins" />
+	    where id = #{id,jdbcType=VARCHAR}
+  	</select>
+  	
+  	<delete id="delete">
+	    delete from sys_service_operationmanager
+	    where id = #{id,jdbcType=VARCHAR}
+  	</delete>
+  	
+  	<insert id="insert">
+	    insert into sys_service_operationmanager (
+	    	id, 
+	    	service_no, 
+	      	company_name, 
+	      	server_address, 
+	      	role_name, 
+	      	default_manager, 
+	      	default_manager_id, 
+	      	alternative_manager, 
+	      	alternative_manager_id
+	      ) values (
+	      	#{id,jdbcType=VARCHAR}, 
+	      	#{serviceNo,jdbcType=VARCHAR}, 
+	      	#{companyName,jdbcType=VARCHAR}, 
+	      	#{serverAddress,jdbcType=VARCHAR}, 
+	      	#{roleName,jdbcType=VARCHAR}, 
+	      	#{defaultManager,jdbcType=VARCHAR}, 
+	      	#{defaultManagerId,jdbcType=BIT}, 
+	      	#{alternativeManager,jdbcType=VARCHAR}, 
+	      	#{alternativeManagerId,jdbcType=VARCHAR}
+	      )
+  	</insert>
+ 	
+  	<update id="update">
+    	update sys_service_operationmanager set 
+    		service_no = #{serviceNo,jdbcType=VARCHAR},
+      		company_name = #{companyName,jdbcType=VARCHAR},
+      		server_address = #{serverAddress,jdbcType=VARCHAR},
+      		role_name = #{roleName,jdbcType=VARCHAR},
+      		default_manager = #{defaultManager,jdbcType=VARCHAR},
+      		default_manager_id = #{defaultManagerId,jdbcType=BIT},
+      		alternative_manager = #{alternativeManager,jdbcType=VARCHAR},
+      		alternative_manager_id = #{alternativeManagerId,jdbcType=VARCHAR},
+      		update_by = #{updateBy.id,jdbcType=VARCHAR},
+      		update_date = #{updateDate,jdbcType=TIMESTAMP}
+    	where id = #{id,jdbcType=VARCHAR}
+  	</update>
+  	
+  	<select id="getByServiceNo" resultType="ServiceOperation">
+		SELECT
+		<include refid="serviceOperationColumns" />
+		FROM sys_service_operationmanager a
+		<include refid="serviceOperationJoins" />
+		WHERE a.service_no = #{serviceNo}
+	</select>
+  	
+</mapper>

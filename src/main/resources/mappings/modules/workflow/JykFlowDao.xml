@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.flow.dao.JykFlowDao">
+
+	<sql id="jykFlowColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.split_id AS "splitId",
+		a.planning_expert_interface AS "planningExpertInterface",
+		a.planning_expert AS "planningExpert",
+		a.operation_manager AS
+		"operationManager",
+		a.operation_adviser AS "operationAdviser",
+		a.adviser_shop_docking_state AS "adviserShopDockingState",
+		a.planning_shop_docking_state AS "planningShopDockingState",
+		a.promotion_time AS "promotionTime",
+		a.next_contact_time AS
+		"nextContactTime",
+		a.re_cast AS "reCast",
+		a.create_shop_branch AS "createShopBranch",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS
+		"updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag",
+		a.PROC_INS_ID AS "procInsId"
+	</sql>
+
+	<sql id="jykFlowJoins">
+	</sql>
+	<select id="getByProcInstId" resultType="JykFlow">
+		SELECT
+		<include refid="jykFlowColumns" />
+		FROM jyk_flow a
+		<include refid="jykFlowJoins" />
+		WHERE a.PROC_INS_ID = #{procInsId}
+	</select>
+
+
+	<select id="get" resultType="JykFlow">
+		SELECT
+		<include refid="jykFlowColumns" />
+		FROM jyk_flow a
+		<include refid="jykFlowJoins" />
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findList" resultType="JykFlow">
+		SELECT
+		<include refid="jykFlowColumns" />
+		FROM jyk_flow a
+		<include refid="jykFlowJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findAllList" resultType="JykFlow">
+		SELECT
+		<include refid="jykFlowColumns" />
+		FROM jyk_flow a
+		<include refid="jykFlowJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findTaskList" resultType="com.yunnex.ops.erp.modules.workflow.flow.from.FlowForm">
+		SELECT
+			art.ID_ AS "act.taskId",
+			art.TASK_DEF_KEY_ AS "act.taskDefKey",
+			art.PROC_DEF_ID_ AS "act.procDefId",
+			art.ASSIGNEE_ AS "act.assignee",
+			art.NAME_ AS "act.taskName",
+			art.PROC_INST_ID_ AS "act.businessId",
+			aht.START_TIME_ AS "act.taskStarterDate",
+			eosi.promotion_time  AS "orderSplitInfo.promotionTime",
+			eosi.next_contact_time  AS "orderSplitInfo.nextContactTime",
+			eosi.next_license_time  AS "orderSplitInfo.nextLicenseTime",
+			eosi.next_qualification_time  AS "orderSplitInfo.nextQualificationTime",
+			eosi.hurry_flag  AS "orderSplitInfo.hurryFlag",
+			eosi.order_id  AS "orderSplitInfo.orderId",
+			eosi.split_id  AS "orderSplitInfo.splitId",
+			eosi.good_name  AS "orderSplitInfo.goodName",
+			eosi.num  AS "orderSplitInfo.num",
+			eosi.good_type_name  AS "orderSplitInfo.goodTypeName",	
+			eooi.order_number  AS "orderOriginalInfo.orderNumber",
+			eooi.buy_date  AS "orderOriginalInfo.buyDate",
+			eooi.shop_name  AS "orderOriginalInfo.shopName",
+			eooi.agent_name  AS "orderOriginalInfo.agentName",
+			eooi.order_type  AS "orderOriginalInfo.orderType",
+			eooi.contact_name  AS "orderOriginalInfo.contactName",
+			eooi.contact_number  AS "orderOriginalInfo.contactNumber",
+			eooi.promote_contact  AS "orderOriginalInfo.promoteContact",
+			eooi.promote_phone  AS "orderOriginalInfo.promotePhone"
+		FROM
+			ACT_RU_TASK art 
+		LEFT JOIN
+			ACT_HI_TASKINST aht
+		ON
+			art.ID_ = aht.ID_
+		LEFT JOIN
+			erp_order_split_info eosi
+		ON
+			art.PROC_INST_ID_ = eosi.PROC_INS_ID
+		LEFT JOIN 
+			erp_order_original_info eooi 
+		ON 
+			eosi.order_id = eooi.id
+		LEFT JOIN 
+			erp_shop_info esi
+		ON 
+			eooi.shop_extension_id = esi.zhangbei_id
+		LEFT JOIN
+			erp_pay_intopieces epi
+		ON
+			art.PROC_INST_ID_ = epi.proc_ins_id AND epi.charge_person = '1'
+		LEFT JOIN 
+			erp_shop_data_input esdi 
+		ON 
+			esdi.order_id = eooi.id AND esdi.proc_ins_id = art.PROC_INST_ID_
+		LEFT JOIN 
+			sdi_flow sf 
+		ON 
+			esdi.order_id = sf.order_id AND sf.operation_manager = #{assignee} or sf.operation_adviser = #{assignee}
+		WHERE
+			art.ASSIGNEE_ = #{assignee}
+		LIMIT #{pageNo}, #{pageSize}
+	</select>
+
+	<insert id="insert">
+		INSERT INTO jyk_flow(
+		id,
+		order_id,
+		split_id,
+		planning_expert_interface,
+		planning_expert,
+		operation_manager,
+		operation_adviser,
+		adviser_shop_docking_state,
+		planning_shop_docking_state,
+		promotion_time,
+		next_contact_time,
+		re_cast,
+		create_shop_branch,
+		create_date,
+		create_by,
+		update_date,
+		update_by,
+		remark,
+		sort,
+		PROC_INS_ID,
+		del_flag
+		) VALUES (
+		#{id},
+		#{orderId},
+		#{splitId},
+		#{planningExpertInterface},
+		#{planningExpert},
+		#{operationManager},
+		#{operationAdviser},
+		#{adviserShopDockingState},
+		#{planningShopDockingState},
+		#{promotionTime},
+		#{nextContactTime},
+		#{reCast},
+		#{createShopBranch},
+		#{createDate},
+		#{createBy.id},
+		#{updateDate},
+		#{updateBy.id},
+		#{remark},
+		#{sort},
+		#{procInsId},
+		#{delFlag}
+		)
+	</insert>
+
+	<update id="update">
+		UPDATE jyk_flow SET
+		order_id = #{orderId},
+		split_id =
+		#{splitId},
+		planning_expert_interface = #{planningExpertInterface},
+		planning_expert = #{planningExpert},
+		operation_manager =
+		#{operationManager},
+		operation_adviser = #{operationAdviser},
+		adviser_shop_docking_state = #{adviserShopDockingState},
+		planning_shop_docking_state = #{planningShopDockingState},
+		promotion_time = #{promotionTime},
+		next_contact_time =
+		#{nextContactTime},
+		re_cast = #{reCast},
+		create_shop_branch =
+		#{createShopBranch},
+		update_date = #{updateDate},
+		update_by =
+		#{updateBy.id},
+		remark = #{remark},
+		sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateFlowByProcIncId">
+		UPDATE jyk_flow SET
+		<if test="planningExpert != null">
+			planning_expert = #{planningExpert},
+		</if>
+		<if test="operationManager != null">
+			operation_manager = #{operationManager},
+		</if>
+		<if test="operationAdviser != null">
+			operation_adviser = #{operationAdviser},
+		</if>
+		<if test="adviserShopDockingState != null">
+			adviser_shop_docking_state = #{adviserShopDockingState},
+		</if>
+		<if test="planningShopDockingState != null">
+			planning_shop_docking_state = #{planningShopDockingState},
+		</if>
+		<if test="promotionTime != null">
+			promotion_time = #{promotionTime},
+		</if>
+		<if test="nextContactTime != null">
+			next_contact_time =#{nextContactTime},
+		</if>
+		<if test="reCast != null">
+			re_cast = #{reCast},
+		</if>
+		<if test="createShopBranch != null">
+			create_shop_branch =#{createShopBranch},
+		</if>
+		update_date = #{updateDate},
+		update_by =#{updateBy.id}
+		WHERE PROC_INS_ID = #{procInsId}
+	</update>
+
+
+	<update id="delete">
+		UPDATE jyk_flow SET
+		del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findTaskAssignee" resultType="map">
+		select 
+			act_id_, userId, username 
+		from
+			(SELECT 
+				aha.act_id_, su.id userId, su.`name` username
+			FROM 
+				`ACT_HI_ACTINST` aha 
+			inner 
+				join sys_user su 
+			on 
+				aha.ASSIGNEE_ = su.id 
+			where 
+				aha.PROC_INST_ID_ = #{procInsId}
+			order by
+				aha.START_TIME_ desc) a
+		group by
+			act_id_
+	</select>
+	
+	<select id="getContentList" resultType="map">
+		SELECT NAME_ as name, TEXT_ as text from ACT_RU_VARIABLE 
+		where PROC_INST_ID_=#{procInsId}
+	</select>
+	
+	<select id="getContentListDetail" resultType="map">
+		SELECT NAME_ as name, TEXT_ as text from ACT_RU_VARIABLE 
+		where PROC_INST_ID_=#{procInsId} and NAME_=#{name}
+	</select>
+	
+	<select id="findProcessByProcId" resultType="map">
+		select
+		a.NAME_ as name,
+		s.name as username,
+		date_format(a.START_TIME_,'%Y-%m-%d %T')  as startTime
+	from
+		ACT_HI_TASKINST a,
+		sys_user s
+	where
+		PROC_INST_ID_ = #{procInsId}
+		and s.id = a.ASSIGNEE_
+		ORDER by a.START_TIME_ desc
+	</select>
+
+</mapper>

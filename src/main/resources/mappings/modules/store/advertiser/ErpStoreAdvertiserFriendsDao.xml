@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.store.advertiser.dao.ErpStoreAdvertiserFriendsDao">
+    
+	<sql id="erpStoreAdvertiserFriendsColumns">
+		a.id AS "id",
+		a.provide_account_info AS "provideAccountInfo",
+		a.account_no AS "accountNo",
+		a.account_password AS "accountPassword",
+		a.account_original_id AS "accountOriginalId",
+		a.advertiser_screenshot AS "advertiserScreenshot",
+		a.store_screenshot AS "storeScreenshot",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS "auditContent",
+		a.PROC_INS_ID AS "procInsId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.proc_ins_id AS "procInsId"
+	</sql>
+	
+	<sql id="erpStoreAdvertiserFriendsJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpStoreAdvertiserFriends">
+		SELECT 
+			<include refid="erpStoreAdvertiserFriendsColumns"/>
+		FROM erp_store_advertiser_friends a
+		<include refid="erpStoreAdvertiserFriendsJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpStoreAdvertiserFriends">
+		SELECT 
+			<include refid="erpStoreAdvertiserFriendsColumns"/>
+		FROM erp_store_advertiser_friends a
+		<include refid="erpStoreAdvertiserFriendsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="provideAccountInfo != null and provideAccountInfo != ''">
+				AND a.provide_account_info LIKE 
+					<if test="dbName == 'oracle'">'%'||#{provideAccountInfo}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{provideAccountInfo}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{provideAccountInfo},'%')</if>
+			</if>
+			<if test="accountNo != null and accountNo != ''">
+				AND a.account_no LIKE 
+					<if test="dbName == 'oracle'">'%'||#{accountNo}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{accountNo}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{accountNo},'%')</if>
+			</if>
+			<if test="accountOriginalId != null and accountOriginalId != ''">
+				AND a.account_original_id LIKE 
+					<if test="dbName == 'oracle'">'%'||#{accountOriginalId}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{accountOriginalId}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{accountOriginalId},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpStoreAdvertiserFriends">
+		SELECT 
+			<include refid="erpStoreAdvertiserFriendsColumns"/>
+		FROM erp_store_advertiser_friends a
+		<include refid="erpStoreAdvertiserFriendsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_store_advertiser_friends(
+			id,
+			provide_account_info,
+			account_no,
+			account_password,
+			account_original_id,
+			advertiser_screenshot,
+			store_screenshot,
+			audit_status,
+			audit_content,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			proc_ins_id
+		) VALUES (
+			#{id},
+			#{provideAccountInfo},
+			#{accountNo},
+			#{accountPassword},
+			#{accountOriginalId},
+			#{advertiserScreenshot},
+			#{storeScreenshot},
+			#{auditStatus},
+			#{auditContent},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{procInsId}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_store_advertiser_friends SET 	
+			provide_account_info = #{provideAccountInfo},
+			account_no = #{accountNo},
+			account_password = #{accountPassword},
+			account_original_id = #{accountOriginalId},
+			advertiser_screenshot = #{advertiserScreenshot},
+			store_screenshot = #{storeScreenshot},
+			audit_status=#{auditStatus},
+			audit_content=#{auditContent},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			proc_ins_id =  #{procInsId},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_store_advertiser_friends SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getByStoreId" resultType="ErpStoreAdvertiserFriends">
+		SELECT
+		<include refid="erpStoreAdvertiserFriendsColumns"/>, c.special_certificate AS "specialCertificate"
+		FROM erp_store_advertiser_friends a
+		LEFT JOIN erp_store_info b ON a.id = b.advertiser_friends_id
+		LEFT JOIN erp_store_credentials c ON b.credentials_id = c.id
+		<where>
+			a.del_flag = 0
+			AND b.id = #{storeId}
+		</where>
+	</select>
+	<select id="getByProcInsId" resultType="ErpStoreAdvertiserFriends">
+		SELECT 
+			<include refid="erpStoreAdvertiserFriendsColumns"/>
+		FROM erp_store_advertiser_friends a
+		<include refid="erpStoreAdvertiserFriendsJoins"/>
+		WHERE proc_ins_id = #{procInsId}
+	</select>
+	
+	<select id="queryRecordDataAuditStatus" resultType="java.lang.Integer" parameterType="com.yunnex.ops.erp.modules.store.basic.entity.ErpStoreInfo">
+		select
+			d.audit_status
+		from
+			erp_store_info a,
+			erp_store_advertiser_friends d
+		where
+			a.advertiser_friends_id = d.id
+			and a.del_flag = '0'
+			and d.del_flag = '0'
+			and d.audit_status != 0
+			and d.account_no = #{friend.accountNo}
+			and a.shop_info_id = #{shopInfoId}
+			and a.id != #{id}
+		order by
+			d.update_date asc 
+		limit 1
+	</select>
+	
+	<update id="syncAuditStatusByAccount">
+		update
+			erp_store_advertiser_friends
+		set
+			audit_status = #{auditStatus},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id}
+		where
+			id in(
+				select
+					d.advertiser_friends_id
+				from
+					erp_store_info d
+				where
+					d.shop_info_id = #{shopInfoId}
+				and 
+					d.del_flag = '0'
+			)
+			and del_flag = '0'
+			and audit_status != 0
+			and account_no = #{accountNo}
+	</update>
+	
+</mapper>

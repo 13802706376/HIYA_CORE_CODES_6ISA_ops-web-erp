@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.diagnosis.dao.DiagnosisStoreBusinessHourDao">
+    
+	<sql id="diagnosisStoreBusinessHourColumns">
+		a.id AS "id",
+		a.store_info_id AS "storeInfoId",
+		a.workdays AS "workdays",
+		a.start_time AS "startTime",
+		a.end_time AS "endTime",
+		a.business_type AS "businessType",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="diagnosisStoreBusinessHourJoins">
+	</sql>
+    
+	<select id="get" resultType="DiagnosisStoreBusinessHour">
+		SELECT 
+			<include refid="diagnosisStoreBusinessHourColumns"/>
+		FROM diagnosis_store_business_hour a
+		<include refid="diagnosisStoreBusinessHourJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DiagnosisStoreBusinessHour">
+		SELECT 
+			<include refid="diagnosisStoreBusinessHourColumns"/>
+		FROM diagnosis_store_business_hour a
+		<include refid="diagnosisStoreBusinessHourJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DiagnosisStoreBusinessHour">
+		SELECT 
+			<include refid="diagnosisStoreBusinessHourColumns"/>
+		FROM diagnosis_store_business_hour a
+		<include refid="diagnosisStoreBusinessHourJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO diagnosis_store_business_hour(
+			id,
+			store_info_id,
+			workdays,
+			start_time,
+			end_time,
+			business_type,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{storeInfoId},
+			#{workdays},
+			#{startTime},
+			#{endTime},
+			#{businessType},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE diagnosis_store_business_hour SET 	
+			store_info_id = #{storeInfoId},
+			workdays = #{workdays},
+			start_time = #{startTime},
+			end_time = #{endTime},
+			business_type = #{businessType},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE diagnosis_store_business_hour SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+    
+    <select id="findByStoreInfoId" resultType="DiagnosisStoreBusinessHour">
+        SELECT 
+            <include refid="diagnosisStoreBusinessHourColumns"/>
+        FROM 
+            diagnosis_store_business_hour a
+        WHERE
+            store_info_id = #{storeInfoId}
+    </select>
+    
+    <delete id="deleteByStoreInfoId">
+        DELETE FROM diagnosis_store_business_hour WHERE store_info_id = #{storeInfoId}
+    </delete>
+    
+    <insert id="saveBatch">
+       INSERT INTO diagnosis_store_business_hour(
+            id,
+            store_info_id,
+            workdays,
+            start_time,
+            end_time,
+            business_type,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            remarks,
+            del_flag
+        ) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id},
+			#{item.storeInfoId},
+			#{item.workdays},
+			#{item.startTime},
+			#{item.endTime},
+			#{item.businessType},
+			#{item.createBy.id},
+			#{item.createDate},
+			#{item.updateBy.id},
+			#{item.updateDate},
+			#{item.remarks},
+			#{item.delFlag})
+        </foreach>
+    </insert>
+	
+</mapper>

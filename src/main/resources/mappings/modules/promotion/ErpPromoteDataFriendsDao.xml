@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.promotion.dao.ErpPromoteDataFriendsDao">
+    
+	
+	<select id="queryFriendsData"  resultType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataFriends">
+		SELECT 
+			a.id AS "id",
+			a.split_order_id AS "splitOrderId",
+			a.data_time AS "dataTime",
+			a.expenditure AS "expenditure",
+			a.details_query_num AS "detailsQueryNum",
+			a.details_query_cost AS "detailsQueryCost",
+			a.details_query_percent AS "detailsQueryPercent",
+			a.exposure_num AS "exposureNum",
+			a.promote_page_query_num AS "promotePageQueryNum",
+			a.promote_page_query_cost AS "promotePageQueryCost",
+			a.promote_page_query_percent AS "promotePageQueryPercent",
+			a.promote_page_propagate_num AS "promotePagePropagateNum",
+			a.store_query_num AS "storeQueryNum",
+			a.upvote_comment_num AS "upvoteCommentNum",
+			a.attention_num AS "attentionNum",
+			a.sell_clew_num AS "sellClewNum",
+			a.create_by AS "createBy.id",
+			a.create_date AS "createDate",
+			a.update_by AS "updateBy.id",
+			a.update_date AS "updateDate",
+			a.del_flag AS "delFlag",
+			a.remark AS "remark"
+		FROM erp_promote_data_friends a
+		WHERE a.split_order_id = #{splitOrderId}
+		<if test="id !=null and id != ''">and a.id=#{id}</if>
+		<choose>
+			<when test="delFlag !=null and delFlag != ''">
+				and a.del_flag = #{delFlag}
+			</when>
+			<otherwise>
+				and a.del_flag = '0'
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.data_time DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_promote_data_friends(
+			id,
+			split_order_id,
+			data_time,
+			<if test="expenditure != null">expenditure,</if>
+			<if test="detailsQueryNum != null">details_query_num,</if>
+			<if test="detailsQueryCost != null">details_query_cost,</if>
+			<if test="detailsQueryPercent != null">details_query_percent,</if>
+			<if test="exposureNum != null">exposure_num,</if>
+			<if test="promotePageQueryNum != null">promote_page_query_num,</if>
+			<if test="promotePageQueryCost != null">promote_page_query_cost,</if>
+			<if test="promotePageQueryPercent != null">promote_page_query_percent,</if>
+			<if test="promotePagePropagateNum != null">promote_page_propagate_num,</if>
+			<if test="storeQueryNum != null">store_query_num,</if>
+			<if test="upvoteCommentNum != null">upvote_comment_num,</if>
+			<if test="attentionNum != null">attention_num,</if>
+			<if test="sellClewNum != null">sell_clew_num,</if>
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remark
+		) VALUES (
+			#{id},
+			#{splitOrderId},
+			#{dataTime},
+			<if test="expenditure != null">#{expenditure},</if>
+			<if test="detailsQueryNum != null">#{detailsQueryNum},</if>
+			<if test="detailsQueryCost != null">#{detailsQueryCost},</if>
+			<if test="detailsQueryPercent != null">#{detailsQueryPercent},</if>
+			<if test="exposureNum != null">#{exposureNum},</if>
+			<if test="promotePageQueryNum != null">#{promotePageQueryNum},</if>
+			<if test="promotePageQueryCost != null">#{promotePageQueryCost},</if>
+			<if test="promotePageQueryPercent != null">#{promotePageQueryPercent},</if>
+			<if test="promotePagePropagateNum != null">#{promotePagePropagateNum},</if>
+			<if test="storeQueryNum != null">#{storeQueryNum},</if>
+			<if test="upvoteCommentNum != null">#{upvoteCommentNum},</if>
+			<if test="attentionNum != null">#{attentionNum},</if>
+			<if test="sellClewNum != null">#{sellClewNum},</if>
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remark}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_promote_data_friends 
+		<set>
+			<if test="expenditure != null">expenditure = #{expenditure},</if>
+			<if test="detailsQueryNum != null">details_query_num = #{detailsQueryNum},</if>
+			<if test="detailsQueryCost != null">details_query_cost = #{detailsQueryCost},</if>
+			<if test="detailsQueryPercent != null">details_query_percent = #{detailsQueryPercent},</if>
+			<if test="exposureNum != null">exposure_num = #{exposureNum},</if>
+			<if test="promotePageQueryNum != null">promote_page_query_num = #{promotePageQueryNum},</if>
+			<if test="promotePageQueryCost != null">promote_page_query_cost = #{promotePageQueryCost},</if>
+			<if test="promotePageQueryPercent != null">promote_page_query_percent = #{promotePageQueryPercent},</if>
+			<if test="promotePagePropagateNum != null">promote_page_propagate_num = #{promotePagePropagateNum},</if>
+			<if test="storeQueryNum != null">store_query_num = #{storeQueryNum},</if>
+			<if test="upvoteCommentNum != null">upvote_comment_num = #{upvoteCommentNum},</if>
+			<if test="attentionNum != null">attention_num = #{attentionNum},</if>
+			<if test="sellClewNum != null">sell_clew_num = #{sellClewNum},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_promote_data_friends SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="deleteBySplitIdAndDataTime" parameterType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataFriends">
+		UPDATE erp_promote_data_friends SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE split_order_id = #{splitOrderId}
+		    AND data_time = #{dataTime}
+	</update>
+	
+	<select id="queryFriendsDataSum" parameterType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataFriends" resultType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataFriendsSum">
+		select
+			d.split_order_id as splitOrderId,
+			(select opc.promote_status from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '1') as promotionState,
+			(select (case when opc.promote_status='running' then '推广中' when opc.promote_status='success' then '推广结束' else '未开始' end) from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '1') as promotionStateTxt,
+			(select opc.promote_start_date from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '1') as promotionBeginDate,
+			(select opc.promote_end_date from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '1') as promotionEndDate,
+			sum(d.exposure_num) as exposureNumSum,
+			sum(d.expenditure) as expenditureSum,
+			ifnull(sum(d.expenditure)/ sum(d.exposure_num),0) as singleExposureCostSum,
+			sum(d.details_query_num) as detailsQueryNumSum,
+			ifnull(sum(d.details_query_num)/ sum(d.exposure_num),0) as detailsQuerySumPercent,
+			sum(ifnull(promote_page_query_num,0)+ifnull(store_query_num,0)+ifnull(upvote_comment_num,0)+ifnull(attention_num,0)+ifnull(promote_page_propagate_num,0)) as interactionNumSum
+		from
+			erp_promote_data_friends d
+		where
+			d.split_order_id = #{splitOrderId}
+		and 
+			d.del_flag = '0'
+		group by
+			d.split_order_id
+	</select>
+	
+	
+	<insert id="batchInsert">
+		INSERT INTO erp_promote_data_friends(
+			id,
+			split_order_id,
+			data_time,
+			expenditure,
+			details_query_num,
+			details_query_cost,
+			details_query_percent,
+			exposure_num,
+			promote_page_query_num,
+			promote_page_query_cost,
+			promote_page_query_percent,
+			promote_page_propagate_num,
+			store_query_num,
+			upvote_comment_num,
+			attention_num,
+			sell_clew_num,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remark
+		) VALUES 
+		<foreach collection ="list" item="friends" separator =",">
+		(
+			uuid(),
+			#{friends.splitOrderId},
+			#{friends.dataTime},
+			<choose>
+				<when test="friends.expenditure!=null">#{friends.expenditure}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.detailsQueryNum!=null">#{friends.detailsQueryNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.detailsQueryCost!=null">#{friends.detailsQueryCost}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.detailsQueryPercent!=null">#{friends.detailsQueryPercent}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.exposureNum!=null">#{friends.exposureNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.promotePageQueryNum!=null">#{friends.promotePageQueryNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.promotePageQueryCost!=null">#{friends.promotePageQueryCost}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.promotePageQueryPercent!=null">#{friends.promotePageQueryPercent}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.promotePagePropagateNum!=null">#{friends.promotePagePropagateNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.storeQueryNum!=null">#{friends.storeQueryNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.upvoteCommentNum!=null">#{friends.upvoteCommentNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.attentionNum!=null">#{friends.attentionNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="friends.sellClewNum!=null">#{friends.sellClewNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			#{friends.createBy.id},
+			now(),
+			#{friends.updateBy.id},
+			now(),
+			'importData'
+		)
+		</foreach >
+	</insert>
+	
+	<update id="batchDelete">
+		UPDATE erp_promote_data_friends SET 
+			del_flag = '1'
+		WHERE split_order_id = #{splitOrderId}
+		    AND data_time in (<foreach collection ="list" item="friends" separator =",">date(#{friends.dataTime})</foreach>)
+	</update>
+	
+	<select id="calSumData" parameterType="java.util.Map" resultType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataFriends">
+		select 
+			#{splitOrderId}  as splitOrderId,
+			sd.dataTime,
+			sum(sd.expenditure) as expenditure,
+			sum(sd.detailsQueryNum) as detailsQueryNum, 
+			sum(sd.detailsQueryCost) as detailsQueryCost,
+			sum(sd.detailsQueryPercent) as detailsQueryPercent,
+			sum(sd.exposureNum) as exposureNum,
+			sum(sd.promotePageQueryNum) as promotePageQueryNum,
+			sum(sd.promotePageQueryCost) as promotePageQueryCost,
+			sum(sd.promotePageQueryPercent) as promotePageQueryPercent,
+			sum(sd.promotePagePropagateNum) as promotePagePropagateNum,
+			sum(sd.storeQueryNum) as storeQueryNum,
+			sum(sd.upvoteCommentNum) as upvoteCommentNum,
+			sum(sd.attentionNum) as attentionNum,
+			sum(sd.sellClewNum) as sellClewNum
+		from (
+		<foreach collection ="list" item="friends" separator ="union all">
+		select
+			#{friends.dataTime} as dataTime,
+			ifnull(#{friends.expenditure},0) as expenditure,
+			ifnull(#{friends.detailsQueryNum},0) as detailsQueryNum,
+			ifnull(#{friends.detailsQueryCost},0) as detailsQueryCost,
+			ifnull(#{friends.detailsQueryPercent},0) * 100 as detailsQueryPercent,
+			ifnull(#{friends.exposureNum},0) as exposureNum,
+			ifnull(#{friends.promotePageQueryNum},0) as promotePageQueryNum,
+			ifnull(#{friends.promotePageQueryCost},0) as promotePageQueryCost,
+			ifnull(#{friends.promotePageQueryPercent},0) * 100 as promotePageQueryPercent,
+			ifnull(#{friends.promotePagePropagateNum},0) as promotePagePropagateNum,
+			ifnull(#{friends.storeQueryNum},0) as storeQueryNum,
+			ifnull(#{friends.upvoteCommentNum},0) as upvoteCommentNum,
+			ifnull(#{friends.attentionNum},0) as attentionNum,
+			ifnull(#{friends.sellClewNum},0) as sellClewNum
+		</foreach >
+		) sd
+		group by sd.dataTime
+	</select>
+	
+</mapper>

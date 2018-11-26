@@ -1,0 +1,723 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.shop.dao.ErpShopInfoDao">
+
+	<sql id="erpShopInfoColumns">
+		a.id AS "id",
+		a.number AS "number",
+		a.name AS "name",
+		a.abbreviation AS "abbreviation",
+		a.industry_type AS "industryType",
+		a.address AS "address",
+		a.city_level AS "cityLevel",
+		a.contact_email AS "contactEmail",
+		a.contact_name AS "contactName",
+		a.contact_phone AS "contactPhone",
+		a.service_provider AS "serviceProvider",
+		a.service_provider_phone AS
+		"serviceProviderPhone",
+		a.zhangbei_id AS "zhangbeiId",
+		a.zhangbei_password AS "password",
+		a.store_count AS "storeCount",
+		a.create_date AS
+		"createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS
+		"updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort
+		AS "sort",
+		a.del_flag AS "delFlag",
+		a.into_pieces AS "intoPieces",
+		a.zhangbei_state AS "zhangbeiState",
+		a.wechatpay_state AS "wechatpayState",
+		a.unionpay_state AS "unionpayState",
+		a.alipa_state AS "alipaState",
+		a.zhangbei_remark AS "zhangbeiRemark",
+		a.wechatpay_remark AS "wechatpayRemark",
+		a.unionpay_remark AS "unionpayRemark",
+		a.business_category AS "businessCategory",
+		a.business_category_name AS "businessCategoryName",
+		a.source AS "source",
+		a.order_id AS "orderId",
+		a.is_abnormal AS "isAbnormal",
+		a.login_name AS "loginName",
+		a.agent_id AS "agentId",
+		a.operation_adviser_id AS "operationAdviserId",
+		a.current_status AS "currentStatus"
+	</sql>
+
+	<sql id="erpShopInfoColumnsList">
+		<include refid="erpShopInfoColumns"/>,b.name AS "operationAdviserName",
+
+		(SELECT sum(eogsi.pending_num) FROM erp_order_good_service_info eogsi WHERE eogsi.order_id IN
+		(SELECT id FROM erp_order_original_info WHERE shop_id=a.zhangbei_id)
+		and eogsi.del_flag='0' and eogsi.service_item_name!='聚引客生产服务') AS "pendingServiceNum",
+
+		(select sum(eoog.pending_num) from erp_order_original_good eoog where eoog.order_id in
+		(select id from erp_order_original_info where shop_id=a.zhangbei_id)
+		and eoog.good_type_id=5) AS "pendingJykNum"
+	</sql>
+
+	<sql id="erpShopInfoJoins">
+	</sql>
+
+	<select id="get" resultType="ErpShopInfo">
+		SELECT
+		<include refid="erpShopInfoColumns" />
+		FROM erp_shop_info a
+		<include refid="erpShopInfoJoins" />
+		WHERE a.id = #{id}
+	</select>
+
+	<sql id="findPageSql">
+		SELECT
+		<if test="page == null or page.pageQuery">
+			<include refid="erpShopInfoColumnsList"/>
+		</if>
+		<if test="page != null and !page.pageQuery">
+			COUNT(*)
+		</if>
+		FROM erp_shop_info a
+		LEFT JOIN sys_user b
+		ON a.operation_adviser_id=b.id
+		<where>
+			a.del_flag ='0'
+			<if test="zhangbeiId != null and zhangbeiId != ''">
+				AND a.zhangbei_id = #{zhangbeiId}
+			</if>
+			<if test="operationAdviserId != null and operationAdviserId != ''">
+				AND a.operation_adviser_id = #{operationAdviserId}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name LIKE
+				<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			
+				<if test="abbreviation != null and abbreviation != ''">
+			   	AND a.abbreviation LIKE concat('%',#{abbreviation},'%')
+			</if>
+			
+			<if test="contactName != null and contactName != ''">
+				AND a.contact_name LIKE
+				<if test="dbName == 'oracle'">'%'||#{contactName}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{contactName}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{contactName},'%')</if>
+			</if>
+			<if test="contactPhone != null and contactPhone != ''">
+				AND a.contact_phone LIKE
+				<if test="dbName == 'oracle'">'%'||#{contactPhone}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{contactPhone}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{contactPhone},'%')</if>
+			</if>
+			<choose><!-- 权限判断 -->
+				<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:view")'>
+					<trim prefixOverrides="and |or" prefix="and (" suffix=")">
+						<choose>
+							<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:all")'>
+								1=1
+							</when>
+							<otherwise>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:branchCompany")'>
+									or exists (select 1 from sys_service_operationmanager sso where sso.del_flag = '0'
+									and sso.service_no = a.agent_id)
+								</if>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:serviceCompany")'>
+									or exists (select 1 from erp_agent_info ai where ai.del_flag = '0' and ai.agent_id =
+									a.agent_id)
+								</if>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:company")'>
+									or exists (select 1 from erp_team et where et.del_flag = '0' and et.company_type
+									<![CDATA[<>]]> 'head' and et.agent_id = a.agent_id and et.id in (select tu.team_id
+									from erp_team_user tu where tu.del_flag = '0' and tu.user_id = #{updateBy.id}))
+								</if>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:personal")'>
+									or exists (select 1 from erp_order_flow_user ofu,erp_order_original_info ooi where
+									ofu.order_id = ooi.id and ofu.del_flag = '0' and ooi.del_flag = '0' and ooi.cancel
+									= 0 and ooi.shop_id = a.zhangbei_id and ofu.user_id = #{updateBy.id})
+								</if>
+							</otherwise>
+						</choose>
+					</trim>
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+		<if test="page == null or page.pageQuery">
+			ORDER BY a.sort DESC, a.update_date DESC
+		</if>
+	</sql>
+
+	<select id="findList" resultType="ErpShopInfo">
+		<include refid="findPageSql"/>
+	</select>
+
+	<select id="total" resultType="long">
+		<include refid="findPageSql"/>
+	</select>
+
+	<select id="findByPageWithExcel" resultType="com.yunnex.ops.erp.modules.shop.dto.ShopInfoExcelResponseDto">
+		<include refid="findPageSql"/>
+	</select>
+
+	<select id="findAllList" resultType="ErpShopInfo">
+		SELECT
+		<include refid="erpShopInfoColumns" />,
+		esi.address as mainStoreAddress 
+		FROM erp_shop_info a,erp_store_info esi
+		<include refid="erpShopInfoJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and esi.shop_info_id = a.id and esi.del_flag = '0' and esi.is_main = '1' and esi.sync_oem = 'N' 
+			<if test="(number != null and number != '')
+						or (name != null and name != '')
+						or (industryType != null and industryType != '')
+						or (contactName != null and contactName != '')
+						or (contactPhone != null and contactPhone != '')">
+				AND(
+					1=2 
+				<if test="number != null and number != ''">
+					OR a.number LIKE
+					<if test="dbName == 'oracle'">'%'||#{number}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{number}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{number},'%')</if>
+				</if>
+				<if test="name != null and name != ''">
+					OR a.name LIKE
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+				</if>
+				<if test="industryType != null and industryType != ''">
+					OR a.industry_type = #{industryType}
+				</if>
+				<if test="contactName != null and contactName != ''">
+					OR a.contact_name LIKE
+					<if test="dbName == 'oracle'">'%'||#{contactName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{contactName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{contactName},'%')</if>
+				</if>
+				<if test="contactPhone != null and contactPhone != ''">
+					OR a.contact_phone LIKE
+					<if test="dbName == 'oracle'">'%'||#{contactPhone}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{contactPhone}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{contactPhone},'%')</if>
+				</if>
+				)
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<insert id="insert">
+        INSERT INTO erp_shop_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="number != null">number,</if>
+            <if test="name != null">name,</if>
+            <if test="abbreviation != null">abbreviation,</if>
+            <if test="industryType != null">industry_type,</if>
+            <if test="address != null">address,</if>
+            <if test="cityLevel != null">city_level,</if>
+            <if test="contactEmail != null">contact_email,</if>
+            <if test="contactName != null">contact_name,</if>
+            <if test="contactPhone != null">contact_phone,</if>
+            <if test="serviceProvider != null">service_provider,</if>
+            <if test="serviceProviderPhone != null">service_provider_phone,</if>
+            <if test="zhangbeiId != null">zhangbei_id,</if>
+            <if test="password != null">zhangbei_password,</if>
+            <if test="storeCount != null">store_count,</if>
+            <if test="createDate != null">create_date,</if>
+            <if test="updateDate != null">update_date,</if>
+            <if test="businessCategory != null">business_category,</if>
+            <if test="businessCategoryName != null">business_category_name,</if>
+            <if test="source != null">source,</if>
+            <if test="orderId != null">order_id,</if>
+            <if test="loginName != null">login_name,</if>
+            <if test="agentId != null">agent_id,</if>
+            <if test="operationAdviserId != null">operation_adviser_id,</if>
+            <if test="currentStatus != null">current_status,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="number != null">#{number},</if>
+            <if test="name != null">#{name},</if>
+            <if test="abbreviation != null">#{abbreviation},</if>
+            <if test="industryType != null">#{industryType},</if>
+            <if test="address != null">#{address},</if>
+            <if test="cityLevel != null">#{cityLevel},</if>
+            <if test="contactEmail != null">#{contactEmail},</if>
+            <if test="contactName != null">#{contactName},</if>
+            <if test="contactPhone != null">#{contactPhone},</if>
+            <if test="serviceProvider != null">#{serviceProvider},</if>
+            <if test="serviceProviderPhone != null">#{serviceProviderPhone},</if>
+            <if test="zhangbeiId != null">#{zhangbeiId},</if>
+            <if test="password != null">#{password},</if>
+            <if test="storeCount != null">#{storeCount},</if>
+            <if test="createDate != null">#{createDate},</if>
+            <if test="updateDate != null">#{updateDate},</if>
+            <if test="businessCategory != null">#{businessCategory},</if>
+            <if test="businessCategoryName != null">#{businessCategoryName},</if>
+            <if test="source != null">#{source},</if>
+            <if test="orderId != null">#{orderId},</if>
+            <if test="loginName != null">#{loginName},</if>
+            <if test="agentId != null">#{agentId},</if>
+            <if test="operationAdviserId != null">#{operationAdviserId},</if>
+			<if test="currentStatus != null">#{currentStatus},</if>
+        </trim>
+	</insert>
+
+	<update id="update">
+		UPDATE erp_shop_info 
+		<set>
+			<if test="number != null">number = #{number},</if>
+			<if test="name != null">name = #{name},</if>
+			<if test="abbreviation != null">abbreviation = #{abbreviation},</if>
+			<if test="industryType != null">industry_type = #{industryType},</if>
+			<if test="address != null">address = #{address},</if>
+			<if test="cityLevel != null">city_level = #{cityLevel},</if>
+			<if test="contactEmail != null">contact_email = #{contactEmail},</if>
+			<if test="contactName != null">contact_name = #{contactName},</if>
+			<if test="contactPhone != null">contact_phone = #{contactPhone},</if>
+			<if test="serviceProvider != null">service_provider = #{serviceProvider},</if>
+			<if test="serviceProviderPhone != null">service_provider_phone = #{serviceProviderPhone},</if>
+			<if test="zhangbeiId != null">zhangbei_id = #{zhangbeiId},</if>
+			<if test="password != null">zhangbei_password = #{password},</if>
+			<if test="businessCategory != null">business_category=#{businessCategory},</if>
+			<if test="businessCategoryName != null">business_category_name=#{businessCategoryName},</if>
+			<if test="storeCount != null">store_count = #{storeCount},</if>
+			<if test="updateDate != null">update_date = #{updateDate},</if>
+			<if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			<if test="sort != null">sort = #{sort},</if>
+			<if test="zhangbeiState != null">zhangbei_state = #{zhangbeiState},</if>
+			<if test="wechatpayState != null">wechatpay_state = #{wechatpayState},</if>
+			<if test="unionpayState != null">unionpay_state = #{unionpayState},</if>
+			<if test="alipaState != null">alipa_state = #{alipaState},</if>
+			<if test="isAbnormal != null">is_abnormal = #{isAbnormal},</if>
+            <if test="loginName != null">login_name = #{loginName},</if>
+            <if test="agentId != null">agent_id = #{agentId},</if>
+            <if test="operationAdviserId != null">operation_adviser_id = #{operationAdviserId},</if>
+			<if test="orderId != null">order_id = #{orderId},</if>
+			<if test="currentStatus != null">current_status = #{currentStatus},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+
+	<update id="delete">
+		UPDATE erp_shop_info SET
+		del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<select id="getDistinctdustry" resultType="String">
+		SELECT
+		DISTINCT(industry_type) FROM erp_shop_info a
+	</select>
+
+	<select id="countShopByZhangbeiId" resultType="Integer">
+		SELECT COUNT(a.id)
+		FROM erp_shop_info a WHERE zhangbei_id = #{zhangbeiId}
+	</select>
+	
+	<select id="findListByZhangbeiId" resultType="ErpShopInfo">
+		SELECT 
+		<include refid="erpShopInfoColumns" />
+		FROM erp_shop_info a WHERE zhangbei_id = #{zhangbeiId}
+	</select>
+
+	<update id="updateByZhangbeiId">
+        UPDATE erp_shop_info
+        <set>
+            <if test="erpShopInfo.number != null">number = #{erpShopInfo.number},</if>
+            <if test="erpShopInfo.name != null">name = #{erpShopInfo.name},</if>
+            <if test="erpShopInfo.abbreviation != null">abbreviation = #{erpShopInfo.abbreviation},</if>
+            <if test="erpShopInfo.industryType != null">industry_type = #{erpShopInfo.industryType},</if>
+            <if test="erpShopInfo.address != null">address = #{erpShopInfo.address},</if>
+            <if test="erpShopInfo.cityLevel != null">city_level = #{erpShopInfo.cityLevel},</if>
+            <if test="erpShopInfo.contactEmail != null">contact_email = #{erpShopInfo.contactEmail},</if>
+            <if test="erpShopInfo.contactName != null">contact_name = #{erpShopInfo.contactName},</if>
+            <if test="erpShopInfo.contactPhone != null">contact_phone = #{erpShopInfo.contactPhone},</if>
+            <if test="erpShopInfo.serviceProvider != null">service_provider = #{erpShopInfo.serviceProvider},</if>
+            <if test="erpShopInfo.serviceProviderPhone != null">
+                service_provider_phone = #{erpShopInfo.serviceProviderPhone},
+            </if>
+            <if test="erpShopInfo.password != null">zhangbei_password = #{erpShopInfo.password},</if>
+            <if test="erpShopInfo.updateDate != null">update_date = #{erpShopInfo.updateDate},</if>
+            <if test="erpShopInfo.loginName != null">login_name = #{erpShopInfo.loginName},</if>
+            <if test="erpShopInfo.agentId != null">agent_id = #{erpShopInfo.agentId},</if>
+            <if test="erpShopInfo.operationAdviserId != null">operation_adviser_id = #{erpShopInfo.operationAdviserId},</if>
+        </set>
+		WHERE zhangbei_id = #{erpShopInfo.zhangbeiId}
+	</update>
+	
+	<update id="updateIntoPiecesById">
+		UPDATE erp_shop_info SET
+		into_pieces = 1
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findshopwaiter" resultType="ErpShopInfo">
+	SELECT a.flow_user_id AS "fwrole", GROUP_CONCAT(DISTINCT  c.name) AS "fwname",GROUP_CONCAT(DISTINCT  b.good_name) AS "fwtype"   FROM `erp_order_split_info` b LEFT JOIN `erp_order_flow_user` a ON a.split_id=b.id   LEFT JOIN `sys_user` c ON a.user_id=c.id
+ 	 WHERE b.shop_id=#{shopid}  AND a.flow_user_id IS NOT NULL  GROUP BY a.flow_user_id  
+	</select>
+	
+  	<select id="findshoprole" resultType="ErpShopInfo">
+	SELECT b.shop_id AS "roleshopId",a.user_id AS "roleuserId",c.name AS "roleuserName" FROM erp_order_split_info b LEFT JOIN erp_order_flow_user a ON a.split_id=b.id  LEFT JOIN sys_user c ON a.user_id=c.id
+  WHERE b.shop_id=#{shopid}  AND a.flow_user_id IS NOT NULL  GROUP BY a.user_id
+  UNION
+  SELECT b.shop_id AS "roleshopId",a.user_id AS "roleuserId",c.name AS "roleuserName" FROM erp_delivery_service b LEFT JOIN erp_order_flow_user a ON a.flow_id=b.proc_ins_id  LEFT JOIN sys_user c ON a.user_id=c.id
+  WHERE b.shop_id=#{shopid}  AND a.flow_user_id IS NOT NULL  GROUP BY a.user_id 
+	</select>
+	
+	<select id="findshoproleTwo" resultType="ErpShopInfo">
+		SELECT b.operation_adviser AS "roleuserId",u.name AS "roleuserName"
+		FROM `erp_shop_data_input` a 
+		LEFT JOIN `sdi_flow` b ON a.id=b.sdi_id LEFT JOIN `sys_user` u ON b.operation_adviser=u.id WHERE a.shop_id=#{shopid}
+	</select>
+
+	
+	<select id="getByZhangbeiID" resultType="ErpShopInfo">
+		SELECT
+		<include refid="erpShopInfoColumns" />
+		FROM erp_shop_info a
+		<include refid="erpShopInfoJoins" />
+		WHERE a.zhangbei_id = #{zhangbeiId}
+	</select>
+
+	<select id="findByZhangbeiId" resultType="ErpShopInfo">
+		SELECT
+		<include refid="erpShopInfoColumns"/>
+		FROM erp_shop_info a
+		WHERE a.zhangbei_id = #{zhangbeiId} AND del_flag = '0'
+	</select>
+
+	<update id="updateShopPassword">
+		UPDATE erp_shop_info SET
+			zhangbei_password = #{password}
+		WHERE zhangbei_id = #{zhangbeiId}
+	</update>
+
+	<update id="updateShopLoginName">
+		UPDATE erp_shop_info SET
+			login_name = #{loginName}
+		WHERE zhangbei_id = #{zhangbeiId}
+	</update>
+
+	<update id="updateShopState">
+		UPDATE erp_shop_info SET
+			zhangbei_state = #{erpShopInfo.zhangbeiState},
+			wechatpay_state = #{erpShopInfo.wechatpayState},
+			unionpay_state = #{erpShopInfo.unionpayState},
+			zhangbei_remark = #{erpShopInfo.zhangbeiRemark},
+			wechatpay_remark = #{erpShopInfo.wechatpayRemark},
+			unionpay_remark = #{erpShopInfo.unionpayRemark},
+			zhangbei_password = #{erpShopInfo.password}
+		WHERE zhangbei_id = #{erpShopInfo.zhangbeiId}
+	</update>
+	
+	<select id="getByOrderID" resultType="ErpShopInfo">
+		SELECT
+		<include refid="erpShopInfoColumns" />
+		FROM erp_shop_info a
+		<include refid="erpShopInfoJoins" />
+		WHERE a.order_id = #{orderId}
+	</select>
+	
+	<update id="updateStoreInfo">
+		UPDATE erp_shop_info SET 
+		  <if test="zhangbeiState != null and zhangbeiState == 2">zhangbei_state = #{zhangbeiState},</if>
+		  <if test="isAbnormal != null and zhangbeiState != ''">is_abnormal = #{isAbnormal},</if>
+		  store_count = #{storeCount} 
+		WHERE zhangbei_id = #{zhangbeiId}
+	</update>
+
+	<select id="findShopTaskId" resultType="String">
+    SELECT aa.ID_ FROM ACT_RU_TASK aa 
+			LEFT JOIN (SELECT a.PROC_INS_ID, a.shop_id FROM erp_order_split_info a LEFT JOIN erp_shop_info b ON a.shop_id = b.zhangbei_id) mix ON aa.PROC_INST_ID_ = mix.PROC_INS_ID
+    	  WHERE mix.shop_id = #{zhangbeiId}
+	</select>
+	
+	<select id="countApplyWechatpayByShopId" resultType="Integer">
+		SELECT COUNT(mix.audit_status) FROM erp_shop_info a 
+			LEFT JOIN (
+				SELECT b.shop_info_id, c.audit_status FROM erp_store_info b LEFT JOIN erp_store_pay_weixin c ON(b.weixin_pay_id = c.id) 
+					WHERE c.id IS NOT NULL AND c.audit_status > 0) mix ON (a.id=mix.shop_info_id) 
+			WHERE mix.audit_status IS NOT NULL AND a.zhangbei_id = #{zhangbeiId}
+	</select>
+	
+	<select id="countApplyUnionpayByShopId" resultType="Integer">
+		SELECT COUNT(mix.audit_status) FROM erp_shop_info a 
+			LEFT JOIN (
+				SELECT b.shop_info_id, c.audit_status FROM erp_store_info b LEFT JOIN erp_store_pay_unionpay c ON(b.unionpay_id = c.id) 
+					WHERE c.id IS NOT NULL AND c.audit_status > 0) mix ON (a.id=mix.shop_info_id) 
+			WHERE mix.audit_status IS NOT NULL AND a.zhangbei_id = #{zhangbeiId}
+	</select>
+    
+    <select id="findBySplitId" resultType="ErpShopInfo">
+        SELECT
+		    <include refid="erpShopInfoColumns" />
+		FROM
+		    `erp_order_split_info` eosi
+		INNER JOIN 
+		    erp_shop_info a 
+		ON 
+		    eosi.shop_id = a.zhangbei_id
+		WHERE
+		    eosi.id = #{splitId}
+    </select>
+	
+	<update id="updateAbnormal">
+		UPDATE erp_shop_info SET
+			is_abnormal = #{isAbnormal}
+		WHERE zhangbei_id = #{erpShopInfo.zhangbeiId}
+	</update>
+	
+	<update id="updateAlipaStateById">
+		UPDATE erp_shop_info SET
+			alipa_state = #{alipaState}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findServicePendingNum" parameterType="String" resultType="Integer">
+	   SELECT sum(a.pending_num) FROM erp_order_good_service_info a 
+	   WHERE a.order_id IN 
+	   (SELECT id FROM erp_order_original_info WHERE shop_id=#{zhangbeiId})
+	   and a.del_flag='0' and a.service_item_id!='f3705ffc6b0411e8a04afa163eaf8427'
+	</select>
+	
+	<select id="findJykPendingNum" parameterType="String" resultType="Integer">
+	   select sum(a.pending_num) from erp_order_original_good a where a.order_id in
+	   (select id from erp_order_original_info where shop_id=#{zhangbeiId}) and a.good_type_id=5  
+	</select>
+	<select id="agentSearchList" resultType="java.util.HashMap">
+		select
+			agentId,
+			agentName
+		from
+			(
+				select
+					a.agent_id as agentId,
+					a.name as agentName
+				from
+					erp_agent_info a
+			union all select
+					cast(b.service_no as signed int) as agentId,
+					b.company_name as agentName
+				from
+					sys_service_operationmanager b
+			) tab
+		where
+			1=1
+		<if test="paramObj.keyWord != null and paramObj.keyWord != ''">
+		and(
+			tab.agentName like concat( '%', #{paramObj.keyWord}, '%' )
+	 	or 
+	 		tab.agentId = cast(#{paramObj.keyWord} as signed int))
+	 	</if>
+	 	<if test="paramObj.agentId != null">
+	 		and tab.agentId = #{paramObj.agentId}
+	 	</if>
+	 	order by tab.agentId asc
+	</select>
+	
+	<update id="updateOpsAdviserOfShop">
+	update erp_order_flow_user ofu
+join erp_order_original_info ooi
+on ooi.id=ofu.order_id and ofu.flow_user_id='OperationAdviser' and ooi.shop_id=#{zhangbeiId}
+set ofu.user_id=#{operationAdviserId}
+where exists (select 1 from ACT_RU_TASK art where art.proc_inst_id_=ofu.flow_id)
+	</update>
+	
+	<select id="getOperationServiceInfoByZhangbeiId" parameterType="String" resultType="com.yunnex.ops.erp.modules.shop.dto.OperationServiceResponseDto">
+	<if test="type=='pending'">
+	   SELECT b.order_number as "orderNumber",
+	         a.good_name as "goodName",
+	         a.service_item_name as "serviceItemName",
+	         a.pending_num as "pendingServiceNum",
+	         a.service_term as "serviceTerm",
+	         a.expiration_time as "expirationTime"
+	  FROM erp_order_good_service_info a 
+	  JOIN erp_order_original_info b
+	    ON a.order_id=b.id and b.del_flag='0'
+	  WHERE 
+	  b.shop_id=#{zhangbeiId} 
+	  and a.pending_num!=0 
+	  and a.del_flag='0'
+	  and a.service_item_id!='f3705ffc6b0411e8a04afa163eaf8427'
+	</if>
+	<if test="type=='process'">
+	   select ds.proc_ins_id AS procInsId,
+								  ooi.order_number AS orderNumber,
+								  ogsi.good_name AS goodName,
+								  ogsi.service_item_name AS serviceItemName,
+								  u.name AS operationAdviserName,
+								  ds.create_date AS startTime 
+	  from erp_order_good_service_info ogsi
+      join  erp_flow_service_item_link fsil
+          on ogsi.id=fsil.service_source_id and fsil.del_flag='0'
+			join erp_delivery_service ds 
+			   on fsil.proc_ins_id=ds.proc_ins_id
+			join erp_order_original_info ooi
+			   on ogsi.order_id=ooi.id and ooi.del_flag='0'
+			left join erp_order_flow_user ofu
+			   on ds.proc_ins_id=ofu.flow_id and ofu.flow_user_id='OperationAdviser' and ofu.del_flag='0'
+			left join sys_user u
+		   	on ofu.user_id=u.id and u.del_flag='0'
+			where ooi.shop_id=#{zhangbeiId}
+			   and ogsi.process_num!=0 and ogsi.del_flag='0' 
+			   and (ds.flow_end_time IS NULL or ds.flow_end_time = '0000-00-00 00:00:00')
+      and ogsi.service_item_id!='f3705ffc6b0411e8a04afa163eaf8427'
+	</if>
+	<if test="type=='finish'">
+	   select ds.proc_ins_id AS procInsId,
+								  ooi.order_number AS orderNumber,
+								  ogsi.good_name AS goodName,
+								  ogsi.service_item_name AS serviceItemName,
+								  u.name AS operationAdviserName,
+								  ds.create_date AS startTime,
+								  ds.flow_end_time AS endTime 
+	  from erp_order_good_service_info ogsi 
+     join  erp_flow_service_item_link fsil
+          on ogsi.id=fsil.service_source_id and fsil.del_flag='0'
+			join erp_delivery_service ds 
+			   on fsil.proc_ins_id=ds.proc_ins_id
+			join erp_order_original_info ooi
+			   on ogsi.order_id=ooi.id and ooi.del_flag='0'
+			left join erp_order_flow_user ofu
+			   on ds.proc_ins_id=ofu.flow_id and ofu.flow_user_id='OperationAdviser' and ofu.del_flag='0'
+			left join sys_user u
+		   	on ofu.user_id=u.id and u.del_flag='0'
+			where 
+			    ooi.shop_id=#{zhangbeiId}
+			    and ogsi.finish_num!=0 and ogsi.del_flag='0' 
+			    and ds.flow_end_time IS NOT NULL and ds.flow_end_time != '0000-00-00 00:00:00'
+			    and ogsi.service_item_id!='f3705ffc6b0411e8a04afa163eaf8427'
+	</if>
+	</select>
+	
+	<select id="getJykGoodInfoByZhangbeiId"  resultType="com.yunnex.ops.erp.modules.shop.dto.JykServiceResponseDto">
+	  <if test="type=='pending'">
+			     SELECT b.order_number as "orderNumber",
+					       a.good_name as "goodName",
+					       b.order_version as "version",
+					       a.pending_num as "pendingNum"
+					FROM  erp_order_original_good a 
+					JOIN  erp_order_original_info b
+					  ON  a.order_id=b.id and b.del_flag='0'
+					WHERE b.shop_id=#{zhangbeiId} 
+					      AND a.pending_num!=0
+					      AND a.good_type_id=5 
+					      AND a.del_flag='0' 
+	  </if>
+	  <if test="type=='process'">
+	     select concat(b.order_number,'-',b.split_id) as "orderSplitNumber",
+           c.good_name as "goodName",
+		         a.order_version as "version",
+		         c.num as "splitNum",
+		         d.START_TIME_ as "startTime",
+		         b.PROC_INS_ID as "procInsId",
+           g.name as "operationAdviserName",
+           h.name as "planningExpertName"
+						from erp_order_original_info a
+						join erp_order_split_info b
+						on a.id=b.order_id and b.status=0 and b.del_flag='0' 
+						join erp_order_split_good c
+						on b.id=c.original_split_id and c.del_flag='0'
+						join ACT_HI_PROCINST d
+						ON b.PROC_INS_ID=d.PROC_INST_ID_ 
+						left join erp_order_flow_user e 
+						on b.PROC_INS_ID=e.flow_id and e.del_flag='0' and e.flow_user_id='OperationAdviser'
+						left join erp_order_flow_user f 
+						on b.PROC_INS_ID=f.flow_id and f.del_flag='0' and f.flow_user_id='PlanningExpert'
+						left join sys_user g
+						on e.user_id=g.id and g.del_flag='0'
+						left join sys_user h
+						on f.user_id=h.id and h.del_flag='0'
+						WHERE a.shop_id=#{zhangbeiId}
+	          AND a.del_flag='0'
+	  </if>
+	  
+	  <if test="type=='finish'">
+	     select concat(b.order_number,'-',b.split_id) as "orderSplitNumber",
+           c.good_name as "goodName",
+		         a.order_version as "version",
+		         c.num as "splitNum",
+		         d.START_TIME_ as "startTime",
+		         d.END_TIME_ as "endTime",
+		         b.PROC_INS_ID as "procInsId",
+           g.name as "operationAdviserName",
+           h.name as "planningExpertName"
+						from erp_order_original_info a
+						join erp_order_split_info b
+		  on a.id=b.order_id and b.status in (1,2) and b.del_flag='0'
+						join erp_order_split_good c
+						on b.id=c.original_split_id and c.del_flag='0'
+						join ACT_HI_PROCINST d
+						on b.PROC_INS_ID=d.PROC_INST_ID_ 
+						left join erp_order_flow_user e 
+						on b.PROC_INS_ID=e.flow_id and e.del_flag='0' and e.flow_user_id='OperationAdviser'
+						left join erp_order_flow_user f 
+						on b.PROC_INS_ID=f.flow_id and f.del_flag='0' and f.flow_user_id='PlanningExpert'
+						left join sys_user g
+						on e.user_id=g.id and g.del_flag='0'
+						left join sys_user h
+						on f.user_id=h.id and h.del_flag='0'
+						WHERE a.shop_id=#{zhangbeiId}
+	          AND a.del_flag='0'
+	  </if>
+	</select>
+	
+	<select id="getServiceSumByZhangbeiId"  resultType="map">
+	  <if test="serviceType=='operationService'">
+	      select sum(pending_num) as "pendingNum",
+	         sum(process_num) as "processNum",
+	         sum(finish_num) as "finishNum"
+					  from erp_order_good_service_info 
+					  where order_id in(select id from erp_order_original_info where shop_id=#{zhangbeiId}) 
+					  and del_flag='0'
+					  and service_item_id!='f3705ffc6b0411e8a04afa163eaf8427'
+	  </if>
+	  <if test="serviceType=='jykService'">
+	       SELECT sum(a.pending_num) as "pendingNum",
+	              sum(a.process_num) as "processNum",
+	              sum(a.finish_num)  as "finishNum"
+					   FROM erp_order_original_good a 
+					   WHERE a.order_id in (select id from erp_order_original_info where shop_id=#{zhangbeiId}) 
+					   and a.good_type_id=5 
+					   and a.del_flag='0'
+	  </if>
+	</select>
+	
+	<select id="getServiceInfoByShopNumber" resultType="com.yunnex.ops.erp.modules.shop.dto.ShopServiceResponseDto">
+	    select service_item_name as "serviceItemName",
+						sum(service_num) as "serviceTimesSum",
+						sum(pending_num) as "pendingServiceTimesSum" 
+						from erp_order_good_service_info 
+						where order_id in (select id from erp_order_original_info where shop_number=#{shopNumber} and del_flag='0') and del_flag='0'
+     GROUP BY service_item_name
+	</select>
+   <!-- 根据掌贝id 获取商户信息 -->
+	<select id="getByZhangbeiId" resultType="ErpShopInfo">
+		SELECT <include refid="erpShopInfoColumns" /> FROM erp_shop_info a WHERE zhangbei_id = #{zhangbeiId} AND del_flag = 0
+	</select>
+
+<select id="getOpsAdviserNameByShopInfoId" resultType="String">
+	    select su.name from erp_shop_info esi 
+	    join sys_user su 
+	    on esi.operation_adviser_id = su.id and esi.del_flag='0' and su.del_flag='0'
+	    where esi.id=#{shopInfoId} 
+	</select>
+
+</mapper>

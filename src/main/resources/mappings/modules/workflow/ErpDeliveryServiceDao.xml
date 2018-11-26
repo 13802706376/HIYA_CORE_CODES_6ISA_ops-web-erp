@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.delivery.dao.ErpDeliveryServiceDao">
+
+    <sql id="erpDeliveryServiceColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.order_number AS "orderNumber",
+		a.shop_id AS "shopId",
+		a.shop_name AS "shopName",
+		a.source AS "source",
+		a.proc_ins_id AS "procInsId",
+		a.remark AS "remark",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.train_test_time as trainTestTime,
+		a.should_train_test_time as shouldTrainTestTime,
+		a.materiel_time as materielTime,
+		a.should_materiel_time as shouldMaterielTime,
+		a.visit_service_time as visitServiceTime,
+		a.should_visit_service_time as shouldVisitServiceTime,
+		a.start_time AS "startTime",
+		a.flow_end_time AS "flowEndTime",
+		a.zhct_type AS "zhctType",
+		a.service_type AS "serviceType",
+		a.upgrade_flag AS "upgradeFlag",
+		a.status AS "status"
+	</sql>
+
+    <sql id="erpDeliveryServiceColumns1">
+		a.order_id AS "orderId",
+		a.order_number AS "orderNumber",
+		a.shop_id AS "shopId",
+		a.shop_name AS "shopName",
+		a.source AS "source",
+		a.proc_ins_id AS "procInsId",
+		a.remark AS "remark",
+		a.flow_end_time AS "flowEndTime"
+	</sql>
+
+    <sql id="erpDeliveryServiceJoins">
+    </sql>
+
+    <select id="get" resultType="ErpDeliveryService">
+        SELECT
+        <include refid="erpDeliveryServiceColumns"/>
+        FROM erp_delivery_service a
+        <include refid="erpDeliveryServiceJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="ErpDeliveryService">
+        SELECT
+        <include refid="erpDeliveryServiceColumns"/>
+        FROM erp_delivery_service a
+        <include refid="erpDeliveryServiceJoins"/>
+        <where>
+
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpDeliveryService">
+        SELECT
+        <include refid="erpDeliveryServiceColumns"/>
+        FROM erp_delivery_service a
+        <include refid="erpDeliveryServiceJoins"/>
+        <where>
+
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+		INSERT INTO erp_delivery_service(
+			id,
+			order_id,
+			order_number,
+			shop_id,
+			shop_name,
+			source,
+			proc_ins_id,
+			remark,
+			flow_end_time,
+			service_type,
+			excption_logo,
+		    <if test="zhctType != null">zhct_type,</if>
+			create_by,
+			create_date,
+			update_by,
+			update_date
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{orderNumber},
+			#{shopId},
+			#{shopName},
+			#{source},
+			#{procInsId},
+			#{remark},
+			#{flowEndTime},
+			#{serviceType},
+			#{excptionLogo},
+			<if test="zhctType != null">#{zhctType},</if>
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate}
+		)
+	</insert>
+
+    <update id="update">
+        UPDATE erp_delivery_service SET
+        order_id = #{orderId},
+        shop_id = #{shopId},
+        order_number = #{orderNumber},
+        shop_name = #{shopName},
+        source = #{source},
+        remark = #{remark},
+        update_by = #{updateBy.id},
+        update_date = #{updateDate},
+        <if test="shouldFlowEndTime != null">should_flow_end_time = #{shouldFlowEndTime},</if>
+        <if test="startTime != null">start_time = #{startTime},</if>
+        <if test="trainTestTime != null">train_test_time =#{trainTestTime},</if>
+        <if test="shouldTrainTestTime != null">should_train_test_time =#{shouldTrainTestTime},</if>
+        <if test="materielTime != null">materiel_time =#{materielTime},</if>
+        <if test="shouldMaterielTime != null">should_materiel_time =#{shouldMaterielTime},</if>
+        <if test="visitServiceTime != null">visit_service_time =#{visitServiceTime},</if>
+        <if test="shouldVisitServiceTime != null">should_visit_service_time =#{shouldVisitServiceTime},</if>
+        <if test="serviceType != null ">service_type =#{serviceType},</if>
+        <if test="excptionLogo != null  ">excption_logo =#{excptionLogo},</if>
+        <if test="upgradeFlag != null">upgrade_flag =#{upgradeFlag},</if>
+        <if test="status != null">status =#{status},</if>
+        <if test="zhctType  != null and zhctType != '' ">zhct_type =#{zhctType},</if>
+        <if test="flowEndTime != null"> flow_end_time = #{flowEndTime},</if>
+         proc_ins_id = #{procInsId}
+        WHERE id = #{id}
+    </update>
+    
+    <update id="updateTime">
+        UPDATE erp_delivery_service SET
+        should_flow_end_time = '0000-00-00 00:00:00',
+        train_test_time ='0000-00-00 00:00:00',
+        should_train_test_time ='0000-00-00 00:00:00',
+        materiel_time ='0000-00-00 00:00:00',
+        should_materiel_time ='0000-00-00 00:00:00',
+        visit_service_time ='0000-00-00 00:00:00',
+        should_visit_service_time ='0000-00-00 00:00:00',
+        flow_end_time = '0000-00-00 00:00:00'
+        WHERE id = #{id}
+    </update>
+    
+    <update id="updateTime1">
+        UPDATE erp_delivery_service SET
+        train_test_time ='0000-00-00 00:00:00',
+        materiel_time ='0000-00-00 00:00:00',
+        visit_service_time ='0000-00-00 00:00:00'
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+		DELETE FROM erp_delivery_service
+		WHERE id = #{id}
+	</update>
+
+    <select id="getDeliveryInfoByProsIncId" resultType="ErpDeliveryService">
+        SELECT
+        <include refid="erpDeliveryServiceColumns"/>
+        FROM erp_delivery_service a
+        <include refid="erpDeliveryServiceJoins"/>
+        WHERE a.proc_ins_id = #{procInsId}
+
+    </select>
+
+    <select id="getDeliveryInfoByShopId" resultType="ErpDeliveryService">
+        SELECT
+        <include refid="erpDeliveryServiceColumns"/>
+        FROM erp_delivery_service a
+        <include refid="erpDeliveryServiceJoins"/>
+        WHERE a.shop_id = #{zhangbeiId}
+
+    </select>
+
+    <select id="getDeliveryInfoByShopIdAsc" resultType="ErpDeliveryService">
+        SELECT
+        <include refid="erpDeliveryServiceColumns"/>
+        FROM erp_delivery_service a
+        <include refid="erpDeliveryServiceJoins"/>
+        WHERE a.shop_id = #{zhangbeiId}
+        order by a.create_date
+        limit 1
+    </select>
+
+    <select id="findTaskIdByShopId" resultType="String">
+		SELECT aa.ID_ FROM ACT_RU_TASK aa 
+			LEFT JOIN erp_delivery_service a ON aa.PROC_INST_ID_ = a.proc_ins_id
+    	  WHERE a.shop_id = #{zhangbeiId}
+	</select>
+
+    <select id="getDeliveryInfoByOrederId" resultType="ErpDeliveryService">
+        SELECT
+        <include refid="erpDeliveryServiceColumns"/>
+        FROM erp_delivery_service a
+        <include refid="erpDeliveryServiceJoins"/>
+        WHERE a.order_id = #{orderId}
+    </select>
+
+    <select id="countByOrderNumberAndServiceType" resultType="int">
+		select count(*) from erp_delivery_service
+		where order_number = #{orderNumber} and service_type = #{serviceType}
+	</select>
+ 	<select id="getDeliveryInfoByShopIdAndServiceTypeDesc" resultType="ErpDeliveryService">
+        SELECT
+        <include refid="erpDeliveryServiceColumns"/>
+        FROM erp_delivery_service a
+        <include refid="erpDeliveryServiceJoins"/>
+        WHERE a.shop_id = #{zhangbeiId} AND a.service_type= #{serviceType} AND a.proc_ins_id != #{procInsId}
+        ORDER BY a.create_date  DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByOrderNumberAndServiceType" resultType="ErpDeliveryService">
+        SELECT
+        <include refid="erpDeliveryServiceColumns"/>
+        FROM erp_delivery_service a
+        WHERE a.order_number = #{orderNumber}
+        <if test="types != null and types.size != 0">
+            <foreach collection="types" index="index" item="item" open="and a.service_type IN(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="findByOrederId" resultType="ErpDeliveryService">
+        SELECT
+        <include refid="erpDeliveryServiceColumns"/>
+        FROM erp_delivery_service a
+        WHERE a.order_id = #{orderId}
+    </select>
+
+    <update id="updateExceptionLogo">
+        <if test="ids != null and ids.size != 0">
+            update erp_delivery_service set excption_logo = #{exception}, flow_end_time = #{flowEndTime}, status =
+            #{status} where id in
+            <foreach collection="ids" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </update>
+
+</mapper>

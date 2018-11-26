@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpOrderOriginalGoodDao">
+
+	<sql id="erpOrderOriginalGoodColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.good_name AS "goodName",
+		a.good_id AS "goodId",
+		a.good_type_id AS "goodTypeId",
+		a.good_type_name AS "goodTypeName",
+		a.pre_price AS "prePrice",
+		a.real_price AS "realPrice",
+		a.num AS "num",
+		a.pack_id AS "packId",
+		a.process_num AS "processNum",
+		a.pending_num AS "pendingNum",
+		a.finish_num AS "finishNum",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpOrderOriginalGoodJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpOrderOriginalGood">
+		SELECT 
+			<include refid="erpOrderOriginalGoodColumns"/>
+		FROM erp_order_original_good a
+		<include refid="erpOrderOriginalGoodJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpOrderOriginalGood">
+		SELECT 
+			<include refid="erpOrderOriginalGoodColumns"/>
+		FROM erp_order_original_good a
+		<include refid="erpOrderOriginalGoodJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpOrderOriginalGood">
+		SELECT 
+			<include refid="erpOrderOriginalGoodColumns"/>
+		FROM erp_order_original_good a
+		<include refid="erpOrderOriginalGoodJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_order_original_good(
+			id,
+			order_id,
+			good_name,
+			good_id,
+			good_type_id,
+			good_type_name,
+			pre_price,
+			real_price,
+			num,
+			pack_id,
+			<if test="bizType != null">biz_type,</if>
+			process_num,
+			pending_num,
+			finish_num,
+			create_date,
+			create_by,
+			update_date,
+			update_by,
+			remark,
+			sort,
+			del_flag
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{goodName},
+			#{goodId},
+			#{goodTypeId},
+			#{goodTypeName},
+			#{prePrice},
+			#{realPrice},
+			#{num},
+			#{packId},
+			<if test="bizType != null">#{bizType},</if>
+			#{processNum},
+			#{pendingNum},
+			#{finishNum},
+			#{createDate},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{sort},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_order_original_good SET 	
+			order_id = #{orderId},
+			good_name = #{goodName},
+			good_id = #{goodId},
+			good_type_id = #{goodTypeId},
+			good_type_name = #{goodTypeName},
+			pre_price = #{prePrice},
+			real_price = #{realPrice},
+			num = #{num},
+			pack_id = #{packId},
+			process_num = #{processNum},
+			pending_num = #{pendingNum},
+			finish_num = #{finishNum},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remark = #{remark},
+			<if test="bizType != null">biz_type = #{bizType},</if>
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_order_original_good SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findListByOrderId" resultType="ErpOrderOriginalGood">
+		SELECT 
+			<include refid="erpOrderOriginalGoodColumns"/>
+		FROM erp_order_original_good a
+		<include refid="erpOrderOriginalGoodJoins"/>
+		<where>
+			a.del_flag = 0 and a.order_id = #{orderId}
+		</where>
+	</select>
+	
+	<select id="findListByOrderInfo" resultType="ErpOrderOriginalGood">
+		SELECT 
+			<include refid="erpOrderOriginalGoodColumns"/>
+		FROM erp_order_original_good a
+		<include refid="erpOrderOriginalGoodJoins"/>
+		<where>
+			a.del_flag = 0 and a.order_id = #{orderId}
+			<if test="goodType != null">
+				and good_type_id = #{goodType}
+			</if>
+		</where>
+	</select>
+	
+	<select id="getListOriginalGood" resultType="ErpOrderOriginalGood">
+	    SELECT 
+			<include refid="erpOrderOriginalGoodColumns"/>
+		FROM erp_order_original_good a
+		<include refid="erpOrderOriginalGoodJoins"/>
+		where	a.del_flag = 0 AND  a.num>0  AND a.biz_type!='PACK'   AND a.order_id = #{orderId} 
+	</select>
+	
+	
+	<update id="decreasePendingNum">
+		UPDATE erp_order_original_good SET 	
+			process_num = process_num + #{num},
+			pending_num = pending_num - #{num} 
+		WHERE id = #{id}
+	</update>
+	
+	<update id="decreaseProcessNum">
+		UPDATE erp_order_original_good SET 	
+			finish_num = finish_num + #{num},
+			process_num = process_num - #{num} 
+		WHERE id = #{id}
+	</update>
+	
+	<delete id="deleteByOrderId">
+		DELETE FROM erp_order_original_good
+			WHERE order_id = #{orderId}
+	</delete>
+
+	<select id="findJykAndKclDistinct" resultType="ErpOrderOriginalGood">
+		SELECT good_type_id AS "goodTypeId", good_type_name AS "goodTypeName"
+		FROM `erp_order_original_good` WHERE order_id = #{orderId} AND del_flag = '0'
+		GROUP BY good_type_id, good_type_name HAVING good_type_id IN (5, 6)
+	</select>
+	
+	<select id="findJykPendingGoodNumByOrderId" resultType="java.lang.Integer">
+		select sum(a.pending_num) from erp_order_original_good a where good_type_id=5 and order_id=#{orderId}
+	</select>
+	
+	<insert id="batchInsert">
+		INSERT INTO erp_order_original_good(
+			id,
+			order_id,
+			good_name,
+			good_id,
+			good_type_id,
+			good_type_name,
+			real_price,
+			num,
+			pending_num,
+			create_date,
+			create_by,
+			update_date,
+			update_by
+		) VALUES 
+		<foreach collection ="erpOrderOriginalGoods" item="goodObj" separator =",">
+		(
+			uuid(),
+			#{orderId},
+			#{goodObj.goodName},
+			#{goodObj.goodId},
+			#{goodObj.goodTypeId},
+			#{goodObj.goodTypeName},
+			#{goodObj.realPrice},
+			#{goodObj.num},
+			#{goodObj.num},
+			now(),
+			'user',
+			now(),
+			'user'
+		)
+		</foreach>
+	</insert>
+	
+	<select id="queryGoodFormList" resultType="com.yunnex.ops.erp.modules.order.entity.SplitGoodForm">
+		select
+			d.id as goodId,
+			d.num as num,
+			d.good_type_id as goodTypeId,
+			d.pack_id as packId
+		from
+			erp_order_original_good d
+		where 
+			d.del_flag = '0'
+		and 
+			d.order_id = #{orderId}
+	</select>
+	
+	<update id="resetPendingNum">
+		<foreach collection="splitGoodLists" item="good">
+			update erp_order_original_good set pending_num = pending_num + #{good.num},process_num = process_num - #{good.num} where id = #{good.goodId};
+		</foreach>
+	</update>
+	
+</mapper>

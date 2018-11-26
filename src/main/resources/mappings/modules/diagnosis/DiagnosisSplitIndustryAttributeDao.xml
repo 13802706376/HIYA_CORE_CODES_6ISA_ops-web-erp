@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.diagnosis.dao.DiagnosisSplitIndustryAttributeDao">
+    
+	<sql id="diagnosisSplitIndustryAttributeColumns">
+		a.split_id AS "splitId",
+		a.industry_attribute_id AS "industryAttributeId"
+	</sql>
+	
+	<sql id="diagnosisSplitIndustryAttributeJoins">
+	</sql>
+    
+	<select id="get" resultType="DiagnosisSplitIndustryAttribute">
+		SELECT 
+			<include refid="diagnosisSplitIndustryAttributeColumns"/>
+		FROM diagnosis_split_industry_attribute a
+		<include refid="diagnosisSplitIndustryAttributeJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DiagnosisSplitIndustryAttribute">
+		SELECT 
+			<include refid="diagnosisSplitIndustryAttributeColumns"/>
+		FROM diagnosis_split_industry_attribute a
+		<include refid="diagnosisSplitIndustryAttributeJoins"/>
+		<where>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DiagnosisSplitIndustryAttribute">
+		SELECT 
+			<include refid="diagnosisSplitIndustryAttributeColumns"/>
+		FROM diagnosis_split_industry_attribute a
+		<include refid="diagnosisSplitIndustryAttributeJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO diagnosis_split_industry_attribute(
+			split_id,
+			industry_attribute_id
+		) VALUES (
+			#{splitId},
+			#{industryAttributeId}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE diagnosis_split_industry_attribute SET 	
+			split_id = #{splitId},
+			industry_attribute_id = #{industryAttributeId}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM diagnosis_split_industry_attribute
+		WHERE id = #{id}
+	</update>
+    
+    <delete id="deleteBySplitId">
+        DELETE FROM diagnosis_split_industry_attribute WHERE split_id = #{splitId}
+    </delete>
+    
+    
+    <insert id="saveBatch">
+       <if test="list != null and list.size > 0">
+           INSERT INTO diagnosis_split_industry_attribute(
+                split_id,
+                industry_attribute_id
+            ) VALUES
+            <foreach collection="list" item="item" index="index" separator=",">
+                (
+                    #{item.splitId},
+                    #{item.industryAttributeId}
+                )
+            </foreach>
+        </if>
+    </insert>
+
+	<select id="findBySplitId" resultType="DiagnosisSplitIndustryAttribute">
+		SELECT
+			<include refid="diagnosisSplitIndustryAttributeColumns"/>
+		FROM
+			diagnosis_split_industry_attribute a
+		WHERE
+			split_id = #{splitId}
+	</select>
+    
+</mapper>

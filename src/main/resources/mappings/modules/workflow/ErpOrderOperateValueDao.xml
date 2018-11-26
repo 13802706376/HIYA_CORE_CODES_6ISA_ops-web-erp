@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.flow.dao.ErpOrderOperateValueDao">
+    
+	<sql id="erpOrderOperateValueColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.split_id AS "splitId",
+		a.proc_ins_id AS "procInsId",
+		a.sub_task_id AS "subTaskId",
+		a.key_name AS "keyName",
+		a.value AS "value",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpOrderOperateValueJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpOrderOperateValue">
+		SELECT 
+			<include refid="erpOrderOperateValueColumns"/>
+		FROM erp_order_operate_value a
+		<include refid="erpOrderOperateValueJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpOrderOperateValue">
+		SELECT 
+			<include refid="erpOrderOperateValueColumns"/>
+		FROM erp_order_operate_value a
+		<include refid="erpOrderOperateValueJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpOrderOperateValue">
+		SELECT 
+			<include refid="erpOrderOperateValueColumns"/>
+		FROM erp_order_operate_value a
+		<include refid="erpOrderOperateValueJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_order_operate_value(
+			id,
+			order_id,
+			split_id,
+			proc_ins_id,
+			sub_task_id,
+			key_name,
+			value,
+			update_date,
+			update_by,
+			remark,
+			sort,
+			del_flag
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{splitId},
+			#{procInsId},
+			#{subTaskId},
+			#{keyName},
+			#{value},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{sort},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_order_operate_value SET 	
+			order_id = #{orderId},
+			split_id = #{splitId},
+			proc_ins_id = #{procInsId},
+			sub_task_id = #{subTaskId},
+			key_name = #{keyName},
+			value = #{value},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remark = #{remark},
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_order_operate_value SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getOnlyOne" resultType="ErpOrderOperateValue">
+		SELECT 
+			<include refid="erpOrderOperateValueColumns"/>
+		FROM erp_order_operate_value a
+		<include refid="erpOrderOperateValueJoins"/>
+		WHERE a.proc_ins_id = #{procInsId}
+		AND a.key_name = #{keyName}
+		AND a.sub_task_id = #{subTaskId}
+	</select>
+	
+</mapper>

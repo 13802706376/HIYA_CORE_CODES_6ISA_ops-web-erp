@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.effect.dao.JykDeliveryEffectInfoDao">
+    
+	<sql id="jykDeliveryEffectInfoColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.split_id AS "splitId",
+		a.proc_ins_id AS "procInsId",
+		a.state AS "state",
+		a.outer_img_url_friends AS "outerImgUrlFriends",
+		a.outer_img_name_friends AS "outerImgNameFriends",
+		a.inner_img_url_friends AS "innerImgUrlFriends",
+		a.inner_img_name_friends AS "innerImgNameFriends",
+		a.outer_img_url_weibo AS "outerImgUrlWeibo",
+		a.outer_img_name_weibo AS "outerImgNameWeibo",
+		a.inner_img_url_weibo AS "innerImgUrlWeibo",
+		a.inner_img_name_weibo AS "innerImgNameWeibo",
+		a.outer_img_url_momo AS "outerImgUrlMomo",
+		a.outer_img_name_momo AS "outerImgNameMomo",
+		a.inner_img_url_momo AS "innerImgUrlMomo",
+		a.inner_img_name_momo AS "innerImgNameMomo",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="jykDeliveryEffectInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="JykDeliveryEffectInfo">
+		SELECT 
+			<include refid="jykDeliveryEffectInfoColumns"/>
+		FROM jyk_delivery_effect_info a
+		<include refid="jykDeliveryEffectInfoJoins"/>
+		WHERE a.del_flag = 0 AND a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="JykDeliveryEffectInfo">
+		SELECT 
+			<include refid="jykDeliveryEffectInfoColumns"/>
+		FROM jyk_delivery_effect_info a
+		<include refid="jykDeliveryEffectInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="JykDeliveryEffectInfo">
+		SELECT 
+			<include refid="jykDeliveryEffectInfoColumns"/>
+		FROM jyk_delivery_effect_info a
+		<include refid="jykDeliveryEffectInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO jyk_delivery_effect_info(
+			id,
+			order_id,
+			split_id,
+			proc_ins_id,
+			state,
+			outer_img_url_friends,
+			outer_img_name_friends,
+			inner_img_url_friends,
+			inner_img_name_friends,
+			outer_img_url_weibo,
+			outer_img_name_weibo,
+			inner_img_url_weibo,
+			inner_img_name_weibo,
+			outer_img_url_momo,
+			outer_img_name_momo,
+			inner_img_url_momo,
+			inner_img_name_momo,
+			create_date,
+			create_by,
+			update_date,
+			update_by,
+			remark,
+			sort,
+			del_flag
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{splitId},
+			#{procInsId},
+			#{state},
+			#{outerImgUrlFriends},
+			#{outerImgNameFriends},
+			#{innerImgUrlFriends},
+			#{innerImgNameFriends},
+			#{outerImgUrlWeibo},
+			#{outerImgNameWeibo},
+			#{innerImgUrlWeibo},
+			#{innerImgNameWeibo},
+			#{outerImgUrlMomo},
+			#{outerImgNameMomo},
+			#{innerImgUrlMomo},
+			#{innerImgNameMomo},
+			#{createDate},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{sort},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE jyk_delivery_effect_info SET 	
+			order_id = #{orderId},
+			split_id = #{splitId},
+			proc_ins_id = #{procInsId},
+			state = #{state},
+			outer_img_url_friends = #{outerImgUrlFriends},
+			outer_img_name_friends = #{outerImgNameFriends},
+			inner_img_url_friends = #{innerImgUrlFriends},
+			inner_img_name_friends = #{innerImgNameFriends},
+			outer_img_url_weibo = #{outerImgUrlWeibo},
+			outer_img_name_weibo = #{outerImgNameWeibo},
+			inner_img_url_weibo = #{innerImgUrlWeibo},
+			inner_img_name_weibo = #{innerImgNameWeibo},
+			outer_img_url_momo = #{outerImgUrlMomo},
+			outer_img_name_momo = #{outerImgNameMomo},
+			inner_img_url_momo = #{innerImgUrlMomo},
+			inner_img_name_momo = #{innerImgNameMomo},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remark = #{remark},
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE jyk_delivery_effect_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="deleteBefore">
+		UPDATE jyk_delivery_effect_info SET 
+			del_flag = 1
+		WHERE split_id = #{splitId}
+	</update>
+	
+	<update id="updateState">
+		UPDATE jyk_delivery_effect_info SET 
+			state = #{state}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getByProcInsId" resultType="JykDeliveryEffectInfo">
+		SELECT 
+			<include refid="jykDeliveryEffectInfoColumns"/>
+		FROM jyk_delivery_effect_info a
+		<include refid="jykDeliveryEffectInfoJoins"/>
+		WHERE a.del_flag = 0 AND a.state NOT IN ('0') AND a.proc_ins_id = #{procInsId}
+	</select>
+	
+</mapper>

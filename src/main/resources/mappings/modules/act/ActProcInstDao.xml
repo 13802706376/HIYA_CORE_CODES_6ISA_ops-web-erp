@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.act.dao.ActProcInstDao">
+	
+	<insert id="addBatchRuTask" >
+            INSERT INTO ACT_RU_TASK (ID_,REV_,EXECUTION_ID_,PROC_INST_ID_,PROC_DEF_ID_,NAME_,PARENT_TASK_ID_,DESCRIPTION_,TASK_DEF_KEY_, OWNER_,ASSIGNEE_, DELEGATION_, PRIORITY_,CREATE_TIME_,DUE_DATE_,CATEGORY_,SUSPENSION_STATE_,TENANT_ID_,FORM_KEY_)
+             SELECT 
+             CONCAT(ID_,'1'),
+             REV_,
+             EXECUTION_ID_,
+             #{procInsId},
+             #{procDefId},
+             NAME_,
+             PARENT_TASK_ID_,
+             DESCRIPTION_,
+             TASK_DEF_KEY_,
+             OWNER_,
+             ASSIGNEE_,
+             DELEGATION_,
+             PRIORITY_,
+             CREATE_TIME_,
+             DUE_DATE_,
+             CATEGORY_,
+             SUSPENSION_STATE_,
+             TENANT_ID_,
+             FORM_KEY_
+			 FROM  ACT_RU_TASK WHERE PROC_INST_ID_ = #{oldProcInsId}  AND TASK_DEF_KEY_  NOT IN( SELECT act_id FROM   ACT_RE_ACTDEF_EXT WHERE    up_del_file_flag ='Y')
+    </insert>
+   <update id="updateRuTaskExIdByproId">
+   UPDATE ACT_RU_TASK  SET EXECUTION_ID_=#{procInsId}  WHERE EXECUTION_ID_= #{oldProcInsId} 
+   </update>
+   
+   <update id="updateActIdByProId">
+   UPDATE ACT_RU_EXECUTION SET ACT_ID_= #{actId}  WHERE ID_=#{procInsId} 
+   </update>
+   <delete id="deleteExecuIionByProId">
+   DELETE FROM   ACT_RU_EXECUTION  WHERE ID_=#{procInsId} 
+   </delete>
+   <update id="updateExeCuTionByPid">
+   UPDATE ACT_RU_EXECUTION SET PROC_INST_ID_=#{procInsId},PROC_DEF_ID_= #{procDefId}  WHERE PROC_INST_ID_=#{oldProcInsId}  AND ID_ != #{oldProcInsId}
+   </update>
+    
+    <update id="updateEcuParentId">
+    UPDATE ACT_RU_EXECUTION SET PARENT_ID_= #{procInsId} WHERE PARENT_ID_=#{oldProcInsId}
+    </update>
+    
+    <insert id="addBatchRuVariable" >
+	INSERT INTO ACT_RU_VARIABLE (ID_,REV_,TYPE_,NAME_,EXECUTION_ID_,PROC_INST_ID_,TASK_ID_,BYTEARRAY_ID_,DOUBLE_,LONG_,TEXT_,TEXT2_)
+             SELECT 
+             UUID(),
+             REV_,
+             TYPE_,
+             NAME_,
+            #{procInsId},
+            #{procInsId},
+             TASK_ID_,
+             BYTEARRAY_ID_,
+             DOUBLE_,
+             LONG_,
+             TEXT_,
+             TEXT2_
+	  FROM  ACT_RU_VARIABLE WHERE PROC_INST_ID_ = #{oldProcInsId}  
+    </insert>
+    
+    <insert id="addBatchHiVarinst">
+    INSERT INTO  ACT_HI_VARINST ( ID_,PROC_INST_ID_,EXECUTION_ID_,TASK_ID_,NAME_,VAR_TYPE_,REV_,BYTEARRAY_ID_,DOUBLE_,LONG_,TEXT_,TEXT2_,CREATE_TIME_,LAST_UPDATED_TIME_)
+              SELECT 
+              UUID(),
+               #{procInsId},
+               #{procInsId},
+              TASK_ID_,
+              NAME_,
+              VAR_TYPE_,
+              REV_,
+              BYTEARRAY_ID_,
+              DOUBLE_,
+              LONG_,
+              TEXT_,
+              TEXT2_,
+              CREATE_TIME_,
+              LAST_UPDATED_TIME_
+    	 FROM ACT_HI_VARINST WHERE PROC_INST_ID_  = #{oldProcInsId}  
+    </insert>
+    
+    
+    
+    
+    <insert id="addRuTask" >
+    INSERT INTO ACT_RU_TASK (ID_,REV_,EXECUTION_ID_,PROC_INST_ID_,PROC_DEF_ID_,NAME_,PARENT_TASK_ID_,DESCRIPTION_,TASK_DEF_KEY_, OWNER_,ASSIGNEE_, DELEGATION_, PRIORITY_,CREATE_TIME_,DUE_DATE_,CATEGORY_,SUSPENSION_STATE_,TENANT_ID_,FORM_KEY_)
+             SELECT 
+              #{id},
+             task.REV_,
+            EXECUTION_ID_,
+             #{procInsId},
+             #{procDefId},
+             #{name},
+             task.PARENT_TASK_ID_,
+             task. DESCRIPTION_,
+             #{taskDefKey},
+             task.OWNER_,
+             us.user_id,
+             task.DELEGATION_,
+             task.PRIORITY_,
+             task.CREATE_TIME_,
+             task.DUE_DATE_,
+             task.CATEGORY_,
+             task.SUSPENSION_STATE_,
+             task.TENANT_ID_,
+             task.FORM_KEY_
+			 FROM  ACT_RU_TASK  task
+	      LEFT JOIN erp_order_flow_user us ON  task.PROC_INST_ID_ = us.flow_id
+	      WHERE task.PROC_INST_ID_= #{oldProcInsId}  AND  us.flow_user_id='OperationAdviser'
+	     <if test="type !=null and type !=''">
+	       AND task.TASK_DEF_KEY_  IN( SELECT act_id FROM   ACT_RE_ACTDEF_EXT WHERE    up_del_file_flag ='Y') 
+	     </if>
+	     LIMIT 1
+    </insert>
+    
+    
+    <insert id="addRuTaskExcuId" >
+    INSERT INTO ACT_RU_TASK (ID_,REV_,EXECUTION_ID_,PROC_INST_ID_,PROC_DEF_ID_,NAME_,PARENT_TASK_ID_,DESCRIPTION_,TASK_DEF_KEY_, OWNER_,ASSIGNEE_, DELEGATION_, PRIORITY_,CREATE_TIME_,DUE_DATE_,CATEGORY_,SUSPENSION_STATE_,TENANT_ID_,FORM_KEY_)
+             SELECT 
+              #{id},
+             task.REV_,
+             #{excutionId},
+             #{procInsId},
+             #{procDefId},
+             #{name},
+             task.PARENT_TASK_ID_,
+             task. DESCRIPTION_,
+             #{actId},
+             task.OWNER_,
+             us.user_id,
+             task.DELEGATION_,
+             task.PRIORITY_,
+             task.CREATE_TIME_,
+             task.DUE_DATE_,
+             task.CATEGORY_,
+             task.SUSPENSION_STATE_,
+             task.TENANT_ID_,
+             task.FORM_KEY_
+			 FROM  ACT_RU_TASK  task
+	      LEFT JOIN erp_order_flow_user us ON  task.PROC_INST_ID_ = us.flow_id
+	      WHERE task.PROC_INST_ID_= #{oldProcInsId}  AND  us.flow_user_id='OperationAdviser'
+	     LIMIT 1
+    </insert>
+    
+    
+    
+    
+     <insert id="addHiTaskInst" >
+    INSERT INTO ACT_HI_TASKINST (ID_,PROC_DEF_ID_,TASK_DEF_KEY_,PROC_INST_ID_,EXECUTION_ID_,NAME_,PARENT_TASK_ID_,DESCRIPTION_,OWNER_,ASSIGNEE_,START_TIME_,CLAIM_TIME_,DURATION_,DELETE_REASON_,PRIORITY_,DUE_DATE_,FORM_KEY_,CATEGORY_,TENANT_ID_)
+             SELECT 
+             #{id},
+             hi.PROC_DEF_ID_,
+             #{taskDefKey},
+             #{procInsId},
+             hi.EXECUTION_ID_,
+             #{name},
+             hi.PARENT_TASK_ID_,
+             hi.DESCRIPTION_,
+             hi.OWNER_,
+             us.user_id,
+             hi.START_TIME_,
+             hi.CLAIM_TIME_,
+             hi.DURATION_,
+             hi.DELETE_REASON_,
+             hi.PRIORITY_,
+             hi.DUE_DATE_,
+             hi.FORM_KEY_,
+             hi.CATEGORY_,
+             hi.TENANT_ID_
+			 FROM  ACT_HI_TASKINST  hi
+	      LEFT JOIN erp_order_flow_user us ON  hi.PROC_INST_ID_ = us.flow_id
+	     WHERE hi.PROC_INST_ID_= #{oldProcInsId}  AND  us.flow_user_id='OperationAdviser'
+	     LIMIT 1
+    </insert>
+    
+    
+    
+    
+    <delete id="deleteRuTaskByProcId">
+    DELETE  FROM  ACT_RU_TASK WHERE  PROC_INST_ID_=  #{procInsId};
+    </delete>
+    
+    <delete id="deleteHiTaskByProcId">
+    DELETE  FROM  ACT_HI_TASKINST WHERE  PROC_INST_ID_=  #{procInsId};
+    </delete>
+    
+    <delete id="deleteRuVariableByProcId">
+ 	DELETE  FROM  ACT_RU_VARIABLE 
+    WHERE  PROC_INST_ID_=   #{procInsId}
+    AND NAME_ IN (  SELECT a.* FROM  ( SELECT NAME_ FROM  ACT_RU_VARIABLE  WHERE  PROC_INST_ID_=  #{oldProcInsId} )a )
+    </delete>
+    
+      <insert id="addHiTaskInstByProcInsId" >
+    INSERT INTO ACT_HI_TASKINST (ID_,PROC_DEF_ID_,TASK_DEF_KEY_,PROC_INST_ID_,EXECUTION_ID_,NAME_,PARENT_TASK_ID_,DESCRIPTION_,OWNER_,ASSIGNEE_,START_TIME_,CLAIM_TIME_,END_TIME_,DURATION_,DELETE_REASON_,PRIORITY_,DUE_DATE_,FORM_KEY_,CATEGORY_,TENANT_ID_)
+             SELECT 
+             CONCAT(ID_,'1'),
+             PROC_DEF_ID_,
+             TASK_DEF_KEY_,
+             #{procInsId},
+             EXECUTION_ID_,
+             NAME_,
+             PARENT_TASK_ID_,
+             DESCRIPTION_,
+             OWNER_,
+             ASSIGNEE_,
+             START_TIME_,
+             CLAIM_TIME_,
+             END_TIME_,
+             DURATION_,
+             DELETE_REASON_,
+             PRIORITY_,
+             DUE_DATE_,
+             FORM_KEY_,
+             CATEGORY_,
+             TENANT_ID_
+			 FROM  ACT_HI_TASKINST 
+	     WHERE PROC_INST_ID_= #{oldProcInsId} AND TASK_DEF_KEY_  NOT IN (SELECT act_id FROM  ACT_RE_ACTDEF_EXT WHERE up_del_file_flag='Y')
+    </insert>
+    
+    <insert id="addBatchHiProcInst">
+    INSERT INTO ACT_HI_PROCINST (ID_,PROC_INST_ID_,BUSINESS_KEY_,PROC_DEF_ID_,START_TIME_,END_TIME_,DURATION_,START_USER_ID_,START_ACT_ID_,END_ACT_ID_,SUPER_PROCESS_INSTANCE_ID_,DELETE_REASON_,TENANT_ID_,NAME_)
+            SELECT 
+          #{procInsId},
+           #{procInsId},
+            BUSINESS_KEY_,
+            PROC_DEF_ID_,
+            START_TIME_,
+            END_TIME_,
+            DURATION_,
+            START_USER_ID_,
+            START_ACT_ID_,
+            END_ACT_ID_,
+            SUPER_PROCESS_INSTANCE_ID_,
+            DELETE_REASON_,
+            TENANT_ID_,
+            NAME_
+			FROM  ACT_HI_PROCINST 
+	     WHERE PROC_INST_ID_= #{oldProcInsId} 
+    </insert>
+    <delete id="deleteHiProcInstByProcId">
+    DELETE  FROM  ACT_HI_PROCINST WHERE  PROC_INST_ID_=  #{procInsId};
+    </delete>
+    
+    <insert id="addBatchFlowForm">
+     INSERT INTO erp_flow_form (id,task_id,bus_id,proc_ins_id,task_def,form_attr_type,form_attr_name,form_attr_value,form_text_value,form_attr_desc,create_date,create_by,update_date,update_by,remark)
+            SELECT 
+            UUID(),
+            task_id,
+            bus_id,
+           #{procInsId},
+            task_def,
+            form_attr_type,
+            form_attr_name,
+            form_attr_value,
+            form_text_value,
+            form_attr_desc,
+            create_date,
+            create_by,
+            update_date,
+            update_by,
+            remark
+			FROM  erp_flow_form 
+	     WHERE proc_ins_id= #{oldProcInsId}  AND task_def NOT IN (SELECT act_id FROM  ACT_RE_ACTDEF_EXT WHERE up_del_file_flag='Y')
+    </insert>
+    
+     <insert id="addBatchOrderFile">
+     INSERT INTO erp_order_file (id,proc_ins_id,file_name,file_path,file_type,file_title,create_by,update_date,update_by,remark,del_flag,create_date,task_def_key,sub_task_id)
+            SELECT 
+            UUID(),
+            #{procInsId},
+            file_name,
+            file_path,
+            file_type,
+            file_title,
+            create_by,
+            update_date,
+            update_by,
+            remark,
+            del_flag,
+            create_date,
+            task_def_key,
+            sub_task_id
+		  FROM  erp_order_file 
+	     WHERE proc_ins_id= #{oldProcInsId}  AND task_def_key  NOT IN (SELECT act_id FROM  ACT_RE_ACTDEF_EXT WHERE up_del_file_flag='Y')
+     </insert>
+    
+    
+    
+    <insert id="addBatchOrderFlowUser">
+    INSERT INTO erp_order_flow_user (id,order_id,split_id,flow_id,user_id,create_date,create_by,update_date,update_by,remark,del_flag,flow_user_id)
+            SELECT 
+            UUID(),
+            #{orderId},
+             #{orderId},
+            #{procInsId},
+            user_id,
+            create_date,
+            create_by,
+            update_date,
+            update_by,
+            remark,
+            del_flag,
+            flow_user_id
+            FROM  erp_order_flow_user 
+	     WHERE flow_id= #{oldProcInsId} 
+    </insert>
+    
+    <insert id="addBatchZhctRuTask" >
+            INSERT INTO ACT_RU_TASK (ID_,REV_,EXECUTION_ID_,PROC_INST_ID_,PROC_DEF_ID_,NAME_,PARENT_TASK_ID_,DESCRIPTION_,TASK_DEF_KEY_, OWNER_,ASSIGNEE_, DELEGATION_, PRIORITY_,CREATE_TIME_,DUE_DATE_,CATEGORY_,SUSPENSION_STATE_,TENANT_ID_,FORM_KEY_)
+             SELECT 
+             CONCAT(ID_,'1'),
+             REV_,
+             EXECUTION_ID_,
+             #{procInsId},
+             PROC_DEF_ID_,
+             NAME_,
+             PARENT_TASK_ID_,
+             DESCRIPTION_,
+             TASK_DEF_KEY_,
+             OWNER_,
+             ASSIGNEE_,
+             DELEGATION_,
+             PRIORITY_,
+             CREATE_TIME_,
+             DUE_DATE_,
+             CATEGORY_,
+             SUSPENSION_STATE_,
+             TENANT_ID_,
+             FORM_KEY_
+			 FROM  ACT_RU_TASK WHERE PROC_INST_ID_ = #{oldProcInsId}  AND TASK_DEF_KEY_ IN ('zhct_menu_configuration','visit_service_subscribe_zhct','visit_service_apply_zhct','visit_service_review_zhct','visit_service_modify_zhct','visit_service_remind_zhct','visit_service_complete_zhct') 
+    </insert>
+	
+	<delete id="deleteFlowUserByProInsId">
+	DELETE  FROM erp_order_flow_user  WHERE flow_id = #{procInsId} 
+	</delete>
+	
+	
+	<delete id="deleteHiVarinstByProId">
+	DELETE  FROM  ACT_HI_VARINST             
+    WHERE  PROC_INST_ID_=   #{procInsId}
+    AND NAME_ IN (  SELECT a.* FROM  ( SELECT NAME_ FROM  ACT_HI_VARINST  WHERE  PROC_INST_ID_=  #{oldProcInsId})a )
+	</delete>
+	
+	
+	<update id="updateRuVarByProcId">
+	UPDATE   ACT_RU_VARIABLE SET TEXT_= #{text}  WHERE PROC_INST_ID_=#{procInsId}   AND NAME_= #{name} 
+	</update>
+	
+	<update id="updateHiVarByProcId">
+	UPDATE   ACT_HI_VARINST SET TEXT_= #{text}  WHERE PROC_INST_ID_=#{procInsId}   AND NAME_= #{name} 
+	</update>
+	
+	<update id="updteExecActId">
+	UPDATE  ACT_RU_EXECUTION SET ACT_ID_=#{actId}  WHERE  PROC_INST_ID_ =#{procInsId}  AND  ACT_ID_  IN( SELECT act_id FROM   ACT_RE_ACTDEF_EXT WHERE  up_del_file_flag ='Y')
+	</update>
+	
+	<delete id="deletRuExcuByproIdAndActId">
+	DELETE FROM ACT_RU_EXECUTION  WHERE PROC_INST_ID_= #{procInsId}  AND ACT_ID_ =#{actId}  AND ID_ NOT IN (SELECT EXECUTION_ID_ FROM ACT_RU_TASK WHERE  PROC_INST_ID_ =#{procInsId} );
+	</delete>
+	
+	
+	<insert id="addActRuExcution">
+	INSERT INTO ACT_RU_EXECUTION (ID_,REV_,PROC_INST_ID_,PARENT_ID_,PROC_DEF_ID_,SUPER_EXEC_,ACT_ID_,IS_ACTIVE_,IS_CONCURRENT_,IS_SCOPE_,IS_EVENT_SCOPE_,SUSPENSION_STATE_,CACHED_ENT_STATE_,TENANT_ID_,NAME_,LOCK_TIME_)
+           SELECT 
+            #{id},
+            REV_,
+            #{procInsId},
+            #{procInsId},
+            #{procDefId},
+            SUPER_EXEC_,
+            #{actId},
+            IS_ACTIVE_,
+            IS_CONCURRENT_,
+            0,
+            IS_EVENT_SCOPE_,
+            SUSPENSION_STATE_,
+            CACHED_ENT_STATE_,
+            TENANT_ID_,
+            NAME_,
+            LOCK_TIME_
+		  FROM  ACT_RU_EXECUTION  WHERE  PROC_INST_ID_= #{oldProcInsId}
+	      LIMIT 1
+	</insert>
+	
+	<insert id="addFlowServiceItemLink">
+	INSERT INTO erp_flow_service_item_link (proc_ins_id,service_source_id,del_flag) VALUE
+	 (
+	 #{procInsId},#{serviceSourceId},0
+	)
+	</insert>
+	
+	<insert id="addGoodServiceInfoById">
+	INSERT INTO erp_order_good_service_info (id,order_id,good_name,service_item_id,service_item_name,service_num,pending_num,process_num,finish_num,service_term,expiration_time,create_date,create_by,update_date,update_by,remark,del_flag)
+	SELECT
+	#{Id},
+	#{orderId},
+	good_name,
+	service_item_id,
+	service_item_name,
+	service_num,
+	pending_num,
+	process_num,
+	finish_num,
+	service_term,
+	expiration_time,
+	create_date,
+	create_by,
+	update_date,
+	update_by,
+	remark,
+	del_flag
+	 FROM erp_order_good_service_info WHERE id = ( 
+	SELECT li.service_source_id FROM erp_flow_service_item_link li
+	LEFT JOIN  erp_order_good_service_info gs ON li.service_source_id = gs.id
+	WHERE  gs.service_item_id=#{serviceItemId}  AND li.proc_ins_id= #{oldProcInsId} LIMIT 1 )
+	</insert>
+	
+	
+	<insert id="addBatchHiActinst">
+	INSERT INTO ACT_HI_ACTINST (ID_,PROC_DEF_ID_,PROC_INST_ID_,	EXECUTION_ID_,ACT_ID_,TASK_ID_,CALL_PROC_INST_ID_,ACT_NAME_,ACT_TYPE_,ASSIGNEE_,START_TIME_,END_TIME_,DURATION_,TENANT_ID_)
+	SELECT
+	 CONCAT(ID_,'1'),
+	#{procDefId},
+	 #{procInsId},
+	 EXECUTION_ID_,
+	ACT_ID_,
+	CONCAT(TASK_ID_,'1'),
+	CALL_PROC_INST_ID_,
+	ACT_NAME_,
+	ACT_TYPE_,
+	ASSIGNEE_,
+	START_TIME_,
+	END_TIME_,
+	DURATION_,
+	TENANT_ID_
+	FROM ACT_HI_ACTINST  WHERE PROC_INST_ID_= #{oldProcInsId} AND ACT_ID_  NOT IN (SELECT act_id FROM  ACT_RE_ACTDEF_EXT WHERE up_del_file_flag='Y')
+	</insert>
+	
+	<delete id="deleteHiactInstByProId">
+	DELETE FROM  ACT_HI_ACTINST WHERE PROC_INST_ID_= #{procInsId}
+	</delete>
+	
+	<update id="updateSysHiActinstInfo">
+	UPDATE ACT_HI_ACTINST a 
+	LEFT JOIN ACT_HI_TASKINST t 
+	ON  a.PROC_INST_ID_  = t.PROC_INST_ID_ AND   a.ACT_ID_=t.TASK_DEF_KEY_ AND a.TASK_ID_=t.ID_
+	SET a.END_TIME_  = t.END_TIME_,a.DURATION_ =t.DURATION_
+	WHERE a.PROC_INST_ID_= #{procInsId} AND a.ACT_ID_= #{actId}
+	</update>
+	
+
+	
+	<delete id="deleteHiVarInstNameByProId">
+	DELETE FROM  ACT_HI_VARINST WHERE  PROC_INST_ID_= #{procInsId}  AND NAME_='visitType'   AND TEXT_='FMPS_I'
+	</delete>
+	
+	<!-- 根据流程id和变量名称集合 删除流程变量 -->
+	<delete id="deleteRuVariableByNames">
+		DELETE FROM  ACT_RU_VARIABLE WHERE  PROC_INST_ID_= #{procInsId}
+			<if test="variableNameList != null and variableNameList.size > 0">
+				AND NAME_ in 
+				<foreach item="nameItem" collection="variableNameList" separator="," open="(" close=")" >
+					#{nameItem}
+				</foreach>
+			</if>
+	</delete>
+	
+	
+	<update id="updateHiActInstName">
+	UPDATE  ACT_HI_ACTINST SET ACT_NAME_=#{name} WHERE ACT_ID_=#{actId} AND TASK_ID_=#{taskId} 
+	</update>
+	
+	<update id="updateHiTaskInstName">
+	UPDATE   ACT_HI_TASKINST  SET NAME_= #{name}  WHERE ID_ =#{taskId} 
+	</update>
+	
+	<update id="updateHiVarinstIdByProId">
+	 UPDATE ACT_HI_VARINST a 
+	 LEFT JOIN ACT_RU_VARIABLE t 
+	 ON  a.PROC_INST_ID_  = t.PROC_INST_ID_ AND   a.NAME_=t.NAME_ 
+	 SET a.ID_  = t.ID_
+	 WHERE a.PROC_INST_ID_= #{procInsId} 
+	</update>
+	
+	<update id="updateActInstTimeByProId">
+	UPDATE ACT_HI_ACTINST SET END_TIME_ = NULL WHERE PROC_INST_ID_=#{procInsId} AND ACT_ID_ =#{actId}
+	</update>
+	
+	
+	
+	
+	
+</mapper>

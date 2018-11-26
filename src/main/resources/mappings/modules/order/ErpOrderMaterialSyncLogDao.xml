@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpOrderMaterialSyncLogDao">
+    
+    <sql id="erpOrderMaterialSyncLogColumns">
+        a.id AS "id",
+        a.order_number AS "orderNumber",
+        a.ys_order_id AS "ysOrderId",
+        a.zhangbei_id AS "zhangbeiId",
+        a.order_category AS "orderCategory",
+        a.sync_date AS "syncDate",
+        a.recover_date AS "recoverDate",
+        a.sync_status AS "syncStatus",
+        a.sync_status_name AS "syncStatusName",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag"
+    </sql>
+
+    <sql id="erpOrderMaterialSyncLogJoins">
+    </sql>
+    
+    <select id="get" resultType="ErpOrderMaterialSyncLog">
+        SELECT
+            <include refid="erpOrderMaterialSyncLogColumns"/>
+        FROM erp_order_material_sync_log a
+        <include refid="erpOrderMaterialSyncLogJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="ErpOrderMaterialSyncLog">
+        SELECT
+            <include refid="erpOrderMaterialSyncLogColumns"/>
+        FROM erp_order_material_sync_log a
+        <include refid="erpOrderMaterialSyncLogJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findByPage" resultType="com.yunnex.ops.erp.modules.order.dto.OrderMaterialSyncLogResponseDto">
+        SELECT
+        <include refid="erpOrderMaterialSyncLogColumns"/>
+        FROM erp_order_material_sync_log a
+        <where>
+            a.del_flag = '0'
+            <if test="exceptionOnly != null and exceptionOnly">
+                AND a.sync_status != 'Normal'
+            </if>
+            <choose>
+                <when test="syncDateStart != null and syncDateEnd != null">
+                    AND a.sync_date &gt;= #{syncDateStart} AND a.sync_date &lt; DATE_ADD(#{syncDateEnd}, INTERVAL 1 DAY)
+                </when>
+                <when test="syncDateStart != null">
+                    AND a.sync_date &gt;= #{syncDateStart}
+                </when>
+                <when test="syncDateEnd != null">
+                    AND a.sync_date &lt; DATE_ADD(#{syncDateEnd}, INTERVAL 1 DAY)
+                </when>
+            </choose>
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.sync_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpOrderMaterialSyncLog">
+        SELECT
+            <include refid="erpOrderMaterialSyncLogColumns"/>
+        FROM erp_order_material_sync_log a
+        <include refid="erpOrderMaterialSyncLogJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO erp_order_material_sync_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+            <if test="orderNumber != null">order_number,</if>
+            <if test="ysOrderId != null">ys_order_id,</if>
+			<if test="zhangbeiId != null">zhangbei_id,</if>
+            <if test="orderCategory != null">order_category,</if>
+			<if test="syncDate != null">sync_date,</if>
+			<if test="recoverDate != null">recover_date,</if>
+			<if test="syncStatus != null">sync_status,</if>
+			<if test="syncStatusName != null">sync_status_name,</if>
+            <if test="createBy != null and createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+            <if test="updateBy != null and updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+			<if test="remarks != null">remarks,</if>
+			<if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+            <if test="orderNumber != null">#{orderNumber},</if>
+            <if test="ysOrderId != null">#{ysOrderId},</if>
+			<if test="zhangbeiId != null">#{zhangbeiId},</if>
+            <if test="orderCategory != null">#{orderCategory},</if>
+			<if test="syncDate != null">#{syncDate},</if>
+			<if test="recoverDate != null">#{recoverDate},</if>
+			<if test="syncStatus != null">#{syncStatus},</if>
+			<if test="syncStatusName != null">#{syncStatusName},</if>
+            <if test="createBy != null and createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+            <if test="updateBy != null and updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+			<if test="remarks != null">#{remarks},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE erp_order_material_sync_log
+            <set>
+                <if test="orderNumber != null">order_number = #{orderNumber},</if>
+                <if test="ysOrderId != null">ys_order_id = #{ysOrderId},</if>
+                <if test="zhangbeiId != null">zhangbei_id = #{zhangbeiId},</if>
+                <if test="orderCategory != null">order_category = #{orderCategory},</if>
+                <if test="syncDate != null">sync_date = #{syncDate},</if>
+                <if test="recoverDate != null">recover_date = #{recoverDate},</if>
+                <if test="syncStatus != null">sync_status = #{syncStatus},</if>
+                <if test="syncStatusName != null">sync_status_name = #{syncStatusName},</if>
+                <if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+                <if test="updateDate != null">update_date = #{updateDate},</if>
+                <if test="remarks != null">remarks = #{remarks},</if>
+            </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+        UPDATE erp_order_material_sync_log SET
+            del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findByYsOrderId" resultType="ErpOrderMaterialSyncLog">
+        SELECT
+        <include refid="erpOrderMaterialSyncLogColumns"/>
+        FROM erp_order_material_sync_log a
+        WHERE ys_order_id = #{ysOrderId} AND del_flag = '0'
+    </select>
+
+    <update id="updateStatus">
+        UPDATE erp_order_material_sync_log
+            <set>
+                <if test="log.recoverDate != null">recover_date = #{log.recoverDate},</if>
+                <if test="log.syncStatus != null">sync_status = #{log.syncStatus},</if>
+                <if test="log.syncStatusName != null">sync_status_name = #{log.syncStatusName},</if>
+                <if test="log.updateBy != null and log.updateBy.id != null">update_by = #{log.updateBy.id},</if>
+                <if test="log.updateDate != null">update_date = #{log.updateDate},</if>
+            </set>
+        WHERE ys_order_id = #{log.ysOrderId} AND sync_status = #{exStatus}
+    </update>
+
+</mapper>

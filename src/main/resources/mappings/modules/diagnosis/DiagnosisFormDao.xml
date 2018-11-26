@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.diagnosis.dao.DiagnosisFormDao">
+    <resultMap type="com.yunnex.ops.erp.modules.diagnosis.entity.DiagnosisForm" id="diagnosisFormResutltMap" > 
+        <id property="id" column="id"/> 
+        <result column="splitId" property="splitId"/>
+        <result column="activityGoal" property="activityGoal"/>
+        <result column="shopUsername" property="shopUsername"/>
+        <result column="shopPassword" property="shopPassword"/>
+        <collection property="diagnosisCardCoupons" ofType="com.yunnex.ops.erp.modules.diagnosis.entity.DiagnosisCardCoupons">
+		    <id column="cardCouponsId" property="id"/>
+		 	<result column="diagnosisCardCouponsSplitId" property="splitId"/>
+		 	<result column="shopName" property="shopName"/>
+		 	<result column="couponType" property="couponType"/>
+		 	<result column="originalPrice" property="originalPrice"/>
+		 	<result column="paymentAmount" property="paymentAmount"/>
+		 	<result column="couponName" property="couponName"/>
+		 	<result column="useThreshold" property="useThreshold"/>
+		 	<result column="reduceAmount" property="reduceAmount"/>
+		 	<result column="giftCouponName" property="giftCouponName"/>
+		 	<result column="superpositionNum" property="superpositionNum"/>
+		 	<result column="discountCouponName" property="discountCouponName"/>
+		 	<result column="discountScale" property="discountScale"/>
+		 	<result column="inventory" property="inventory"/>
+		 	<result column="limitNum" property="limitNum"/>
+		 	<result column="effectiveTime" property="effectiveTime"/>
+		 	<result column="availableHours" property="availableHours"/>
+		 	<result column="description" property="description"/>
+		 	<result column="terms" property="terms"/>
+		 	<result column="phoneNumber" property="phoneNumber"/>
+		 	<result column="fitStore" property="fitStore"/>
+        </collection> 
+    </resultMap> 
+    
+	<sql id="diagnosisFormColumns">
+		a.id AS "id",
+		a.split_id AS "splitId",
+		a.package_additional AS "packageAdditional",
+		a.service_know AS "serviceKnow",
+		a.contact_person AS "contactPerson",
+		a.contact_phone AS "contactPhone",
+		a.major_product AS "majorProduct",
+		a.promote_product AS "promoteProduct",
+		a.activity_requirements AS "activityRequirements",
+		a.activity_goal AS "activityGoal",
+		a.brand_lightspot AS "brandLightspot",
+		a.originality_culture AS "originalityCulture",
+		a.diagnosis_content_additional AS "diagnosisContentAdditional",
+		a.reference_material AS "referenceMaterial",
+		a.main_push AS "mainPush",
+		a.backup_first AS "backupFirst",
+		a.backup_second AS "backupSecond",
+		a.push_area AS "pushArea",
+		a.shop_username AS "shopUsername",
+		a.shop_password AS "shopPassword",
+		a.first_propaganda_content AS "firstPropagandaContent",
+		a.second_propaganda_content AS "secondPropagandaContent",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="diagnosisFormJoins">
+	</sql>
+    
+	<select id="get" resultType="DiagnosisForm">
+		SELECT 
+			<include refid="diagnosisFormColumns"/>
+		FROM diagnosis_form a
+		<include refid="diagnosisFormJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DiagnosisForm">
+		SELECT 
+			<include refid="diagnosisFormColumns"/>
+		FROM diagnosis_form a
+		<include refid="diagnosisFormJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DiagnosisForm">
+		SELECT 
+			<include refid="diagnosisFormColumns"/>
+		FROM diagnosis_form a
+		<include refid="diagnosisFormJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO diagnosis_form(
+			id,
+			split_id,
+			package_additional,
+			service_know,
+			contact_person,
+			contact_phone,
+			major_product,
+			promote_product,
+			activity_requirements,
+			activity_goal,
+			brand_lightspot,
+			originality_culture,
+			diagnosis_content_additional,
+			reference_material,
+			main_push,
+			backup_first,
+			backup_second,
+			push_area,
+			shop_username,
+			shop_password,
+			first_propaganda_content,
+			second_propaganda_content,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{splitId},
+			#{packageAdditional},
+			#{serviceKnow},
+			#{contactPerson},
+			#{contactPhone},
+			#{majorProduct},
+			#{promoteProduct},
+			#{activityRequirements},
+			#{activityGoal},
+			#{brandLightspot},
+			#{originalityCulture},
+			#{diagnosisContentAdditional},
+			#{referenceMaterial},
+			#{mainPush},
+			#{backupFirst},
+			#{backupSecond},
+			#{pushArea},
+			#{shopUsername},
+			#{shopPassword},
+			#{firstPropagandaContent},
+			#{secondPropagandaContent},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE diagnosis_form SET 	
+			split_id = #{splitId},
+			package_additional = #{packageAdditional},
+			service_know = #{serviceKnow},
+			contact_person = #{contactPerson},
+			contact_phone = #{contactPhone},
+			major_product = #{majorProduct},
+			promote_product = #{promoteProduct},
+			activity_requirements = #{activityRequirements},
+			activity_goal = #{activityGoal},
+			brand_lightspot = #{brandLightspot},
+			originality_culture = #{originalityCulture},
+			diagnosis_content_additional = #{diagnosisContentAdditional},
+			reference_material = #{referenceMaterial},
+			main_push = #{mainPush},
+			backup_first = #{backupFirst},
+			backup_second = #{backupSecond},
+			push_area = #{pushArea},
+			shop_username = #{shopUsername},
+			shop_password = #{shopPassword},
+			first_propaganda_content = #{firstPropagandaContent},
+			second_propaganda_content = #{secondPropagandaContent},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE diagnosis_form SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+    
+    <select id="findBySplitId" resultType="DiagnosisForm">
+        SELECT <include refid="diagnosisFormColumns"/> FROM diagnosis_form a WHERE split_id = #{splitId} AND del_flag = 0
+    </select>
+    <select id="findBySplitIdWithCreaterName" resultType="DiagnosisForm">
+        SELECT <include refid="diagnosisFormColumns"/>,
+    				s.name AS "CreaterName"
+        FROM diagnosis_form a 
+        LEFT JOIN sys_user s
+        ON a.create_by=s.id
+        WHERE a.split_id = #{splitId} AND a.del_flag = '0'
+    </select>
+    
+    <select id="getDiagnosisFormBySplitId" resultMap="diagnosisFormResutltMap">
+        SELECT 
+        diagnosisform.id AS id,
+        diagnosisform.split_id AS splitId,
+        diagnosisform.activity_goal AS activityGoal,
+        diagnosisform.shop_username AS shopUsername,
+        diagnosisform.shop_password AS shopPassword,
+        cardcoupons.id AS cardCouponsId,
+        cardcoupons.split_id AS diagnosisCardCouponsSplitId,
+        cardcoupons.shop_name AS shopName,
+        cardcoupons.coupon_type AS couponType,
+        cardcoupons.coupon_name AS couponName,
+        cardcoupons.use_threshold AS useThreshold,
+        cardcoupons.reduce_amount AS reduceAmount,
+        cardcoupons.gift_coupon_name AS giftCouponName,
+        cardcoupons.superposition_num AS superpositionNum,
+        cardcoupons.discount_coupon_name AS discountCouponName,
+        cardcoupons.discount_scale AS discountScale,
+        cardcoupons.inventory AS inventory,
+        cardcoupons.limit_num AS limitNum,
+        cardcoupons.effective_time AS effectiveTime,
+        cardcoupons.available_hours AS availableHours,
+        cardcoupons.description AS description,
+        cardcoupons.terms AS terms,
+        cardcoupons.phone_number AS phoneNumber,
+        cardcoupons.fit_store AS fitStore
+        FROM diagnosis_form diagnosisform
+        LEFT JOIN
+        diagnosis_card_coupons cardcoupons
+        ON diagnosisform.split_id=cardcoupons.split_id
+        WHERE diagnosisform.split_id = #{splitId} AND diagnosisform.del_flag = 0
+    </select>
+	
+</mapper>

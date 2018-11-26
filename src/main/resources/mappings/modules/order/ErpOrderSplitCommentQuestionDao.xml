@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpOrderSplitCommentQuestionDao">
+    
+	<sql id="erpOrderSplitCommentQuestionColumns">
+		a.id AS "id",
+		a.comment_id AS "commentId",
+		a.content AS "content",
+		a.rank AS "rank",
+		a.type AS "type",
+		a.del_flag AS "delFlag",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate"
+	</sql>
+	
+	<sql id="erpOrderSplitCommentQuestionJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpOrderSplitCommentQuestion">
+		SELECT 
+			<include refid="erpOrderSplitCommentQuestionColumns"/>
+		FROM erp_order_split_comment_question a
+		<include refid="erpOrderSplitCommentQuestionJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpOrderSplitCommentQuestion">
+		SELECT 
+			<include refid="erpOrderSplitCommentQuestionColumns"/>
+		FROM erp_order_split_comment_question a
+		<include refid="erpOrderSplitCommentQuestionJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="commentId != null and commentId != ''">
+				AND a.comment_id = #{commentId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.rank
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpOrderSplitCommentQuestion">
+		SELECT 
+			<include refid="erpOrderSplitCommentQuestionColumns"/>
+		FROM erp_order_split_comment_question a
+		<include refid="erpOrderSplitCommentQuestionJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="commentId != null and commentId != ''">
+				AND a.comment_id = #{commentId}
+			</if>
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.rank
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_order_split_comment_question(
+			id,
+			comment_id,
+			content,
+			rank,
+			type,
+			del_flag,
+			create_date,
+			update_date
+		) VALUES (
+			#{id},
+			#{commentId},
+			#{content},
+			#{rank},
+			#{type},
+			#{delFlag},
+			#{createDate},
+			#{updateDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_order_split_comment_question SET 	
+			comment_id = #{commentId},
+			content = #{content},
+			rank = #{rank},
+			type = #{type},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_order_split_comment_question SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getCommentAnswerByComIdAndType" resultType="com.yunnex.ops.erp.modules.order.entity.ErpOrderSplitCommentAnswer">
+	SELECT ans.*  FROM  `erp_order_split_comment_question` qu
+	LEFT JOIN  erp_order_split_comment_answer ans ON ans.question_id= qu.id  
+	WHERE qu.comment_id = #{commentId}
+	<if test="type != null">
+	AND qu.type = #{type} 
+	</if>
+	 AND ans.del_flag='0' AND qu.del_flag='0' ORDER BY ans.rank
+	</select>
+</mapper>

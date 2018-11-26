@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.statistics.dao.ErpStatisticsDao">
+ 
+ 	<!-- 分单明细分页列表基础列 -->
+ 	<sql id="baseSplitStatisticsColumns">
+ 		<![CDATA[
+	 		erpSplit.id,erpSplit.split_id "splitId",erpSplit.create_date "createDate",erpSplit.remark "remarks"
+			,case when erpSplit.`status` = 1 then 'finish'
+					 when erpSplit.pending_prod_flag = 'Y' AND erpSplit.pending_reason = 'Q' THEN 'qualificationProblem' 
+					 when erpSplit.pending_prod_flag = 'Y' AND erpSplit.pending_reason = 'D' THEN 'delayLaunch'
+					 when erpSplit.pending_prod_flag = 'Y' AND erpSplit.suspend_reason = 'refunding' THEN 'refunding'
+					 when erpSplit.pending_prod_flag = 'N' AND erpSplit.online_date > '0000-00-00 00:00:00' THEN 'circulationBegin'
+		       else  'productionBegin' end "splitStatus"
+			,case when erpSplit.online_date >  '0000-00-00 00:00:00' 
+									then if((@dayDiff:=(IF( DAYOFWEEK(erpSplit.online_date)=1 OR DAYOFWEEK(erpSplit.online_date) = 7  ,6,DAYOFWEEK(erpSplit.online_date))
+														- IF(DAYOFWEEK(erpOrder.buy_date)=1 OR DAYOFWEEK(erpOrder.buy_date) = 7  ,6,DAYOFWEEK(erpOrder.buy_date))))>=0,@dayDiff+1,@dayDiff+6) + (FLOOR(DATEDIFF(erpSplit.online_date,erpOrder.buy_date)/7) * 5)
+					 when erpSplit.`status` = 0 THEN -2 ELSE -1 END "deliveryCycle"
+			,IF(
+					(@splitNature:=CONCAT(if(erpOrder.order_source =1,',self','')
+						,if(erpSplit.hurry_flag = 1,',urgency','')
+						,if(erpOrder.create_date > orderGroupShop.min_create_date,',repeat',''))
+			   		)='','/',SUBSTR(@splitNature,2)
+			   	) "splitNatures"
+			,erpSplit.friend_online_date "friendOnlineDate",erpSplit.weibo_online_date "weiboOnlineDate",erpSplit.momo_online_date "momoOnlineDate"
+			,erpSplit.presentation_date "presentationDate",erpSplit.timeout_flag "timeoutFlag",erpSplit.online_date "onlineDate",erpSplit.manual_date "manualDate"
+			,if(erpSplit.manual_date >'0000-00-00 00:00:00','Y','N') "manualFinishFlag",IFNULL(erpSplit.pending_reason,'/') "pendingReason",erpSplit.comment_count "commentCount"
+			,erpSplit.PROC_INS_ID "processId"
+		
+		   
+			,max(if(flowUser.flow_user_id = 'PlanningExpert',sysUser.`name`,NULL)) "planningExpertName",max(if(flowUser.flow_user_id = 'OperationAdviser',sysUser.`name`,NULL)) "operationAdviserName"
+			 
+			,erpOrder.buy_date "buyDate",erpOrder.order_type "orderType",erpOrder.order_number "orderNumber"
+			,erpOrder.shop_name "shopName",erpOrder.agent_name  "agentName"
+			 
+			,GROUP_CONCAT(DISTINCT  (case when promotionChannel.promotion_channel =1 then '朋友圈' when promotionChannel.promotion_channel =2 then '微博' when promotionChannel.promotion_channel =3  then '陌陌' else NULL end)) "extensionChannelNames"
+		 
+		  ,if(max(taskExt.`status`)=3,'Y','N') "taskTimeoutFlag"
+ 		]]>
+ 	</sql>
+ 	
+ 	<!-- 分单明细分页列表基础关联表 -->
+ 	<sql id="baseSplitStatisticsTable">
+ 		<!-- 分单信息 --> 
+		erp_order_split_info erpSplit
+		<!-- 订单信息  -->
+		LEFT JOIN erp_order_original_info erpOrder ON erpSplit.order_id = erpOrder.id
+		<!-- 聚引客订单 按 shop_id 分组  -->
+		LEFT JOIN (
+					SELECT eo.shop_id,min(eo.create_date) min_create_date 
+					FROM erp_order_original_info eo
+					LEFT JOIN erp_order_original_good orderGood ON eo.id = orderGood.order_id 
+																	AND eo.cancel = 0
+																	AND eo.del_flag = 0 
+					where orderGood.good_type_id = 5 GROUP BY eo.shop_id 
+					) orderGroupShop on erpOrder.shop_id = orderGroupShop.shop_id
+		<!-- 分单商品  -->
+		LEFT JOIN erp_order_split_good erpGood on erpSplit.id = erpGood.original_split_id and erpGood.del_flag = 0 
+		<!-- 订单商品  -->
+		LEFT JOIN erp_order_original_good orderGood on erpGood.original_good_id = orderGood.id
+		<!-- 正在进行的任务  -->
+		LEFT JOIN ACT_RU_TASK ruTask on erpSplit.PROC_INS_ID = ruTask.PROC_INST_ID_ 
+		<!-- 历史任务  -->
+		LEFT JOIN ACT_HI_TASKINST hiTask on erpSplit.PROC_INS_ID = hiTask.PROC_INST_ID_
+		<!-- 指派人员角色信息  -->
+		LEFT JOIN erp_order_flow_user flowUser on erpSplit.id = flowUser.split_id 
+													AND flowUser.del_flag = 0
+													and flowUser.flow_user_id in ('PlanningExpert','OperationAdviser')
+		<!-- 指派人员信息  -->
+		LEFT JOIN sys_user sysUser on flowUser.user_id = sysUser.id
+		<!-- 任务状态  -->
+		LEFT JOIN ACT_RU_TASK_EXT taskExt on ruTask.ID_ = taskExt.task_id AND taskExt.`status` = 3
+		<!-- 推广通道  -->
+		LEFT JOIN jyk_order_promotion_channel promotionChannel ON erpSplit.id = promotionChannel.split_id AND promotionChannel.del_flag = 0
+ 	</sql>
+ 	
+ 	<!-- 分单明细分页列表基础过滤条件 -->
+ 	<sql id="baseSplitStatisticsWhere">
+ 		erpOrder.del_flag = 0 	AND erpOrder.cancel = 0
+	   	<if test="userIdList != null and userIdList.size() > 0">
+	   		AND hiTask.ASSIGNEE_ in
+	   		<foreach item="itemUserId" index="index" collection="userIdList" open="(" separator="," close=")">  
+          			#{itemUserId}
+          		</foreach>
+	   	</if>
+	   	<if test="orderNum != null">
+	   		AND erpOrder.order_number LIKE CONCAT('%',#{orderNum},'%')
+	   	</if>
+	   	<if test="shopName != null">
+			AND erpOrder.shop_name LIKE CONCAT('%',#{shopName},'%')
+		</if>
+		<if test="orderTypeList != null and orderTypeList.size() > 0">
+	   		AND erpOrder.order_type in
+	   		<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+          			#{itemOrderType}
+          		</foreach>
+	   	</if>
+	   	<if test="extensionChannelList != null and extensionChannelList.size() > 0">
+	   		AND promotionChannel.promotion_channel in
+	   		<foreach item="itemExtensionChannel" index="index" collection="extensionChannelList" open="(" separator="," close=")">  
+          			#{itemExtensionChannel}
+          		</foreach>
+	   	</if>
+	   	<if test="goodIdList != null and goodIdList.size() > 0">
+	   		AND orderGood.good_id in
+	   		<foreach item="itemGoodId" index="index" collection="goodIdList" open="(" separator="," close=")">  
+          			#{itemGoodId}
+          		</foreach>
+	   	</if>
+	   	<if test="manualFinishFlag != null">
+	   		<choose>
+	   			<when test='manualFinishFlag == "Y"'>
+	   				AND erpSplit.manual_date &gt; '0000-00-00 00:00:00'
+	   			</when>
+	   			<otherwise>
+       				AND (erpSplit.manual_date = '0000-00-00 00:00:00' or erpSplit.manual_date is null) 
+   				</otherwise>
+	   		</choose>
+	   	</if>
+	   	<if test="planningExpertIdList != null and planningExpertIdList.size() > 0">
+	   		AND flowUser.flow_user_id ='PlanningExpert' AND flowUser.user_id in
+	   		<foreach item="itemPlanningExpertId" index="index" collection="planningExpertIdList" open="(" separator="," close=")">  
+          			#{itemPlanningExpertId}
+          		</foreach>
+	   	</if>
+	   	<if test="processVersionList != null and processVersionList.size() > 0">
+	   		AND erpSplit.process_version in 
+	   		<foreach item="itemProcessVersion" index="index" collection="processVersionList" open="(" separator="," close=")">  
+          		#{itemProcessVersion}
+          	</foreach>
+	   	</if>
+	   	<if test="timeoutFlag != null">
+	   		AND erpSplit.timeout_flag =  #{timeoutFlag}
+	   	</if>
+		<choose>
+   			<when test='splitType == "new"'>
+        		AND erpSplit.create_date&gt;=#{startDateStr} AND erpSplit.create_date &lt;=#{endDateStr}
+   			</when>
+   			<when test='splitType == "online"'>
+				AND ((erpSplit.online_date&gt;=#{startDateStr} AND erpSplit.online_date &lt;=#{endDateStr}) OR (erpSplit.manual_date&gt;=#{startDateStr} AND erpSplit.manual_date &lt;=#{endDateStr}))   			
+			</when>
+			<when test='splitType == "finish"'>
+				AND erpSplit.status='1' and erpSplit.update_date&gt;=#{startDateStr} AND erpSplit.update_date &lt;=#{endDateStr}
+			</when>
+   		<otherwise>
+       		AND erpOrder.buy_date&gt;=#{startDateStr} AND erpOrder.buy_date &lt;=#{endDateStr}
+   		</otherwise>
+		</choose>
+ 	</sql>
+ 	
+ 	<!-- 基础查询出来的列的过滤条件 -->
+ 	<sql id="columnsSplitStatisticsColumnsWhere">
+ 		<if test="deliveryCycleList != null and deliveryCycleList.size() > 0">
+ 			AND
+	   		<foreach item="itemdeliveryCycle" index="index" collection="deliveryCycleList" open="(" separator="OR" close=")"> 
+	   			(
+	   			<choose>
+		   			<when test='itemdeliveryCycle.min != null and itemdeliveryCycle.max != null'>
+		        		t.deliveryCycle &gt;= #{itemdeliveryCycle.min} AND t.deliveryCycle &lt;= #{itemdeliveryCycle.max}
+		   			</when>
+		   		<otherwise>
+		       		<if test="itemdeliveryCycle.min != null">
+	   					t.deliveryCycle &gt;= #{itemdeliveryCycle.min} 
+		   			</if>
+		   			<if test="itemdeliveryCycle.max != null">
+		   				t.deliveryCycle &lt;= #{itemdeliveryCycle.max}
+		   			</if>
+		   		</otherwise>
+				</choose>
+          		)
+          	</foreach>
+ 		</if>
+ 	
+ 		<if test="projectAnomalyList != null and projectAnomalyList.size() > 0">
+ 			AND t.pendingReason in 
+	   		<foreach item="itemProjectAnomaly" index="index" collection="projectAnomalyList" open="(" separator="," close=")">  
+          		#{itemProjectAnomaly}
+          	</foreach>
+ 		</if>
+ 		
+ 		<if test="splitNatureList != null and splitNatureList.size() > 0">
+ 			AND
+	   		<foreach item="itemSplitNature" index="index" collection="splitNatureList" open="(" separator="OR" close=")">  
+          		t.splitNatures LIKE CONCAT('%',#{itemSplitNature},'%')
+          	</foreach>
+ 		</if>
+ 		
+ 		<if test="splitStatusList != null and splitStatusList.size() > 0">
+ 			AND t.splitStatus in 
+	   		<foreach item="itemSplitStatus" index="index" collection="splitStatusList" open="(" separator="," close=")">  
+          		#{itemSplitStatus}
+          	</foreach>
+ 		</if>
+ 		
+ 		<if test="taskTimeoutFlag != null">
+	   		AND t.taskTimeoutFlag = #{taskTimeoutFlag}
+	   	</if>
+ 		
+ 	</sql>
+ 
+ 	<!-- 获取分单明细分页列表 -->
+	<select id="findSplitStatistics" resultType="com.yunnex.ops.erp.modules.statistics.entity.SplitStatistics">
+		<if test='queryColumnsFlag == "Y"'>
+			SELECT * from (
+		</if>
+		SELECT <include refid="baseSplitStatisticsColumns"></include>
+		FROM <include refid="baseSplitStatisticsTable"></include>
+		WHERE <include refid="baseSplitStatisticsWhere"></include>
+		GROUP BY erpSplit.id 
+		<!-- 分页插件会 截取掉 order by 之后的sql ，所以必须确保 order by 在sql的最后面 -->
+		<if test='queryColumnsFlag != "Y"'>
+			ORDER BY erpSplit.create_date
+		</if>
+		<!-- 如果需要对查询出来的列 进行过滤 -->
+		<if test='queryColumnsFlag == "Y"'>
+			) t where 1=1 
+			<include refid="columnsSplitStatisticsColumnsWhere"></include>
+			ORDER BY t.createDate
+		</if>
+		
+	</select>
+	
+	<!-- 根据查询条件获取总条数  -->
+	<select id="countBySplitStatisticsRequestDto" resultType="int">
+		SELECT count(*)  FROM (
+			SELECT <include refid="baseSplitStatisticsColumns"></include>
+			FROM
+			<include refid="baseSplitStatisticsTable"></include>
+			WHERE <include refid="baseSplitStatisticsWhere"></include>
+			GROUP BY erpSplit.id 
+			) t
+		<!-- 对查询出来的列 进行过滤 -->
+		<if test='queryColumnsFlag == "Y"'>
+			where 1=1 
+			<include refid="columnsSplitStatisticsColumnsWhere"></include>
+		</if>
+	</select>
+	
+	<!--  上线订单平均周期（保留3位小数） -->
+	<select id="getOnlineAvgCycle" resultType="double">
+		SELECT FORMAT(sum(t.deliveryCycle)/count(*),3) from (
+			SELECT <include refid="baseSplitStatisticsColumns"></include>
+			FROM <include refid="baseSplitStatisticsTable"></include>
+			WHERE <include refid="baseSplitStatisticsWhere"></include>
+			GROUP BY erpSplit.id 
+		) t where 1=1 and t.onlineDate &gt; '0000-00-00 00:00:00'
+		<include refid="columnsSplitStatisticsColumnsWhere"></include>
+	</select>
+	 
+</mapper>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.diagnosis.dao.DiagnosisFirstAdImageDao">
+    
+	<sql id="diagnosisFirstAdImageColumns">
+		a.id AS "id",
+		a.split_id AS "splitId",
+		a.type AS "type",
+		a.img_url AS "imgUrl",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="diagnosisFirstAdImageJoins">
+	</sql>
+    
+	<select id="get" resultType="DiagnosisFirstAdImage">
+		SELECT 
+			<include refid="diagnosisFirstAdImageColumns"/>
+		FROM diagnosis_first_ad_image a
+		<include refid="diagnosisFirstAdImageJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findBySplitId" resultType="DiagnosisFirstAdImage">
+		SELECT 
+			<include refid="diagnosisFirstAdImageColumns"/>
+		FROM diagnosis_first_ad_image a
+		WHERE a.split_id = #{splitId}
+	</select>
+	
+	<select id="findBySplitIdAndType" resultType="DiagnosisFirstAdImage">
+		SELECT 
+			<include refid="diagnosisFirstAdImageColumns"/>
+		FROM diagnosis_first_ad_image a
+		WHERE a.split_id = #{splitId} AND a.type=#{type}
+	</select>
+	
+	<select id="findList" resultType="DiagnosisFirstAdImage">
+		SELECT 
+			<include refid="diagnosisFirstAdImageColumns"/>
+		FROM diagnosis_first_ad_image a
+		<include refid="diagnosisFirstAdImageJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DiagnosisFirstAdImage">
+		SELECT 
+			<include refid="diagnosisFirstAdImageColumns"/>
+		FROM diagnosis_first_ad_image a
+		<include refid="diagnosisFirstAdImageJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO diagnosis_first_ad_image(
+			id,
+			split_id,
+			type,
+			img_url,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{splitId},
+			#{type},
+			#{imgUrl},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE diagnosis_first_ad_image SET 	
+			split_id = #{splitId},
+			type = #{type},
+			img_url = #{imgUrl},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE diagnosis_first_ad_image SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<delete id="deleteBatchByIds">
+	  delete from diagnosis_first_ad_image where
+	  id IN
+	  <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<select id="findListByIds" resultType="DiagnosisFirstAdImage">
+		SELECT
+			<include refid="diagnosisFirstAdImageColumns" />
+		FROM
+			diagnosis_first_ad_image a
+		WHERE a.id IN
+	  	<foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+</mapper>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.message.dao.ErpServiceMessageTemplateDao">
+    
+    <sql id="erpServiceMessageTemplateColumns">
+        a.id AS "id",
+        a.content AS "content",
+        a.status AS "status",
+        a.node_type AS "nodeType",
+        a.node_name AS "nodeName",
+        a.type AS "type",
+        a.link_id AS "linkId",
+        a.task_definition_keys AS "taskDefinitionKeys",
+        a.task_key_type AS "taskKeyType",
+        a.start_intervals AS "startIntervals",
+        a.end_intervals AS "endIntervals",
+        a.service_type AS "serviceType",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate"
+    </sql>
+
+    <sql id="erpServiceMessageTemplateJoins">
+    </sql>
+    
+    <select id="get" resultType="ErpServiceMessageTemplate">
+        SELECT
+            <include refid="erpServiceMessageTemplateColumns"/>
+        FROM erp_service_message_template a
+        <include refid="erpServiceMessageTemplateJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="ErpServiceMessageTemplate">
+        SELECT
+            <include refid="erpServiceMessageTemplateColumns"/>
+        FROM erp_service_message_template a
+        <include refid="erpServiceMessageTemplateJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+            <if test="serviceType != null">
+            	AND a.service_type = #{serviceType}
+            </if>
+            <if test="taskDefinitionKeys != null">
+            	AND FIND_IN_SET(#{taskDefinitionKeys},a.task_definition_keys)
+            </if>
+             <if test="ids != null and ids.size > 0">
+            	and a.id in
+            		<foreach collection="ids"  item="_id" open="(" separator="," close=")">
+            			#{_id}
+            		</foreach>
+            </if>
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpServiceMessageTemplate">
+        SELECT
+            <include refid="erpServiceMessageTemplateColumns"/>
+        FROM erp_service_message_template a
+        <include refid="erpServiceMessageTemplateJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO erp_service_message_template
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="content != null">content,</if>
+			<if test="type != null">type,</if>
+			<if test="linkId != null">link_id,</if>
+			<if test="taskDefinitionKeys != null">task_definition_keys,</if>
+			<if test="taskKeyType != null">task_key_type,</if>
+			<if test="endIntervals != null">end_intervals,</if>
+			<if test="serviceType != null">service_type,</if>
+			<if test="remarks != null">remarks,</if>
+			<if test="delFlag != null">del_flag,</if>
+			<if test="createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+			<if test="updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="content != null">#{content},</if>
+			<if test="type != null">#{type},</if>
+			<if test="linkId != null">#{linkId},</if>
+			<if test="taskDefinitionKeys != null">#{taskDefinitionKeys},</if>
+			<if test="taskKeyType != null">#{taskKeyType},</if>
+			<if test="endIntervals != null">#{endIntervals},</if>
+			<if test="serviceType != null">#{serviceType},</if>
+			<if test="remarks != null">#{remarks},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+			<if test="createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+			<if test="updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE erp_service_message_template
+            <set>
+                <if test="content != null">content = #{content},</if>
+                <if test="type != null">type = #{type},</if>
+                <if test="linkId != null">link_id = #{linkId},</if>
+                <if test="taskDefinitionKeys != null">task_definition_keys = #{taskDefinitionKeys},</if>
+                <if test="taskKeyType != null">task_key_type = #{taskKeyType},</if>
+                <if test="endIntervals != null">end_intervals = #{endIntervals},</if>
+                <if test="serviceType != null">service_type = #{serviceType},</if>
+                <if test="remarks != null">remarks = #{remarks},</if>
+                <if test="updateBy.id != null">update_by = #{updateBy.id},</if>
+                <if test="updateDate != null">update_date = #{updateDate},</if>
+            </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+        UPDATE erp_service_message_template SET
+            del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 根据条件获取唯一数据 -->
+    <select id="getOnly" resultType="ErpServiceMessageTemplate">
+        SELECT
+            <include refid="erpServiceMessageTemplateColumns"/>
+        FROM erp_service_message_template a
+        WHERE  a.del_flag = '0' AND a.service_type = #{serviceType} 
+        	AND a.node_type = #{nodeType} AND a.`status` = #{status}
+    </select>
+
+</mapper>

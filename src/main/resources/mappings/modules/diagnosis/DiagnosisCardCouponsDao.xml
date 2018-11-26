@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.diagnosis.dao.DiagnosisCardCouponsDao">
+    
+	<sql id="diagnosisCardCouponsColumns">
+		a.id AS "id",
+		a.split_id AS "splitId",
+		a.shop_name AS "shopName",
+		a.coupon_type AS "couponType",
+		a.original_price AS "originalPrice",
+		a.payment_amount AS "paymentAmount",
+		a.coupon_name AS "couponName",
+		a.use_threshold AS "useThreshold",
+		a.reduce_amount AS "reduceAmount",
+		a.gift_coupon_name AS "giftCouponName",
+		a.superposition_num AS "superpositionNum",
+		a.discount_coupon_name AS "discountCouponName",
+		a.discount_scale AS "discountScale",
+		a.inventory AS "inventory",
+		a.limit_num AS "limitNum",
+		a.effective_time AS "effectiveTime",
+		a.available_hours AS "availableHours",
+		a.description AS "description",
+		a.terms AS "terms",
+		a.phone_number AS "phoneNumber",
+		a.fit_store AS "fitStore",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="diagnosisCardCouponsJoins">
+	</sql>
+    
+	<select id="get" resultType="DiagnosisCardCoupons">
+		SELECT 
+			<include refid="diagnosisCardCouponsColumns"/>
+		FROM diagnosis_card_coupons a
+		<include refid="diagnosisCardCouponsJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DiagnosisCardCoupons">
+		SELECT 
+			<include refid="diagnosisCardCouponsColumns"/>
+		FROM diagnosis_card_coupons a
+		<include refid="diagnosisCardCouponsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DiagnosisCardCoupons">
+		SELECT 
+			<include refid="diagnosisCardCouponsColumns"/>
+		FROM diagnosis_card_coupons a
+		<include refid="diagnosisCardCouponsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO diagnosis_card_coupons(
+			id,
+			split_id,
+			shop_name,
+			coupon_type,
+			original_price,
+			payment_amount,
+			coupon_name,
+			use_threshold,
+			reduce_amount,
+			gift_coupon_name,
+			superposition_num,
+			discount_coupon_name,
+			discount_scale,
+			inventory,
+			limit_num,
+			effective_time,
+			available_hours,
+			description,
+			terms,
+			phone_number,
+			fit_store,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{splitId},
+			#{shopName},
+			#{couponType},
+			#{originalPrice},
+			#{paymentAmount},
+			#{couponName},
+			#{useThreshold},
+			#{reduceAmount},
+			#{giftCouponName},
+			#{superpositionNum},
+			#{discountCouponName},
+			#{discountScale},
+			#{inventory},
+			#{limitNum},
+			#{effectiveTime},
+			#{availableHours},
+			#{description},
+			#{terms},
+			#{phoneNumber},
+			#{fitStore},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE diagnosis_card_coupons SET 	
+			split_id = #{splitId},
+			shop_name = #{shopName},
+			coupon_type = #{couponType},
+			original_price = #{originalPrice},
+			payment_amount = #{paymentAmount},
+			coupon_name = #{couponName},
+			use_threshold = #{useThreshold},
+			reduce_amount = #{reduceAmount},
+			gift_coupon_name = #{giftCouponName},
+			superposition_num = #{superpositionNum},
+			discount_coupon_name = #{discountCouponName},
+			discount_scale = #{discountScale},
+			inventory = #{inventory},
+			limit_num = #{limitNum},
+			effective_time = #{effectiveTime},
+			available_hours = #{availableHours},
+			description = #{description},
+			terms = #{terms},
+			phone_number = #{phoneNumber},
+			fit_store = #{fitStore},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE diagnosis_card_coupons SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+    
+    <select id="findBySplitId" resultType="DiagnosisCardCoupons">
+        SELECT <include refid="diagnosisCardCouponsColumns"/> FROM diagnosis_card_coupons a WHERE split_id = #{splitId} AND del_flag = 0
+    </select>
+	<delete id="batchDeleteByIds">
+	  DELETE FROM diagnosis_card_coupons WHERE id IN
+   <foreach collection="ids" item="id" open="(" separator="," close=")">
+       #{id}
+   </foreach>
+	</delete>
+</mapper>

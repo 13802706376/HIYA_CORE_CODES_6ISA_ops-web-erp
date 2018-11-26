@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.channel.dao.ErpChannelWeiboRechargeDao">
+    
+	<sql id="erpChannelWeiboRechargeColumns">
+		a.id AS "id",
+		a.split_id AS "splitId",
+		a.shop_info_id AS "shopInfoId",
+		a.weibo_account_no AS "weiboAccountNo",
+		a.weibo_uid AS "weiboUid",
+		a.apply_amount AS "applyAmount",
+		a.actual_amount AS "actualAmount",
+		a.apply_date AS "applyDate",
+		a.finish_date AS "finishDate",
+		a.status AS "status",
+		a.source AS "source",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpChannelWeiboRechargeJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpChannelWeiboRecharge">
+		SELECT 
+			<include refid="erpChannelWeiboRechargeColumns"/>
+		FROM erp_channel_weibo_recharge a
+		<include refid="erpChannelWeiboRechargeJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+	<sql id="listSql">
+		SELECT
+		<if test="page">
+			a.id AS "id",
+			a.split_id AS "splitId",
+			a.shop_info_id AS "shopInfoId",
+			a.weibo_account_no AS "weiboAccountNo",
+			a.weibo_uid AS "weiboUid",
+			a.apply_amount AS "applyAmount",
+			a.actual_amount AS "actualAmount",
+			a.apply_date AS "applyDate",
+			a.finish_date AS "finishDate",
+			a.status AS "status",
+			esi.name AS "shopName",
+			eosi.order_id AS "orderId",
+			concat(eosi.order_number, '-', eosi.split_id) AS splitOrderNo
+		</if>
+		<if test="!page">
+			COUNT(*)
+		</if>
+		FROM erp_channel_weibo_recharge a LEFT JOIN erp_order_split_info eosi ON a.split_id = eosi.id
+		LEFT JOIN erp_shop_info esi ON a.shop_info_id = esi.id
+		<where>
+			a.del_flag = '0' and eosi.del_flag = '0' and esi.del_flag = '0'
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+			<if test="orderNumber != null and orderNumber != ''">
+				AND eosi.order_number LIKE concat('%',#{orderNumber},'%')
+			</if>
+			<if test="shopName != null and shopName != ''">
+				AND esi.name LIKE concat('%',#{shopName},'%')
+			</if>
+			<if test="weiboAccountNo != null and weiboAccountNo != ''">
+				AND a.weibo_account_no LIKE concat('%',#{weiboAccountNo},'%')
+			</if>
+			<if test="weiboUid != null and weiboUid != ''">
+				AND a.weibo_uid LIKE concat('%',#{weiboUid},'%')
+			</if>
+			<if test="applyDateStart != null and applyDateStart != ''">
+				<![CDATA[AND a.apply_date >= #{applyDateStart}]]>
+			</if>
+			<if test="applyDateEnd != null and applyDateEnd != ''">
+                <![CDATA[AND a.apply_date < #{applyDateEnd}]]>
+			</if>
+			<if test="finishDateStart != null and finishDateStart != ''">
+				<![CDATA[AND a.finish_date >= #{finishDateStart}]]>
+			</if>
+			<if test="finishDateEnd != null and finishDateEnd != ''">
+                <![CDATA[AND a.finish_date < #{finishDateEnd}]]>
+			</if>
+		</where>
+		<if test="page">
+			ORDER BY a.apply_date DESC
+			LIMIT #{firstResult}, #{maxResults}
+		</if>
+	</sql>
+
+	<select id="findByPage" resultType="com.yunnex.ops.erp.modules.workflow.channel.dto.WeiboRechargeResponseDto">
+		<include refid="listSql"/>
+	</select>
+
+	<select id="count" resultType="long">
+		<include refid="listSql"/>
+	</select>
+
+	<select id="findAllList" resultType="ErpChannelWeiboRecharge">
+		SELECT 
+			<include refid="erpChannelWeiboRechargeColumns"/>
+		FROM erp_channel_weibo_recharge a
+		<include refid="erpChannelWeiboRechargeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_channel_weibo_recharge
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="splitId != null">split_id,</if>
+			<if test="shopInfoId != null">shop_info_id,</if>
+			<if test="weiboAccountNo != null">weibo_account_no,</if>
+			<if test="weiboUid != null">weibo_uid,</if>
+			<if test="applyAmount != null">apply_amount,</if>
+			<if test="actualAmount != null">actual_amount,</if>
+			<if test="applyDate != null">apply_date,</if>
+			<if test="finishDate != null">finish_date,</if>
+			<if test="status != null">status,</if>
+			<if test="source != null">source,</if>
+			<if test="createBy != null and createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+			<if test="updateBy != null and updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+			<if test="remarks != null">remarks,</if>
+			<if test="delFlag != null">del_flag,</if>
+		</trim>
+		<trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="splitId != null">#{splitId},</if>
+			<if test="shopInfoId != null">#{shopInfoId},</if>
+			<if test="weiboAccountNo != null">#{weiboAccountNo},</if>
+			<if test="weiboUid != null">#{weiboUid},</if>
+			<if test="applyAmount != null">#{applyAmount},</if>
+			<if test="actualAmount != null">#{actualAmount},</if>
+			<if test="applyDate != null">#{applyDate},</if>
+			<if test="finishDate != null">#{finishDate},</if>
+			<if test="status != null">#{status},</if>
+			<if test="source != null">#{source},</if>
+			<if test="createBy != null and createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+			<if test="updateBy != null and updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+			<if test="remarks != null">#{remarks},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+		</trim>
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_channel_weibo_recharge
+		<set>
+			<if test="splitId != null">split_id = #{splitId},</if>
+			<if test="shopInfoId != null">shop_info_id = #{shopInfoId},</if>
+			<if test="weiboAccountNo != null">weibo_account_no = #{weiboAccountNo},</if>
+			<if test="weiboUid != null">weibo_uid = #{weiboUid},</if>
+			<if test="applyAmount != null">apply_amount = #{applyAmount},</if>
+			<if test="actualAmount != null">actual_amount = #{actualAmount},</if>
+			<if test="applyDate != null">apply_date = #{applyDate},</if>
+			<if test="finishDate != null">finish_date = #{finishDate},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="source != null">source = #{source},</if>
+			<if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+			<if test="updateDate != null">update_date = #{updateDate},</if>
+			<if test="remarks != null">remarks = #{remarks},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_channel_weibo_recharge SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<select id="countSplitWeibo" resultType="long">
+		SELECT count(*) FROM erp_channel_weibo_recharge
+		WHERE split_id = #{splitId} AND weibo_account_no = #{weiboAccountNo} AND weibo_uid = #{weiboUid} AND del_flag = '0'
+	</select>
+	<select id="findWeiboRechargeBysplitId"  resultType="ErpChannelWeiboRecharge">
+		SELECT 
+			<include refid="erpChannelWeiboRechargeColumns"/>
+		FROM erp_channel_weibo_recharge a
+		<include refid="erpChannelWeiboRechargeJoins"/>
+		WHERE split_id = #{splitId}  AND  del_flag = '0' AND source= #{source}
+	</select>
+</mapper>

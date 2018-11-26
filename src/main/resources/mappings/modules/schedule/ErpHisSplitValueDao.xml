@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.schedule.dao.ErpHisSplitValueDao">
+    
+	<sql id="erpHisSplitValueColumns">
+		a.id AS "id",
+		a.his_split_id AS "hisSplitId",
+		a.his_content AS "hisContent",
+		a.his_value AS "hisValue"
+	</sql>
+	
+	<sql id="erpHisSplitValueJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpHisSplitValue">
+		SELECT 
+			<include refid="erpHisSplitValueColumns"/>
+		FROM erp_his_split_value a
+		<include refid="erpHisSplitValueJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpHisSplitValue">
+		SELECT 
+			<include refid="erpHisSplitValueColumns"/>
+		FROM erp_his_split_value a
+		<include refid="erpHisSplitValueJoins"/>
+		<where>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpHisSplitValue">
+		SELECT 
+			<include refid="erpHisSplitValueColumns"/>
+		FROM erp_his_split_value a
+		<include refid="erpHisSplitValueJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_his_split_value(
+			id,
+			his_split_id,
+			his_content,
+			his_value
+		) VALUES (
+			#{id},
+			#{hisSplitId},
+			#{hisContent},
+			#{hisValue}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_his_split_value SET 	
+			his_split_id = #{hisSplitId},
+			his_content = #{hisContent},
+			his_value = #{hisValue}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM erp_his_split_value
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

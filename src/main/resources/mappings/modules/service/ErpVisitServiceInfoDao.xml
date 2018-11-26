@@ -1,0 +1,903 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.visit.dao.ErpVisitServiceInfoDao">
+
+	<sql id="erpVisitServiceInfoColumns">
+        a.id AS "id",
+        a.shop_info_id AS "shopInfoId",
+        a.service_address AS "serviceAddress",
+        a.service_type_code AS "serviceTypeCode",
+        a.service_goal_code AS "serviceGoalCode",
+        a.service_goal AS "serviceGoal",
+        a.service_user AS "serviceUser",
+        a.service_preparation_info AS "servicePreparationInfo",
+        a.shop_attendees AS "shopAttendees",
+        a.shop_preparation_info AS "shopPreparationInfo",
+        a.train_recorder AS "trainRecorder",
+        a.service_reason AS "serviceReason",
+        a.shop_needs_picture AS "shopNeedsPicture",
+        a.appointed_start_time AS "appointedStartTime",
+        a.appointed_end_time AS "appointedEndTime",
+        a.service_start_time AS "serviceStartTime",
+        a.service_end_time AS "serviceEndTime",
+        a.audit_status AS "auditStatus",
+        a.audit_user AS "auditUser",
+        a.cancel_reason AS "cancelReason",
+        a.modify_suggest AS "modifySuggest",
+        a.receiving_report AS "receivingReport",
+        a.proc_ins_id AS "procInsId",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate",
+        a.del_flag AS "delFlag",
+        a.remark AS "remark",
+        a.hardware_deliver_flag AS "hardwareDeliverFlag",
+        a.remind_flag AS "remindFlag"
+    </sql>
+
+    
+	<select id="get" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceInfo">
+		SELECT 
+			a.id as id,
+			a.shop_info_id as shopInfoId,
+			(select si.name from erp_shop_info si where si.id = a.shop_info_id and si.del_flag = '0') as shopInfoName,
+			a.service_address as serviceAddress,
+			a.service_type_code as serviceTypeCode,
+			(select st.service_type from erp_visit_service_item st where st.service_type_code = a.service_type_code and st.del_flag = '0' limit 1) as serviceTypeTxt,
+			a.service_goal_code as serviceGoalCode,
+			(select st.service_goal from erp_visit_service_item st where st.service_goal_code = a.service_goal_code and st.del_flag = '0' limit 1) as serviceGoalTxt,
+			a.service_goal as serviceGoal,
+			a.service_user as serviceUser,
+			(select u.name from sys_user u where u.id = a.service_user and u.del_flag = '0') as serviceUserName,
+			a.service_preparation_info as servicePreparationInfo,
+			a.shop_attendees as shopAttendees,
+			a.shop_preparation_info as shopPreparationInfo,
+			a.train_recorder as trainRecorder,
+			a.service_reason as serviceReason,
+			a.shop_needs_picture as shopNeedsPicture,
+			a.appointed_start_time as appointedStartTime,
+			a.appointed_end_time as appointedEndTime,
+			a.service_start_time as serviceStartTime,
+			a.service_end_time as serviceEndTime,
+			a.audit_status as auditStatus,
+			(case when a.audit_status = '1' then '待审核'
+					 when a.audit_status = '2' then '已审核（待上门）'
+					 when a.audit_status = '3' then '审核不通过'
+					 when a.audit_status = '4' then '已上门'
+					 when a.audit_status = '5' then '已取消'
+			end) as auditStatusTxt,
+			a.audit_user as auditUser,
+			(select u.name from sys_user u where u.id = a.audit_user and u.del_flag = '0') as auditUserName,
+			a.cancel_reason as cancelReason,
+			a.modify_suggest as modifySuggest,
+			a.receiving_report as receivingReport,
+			a.proc_ins_id as procInsId,
+			a.hardware_deliver_flag as hardwareDeliverFlag,
+			(select CONCAT(e.score) from erp_service_acceptance e where e.proc_ins_id = a.proc_ins_id and e.del_flag=0 limit 1 ) as score
+		FROM erp_visit_service_info a
+		WHERE a.id = #{id}
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_visit_service_info(
+			id,
+			shop_info_id,
+			<if test="serviceAddress != null">service_address,</if>
+			<if test="serviceTypeCode != null">service_type_code,</if>
+			<if test="serviceGoalCode != null">service_goal_code,</if>
+			<if test="serviceGoal != null">service_goal,</if>
+			<if test="serviceUser != null">service_user,</if>
+			<if test="servicePreparationInfo != null">service_preparation_info,</if>
+			<if test="shopAttendees != null">shop_attendees,</if>
+			<if test="shopPreparationInfo != null">shop_preparation_info,</if>
+			<if test="trainRecorder != null">train_recorder,</if>
+			<if test="serviceReason != null">service_reason,</if>
+			<if test="shopNeedsPicture != null">shop_needs_picture,</if>
+			appointed_start_time,
+			<if test="appointedEndTime != null">appointed_end_time,</if>
+			<if test="serviceStartTime != null">service_start_time,</if>
+			<if test="serviceEndTime != null">service_end_time,</if>
+			<if test="auditStatus != null">audit_status,</if>
+			<if test="auditUser != null">audit_user,</if>
+			<if test="cancelReason != null">cancel_reason,</if>
+			<if test="modifySuggest != null">modify_suggest,</if>
+			<if test="receivingReport != null">receiving_report,</if>
+			<if test="procInsId != null">proc_ins_id,</if>
+			<if test="remark != null">remark,</if>
+			<if test="hardwareDeliverFlag != null">hardware_deliver_flag,</if>
+			create_by,
+			create_date,
+			update_by,
+			update_date
+		) VALUES (
+			#{id},
+			#{shopInfoId},
+			<if test="serviceAddress != null">#{serviceAddress},</if>
+			<if test="serviceTypeCode != null">#{serviceTypeCode},</if>
+			<if test="serviceGoalCode != null">#{serviceGoalCode},</if>
+			<if test="serviceGoal != null">#{serviceGoal},</if>
+			<if test="serviceUser != null">#{serviceUser},</if>
+			<if test="servicePreparationInfo != null">#{servicePreparationInfo},</if>
+			<if test="shopAttendees != null">#{shopAttendees},</if>
+			<if test="shopPreparationInfo != null">#{shopPreparationInfo},</if>
+			<if test="trainRecorder != null">#{trainRecorder},</if>
+			<if test="serviceReason != null">#{serviceReason},</if>
+			<if test="shopNeedsPicture != null">#{shopNeedsPicture},</if>
+			#{appointedStartTime},
+			<if test="appointedEndTime != null">#{appointedEndTime},</if>
+			<if test="serviceStartTime != null">#{serviceStartTime},</if>
+			<if test="serviceEndTime != null">#{serviceEndTime},</if>
+			<if test="auditStatus != null">#{auditStatus},</if>
+			<if test="auditUser != null">#{auditUser},</if>
+			<if test="cancelReason != null">#{cancelReason},</if>
+			<if test="modifySuggest != null">#{modifySuggest},</if>
+			<if test="receivingReport != null">#{receivingReport},</if>
+			<if test="procInsId != null">#{procInsId},</if>
+			<if test="remark != null">#{remark},</if>
+			<if test="hardwareDeliverFlag != null">#{hardwareDeliverFlag},</if>
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_visit_service_info 
+		<set>
+			<if test="serviceAddress != null">service_address = #{serviceAddress},</if>
+			<if test="serviceTypeCode != null">service_type_code = #{serviceTypeCode},</if>
+			<if test="serviceGoalCode != null">service_goal_code = #{serviceGoalCode},</if>
+			<if test="serviceGoal != null">service_goal = #{serviceGoal},</if>
+			<if test="serviceUser != null">service_user = #{serviceUser},</if>
+			<if test="servicePreparationInfo != null">service_preparation_info = #{servicePreparationInfo},</if>
+			<if test="shopAttendees != null">shop_attendees = #{shopAttendees},</if>
+			<if test="shopPreparationInfo != null">shop_preparation_info = #{shopPreparationInfo},</if>
+			<if test="trainRecorder != null">train_recorder = #{trainRecorder},</if>
+			<if test="serviceReason != null">service_reason = #{serviceReason},</if>
+			<if test="shopNeedsPicture != null">shop_needs_picture = #{shopNeedsPicture},</if>
+			<if test="appointedStartTime != null">appointed_start_time = #{appointedStartTime},</if>
+			<if test="appointedEndTime != null">appointed_end_time = #{appointedEndTime},</if>
+			<if test="serviceStartTime != null">service_start_time = #{serviceStartTime},</if>
+			<if test="serviceEndTime != null">service_end_time = #{serviceEndTime},</if>
+			<if test="auditStatus != null">audit_status = #{auditStatus},</if>
+			<if test="auditUser != null">audit_user = #{auditUser},</if>
+			<if test="cancelReason != null">cancel_reason = #{cancelReason},</if>
+			<if test="modifySuggest != null">modify_suggest = #{modifySuggest},</if>
+			<if test="receivingReport != null">receiving_report = #{receivingReport},</if>
+			<if test="procInsId != null">proc_ins_id = #{procInsId},</if>
+			<if test="updateBy != null">update_by = #{updateBy.id},</if>
+			<if test="updateDate != null">update_date = #{updateDate},</if>
+            <if test="remindFlag != null">remind_flag = #{remindFlag},</if>
+            <if test="hardwareDeliverFlag != null">hardware_deliver_flag = #{hardwareDeliverFlag},</if>
+			<if test="remark != null">remark = #{remark}</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_visit_service_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="queryVisitServiceDataList" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceInfo">
+		select
+			a.id as id,
+			a.service_user as serviceUser,
+			(select u.name from sys_user u where u.id = a.service_user and u.del_flag = '0') as serviceUserName,
+			si.name as shopInfoName,
+			si.id as shopInfoId,
+			a.service_type_code as serviceTypeCode,
+			(select st.service_type from erp_visit_service_item st where st.service_type_code = a.service_type_code and st.del_flag = '0' limit 1) as serviceTypeTxt,
+			a.service_goal_code as serviceGoalCode,
+			(select st.service_goal from erp_visit_service_item st where st.service_goal_code = a.service_goal_code and st.del_flag = '0' limit 1) as serviceGoalTxt,
+			a.appointed_start_time as appointedStartTime,
+			a.appointed_end_time as appointedEndTime,
+			a.service_start_time as serviceStartTime,
+			a.service_end_time as serviceEndTime,
+			a.audit_user as auditUser,
+			(select u.name from sys_user u where u.id = a.audit_user and u.del_flag = '0') as auditUserName,
+			a.audit_status as auditStatus,
+			(case when a.audit_status = '0' then '已预约'
+					 when a.audit_status = '1' then '待审核'
+					 when a.audit_status = '2' then '已审核（待上门）'
+					 when a.audit_status = '3' then '审核不通过'
+					 when a.audit_status = '4' then '已上门'
+					 when a.audit_status = '5' then '已取消'
+			end) as auditStatusTxt,
+			a.cancel_reason as cancelReason,
+			a.proc_ins_id as procInsId,
+			(select group_concat(a.team_name) from 	erp_team a,erp_team_user b where a.id = b.team_id	and a.del_flag = '0' and b.del_flag = '0' and a.company_type in ('branch','agent') and b.user_id = a.service_user group by b.user_id) as teamTxt,
+			(select CONCAT(e.score) from erp_service_acceptance e where e.proc_ins_id = a.proc_ins_id and e.del_flag=0 limit 1) as score
+		from
+			erp_visit_service_info a 
+		left join 
+			erp_shop_info si
+		on
+			a.shop_info_id = si.id
+		where
+			a.del_flag = '0'
+		<if test="paramObj.serviceTypeCode != null and paramObj.serviceTypeCode != ''">
+		and a.service_type_code = #{paramObj.serviceTypeCode}
+		</if>
+		<if test="paramObj.serviceGoalCode != null and paramObj.serviceGoalCode != ''">
+		and a.service_goal_code = #{paramObj.serviceGoalCode}
+		</if>
+		<if test="paramObj.shopInfoName != null and paramObj.shopInfoName != ''">
+		and si.name like concat('%',#{paramObj.shopInfoName},'%')
+		</if>
+		<if test="paramObj.teamId != null and paramObj.teamId != ''">
+		and exists (select 1 from erp_team_user etu where etu.del_flag = '0' and etu.user_id = a.service_user and etu.team_id = #{paramObj.teamId})
+		</if>
+		<if test="paramObj.serviceUser != null and paramObj.serviceUser != ''">
+		and a.service_user = #{paramObj.serviceUser}
+		</if>
+		<if test="paramObj.auditStatus != null and paramObj.auditStatus != ''">
+		and a.audit_status = #{paramObj.auditStatus}
+		</if>
+		<if test="paramObj.appointedStartTime != null">
+		and a.appointed_start_time >= #{paramObj.appointedStartTime}
+		</if>
+		<if test="paramObj.appointedEndTime != null">
+		and a.appointed_end_time <![CDATA[<=]]> #{paramObj.appointedEndTime}
+		</if>
+		<if test="paramObj.serviceStartTime != null">
+		and a.service_start_time >= #{paramObj.serviceStartTime}
+		</if>
+		<if test="paramObj.serviceEndTime != null">
+		and a.service_end_time <![CDATA[<=]]> #{paramObj.serviceEndTime}
+		</if>
+		<choose><!-- 权限判断 -->
+			<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("visitService:dataQuery:all")'>
+				and exists (select 1 from erp_team et,erp_team_user etu where et.id = etu.team_id	and et.del_flag = '0' and etu.del_flag = '0' and et.company_type in ('branch','agent') and etu.user_id = a.service_user)
+			</when>
+			<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("visitService:dataQuery:company")'>
+				and exists (select 1 from sys_user u where u.id = a.service_user and u.del_flag = '0' and u.agent_id = #{paramObj.updateBy.agentId})
+			</when>
+			<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("visitService:dataQuery:personal")'>
+				and a.service_user = #{paramObj.updateBy.id}
+			</when>
+			<otherwise>
+				and 1=2
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				order by a.appointed_start_time desc
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findVisitIdByProcInsId" resultType="String">
+		SELECT a.id FROM erp_visit_service_info a 
+		where a.proc_ins_id = #{procInsId} and a.service_goal_code=#{serviceGoalCode}
+		
+	</select>
+	
+	<select id="findDoorVisitIdByProcInsId" resultType="map">
+		SELECT a.service_goal_code as serviceGoalCode,a.shop_info_id as shopInfoId FROM erp_visit_service_info a 
+		where a.proc_ins_id = #{procInsId}
+	</select>
+	
+	<select id="queryServiceItemRecordDataByServiceId"  resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceItemRecord">
+		select
+			d.id as id,
+			d.service_info_id as serviceInfoId,
+			d.service_item_code as serviceItemCode,
+			(select st.service_item from erp_visit_service_item st where st.service_item_code = d.service_item_code and st.del_flag = '0' limit 1)  as serviceItemTxt,
+			d.service_item as serviceItem,
+			d.service_start_time as serviceStartTime,
+			d.service_end_time as serviceEndTime,
+			d.service_item_attendees as serviceItemAttendees,
+			d.complete_flag as completeFlag
+		from
+			erp_visit_service_item_record d
+		where
+			d.service_info_id = #{serviceInfoId}
+			and d.del_flag = '0'
+	</select>
+	
+	<insert id="batchInsertServiceItemRecordData">
+		insert into erp_visit_service_item_record
+		(
+			id,
+			service_info_id,
+			service_item_code,
+			service_item,
+			service_start_time,
+			service_end_time,
+			service_item_attendees,
+			complete_flag,
+			create_by,
+			create_date,
+			update_by,
+			update_date
+		) 
+		values
+		<foreach collection ="list" item="record" separator =",">
+		(
+			uuid(),
+			#{serviceInfoId},
+			#{record.serviceItemCode},
+			#{record.serviceItem},
+			#{record.serviceStartTime},
+			#{record.serviceEndTime},
+			#{record.serviceItemAttendees},
+			#{record.completeFlag},
+			#{userId},
+			now(),
+			#{userId},
+			now()
+		)
+		</foreach>
+	</insert>
+	
+	<delete id="deleteServiceItemRecordDataByServiceId">
+		delete from erp_visit_service_item_record where service_info_id = #{serviceInfoId}
+	</delete>
+	
+	<select id="queryServiceItemData" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceItem">
+		select
+			d.service_item_code as serviceItemCode,
+			d.service_item as serviceItem,
+			d.service_flag as serviceFlag,
+			d.service_time_length as serviceTimeLength,
+			d.service_time_length_txt as serviceTimeLengthTxt,
+			d.service_item_attendees as serviceItemAttendees,
+			d.default_flag as defaultFlag
+		from
+			erp_visit_service_item d
+		where
+			d.del_flag = '0'
+		and d.service_goal_code = #{serviceGoalCode}
+		<if test='serviceGoalCode == "2"'>
+		union all
+		select
+			d.service_item_code as serviceItemCode,
+			d.service_item as serviceItem,
+			d.service_flag as serviceFlag,
+			d.service_time_length as serviceTimeLength,
+			d.service_time_length_txt as serviceTimeLengthTxt,
+			d.service_item_attendees as serviceItemAttendees,
+			d.default_flag as defaultFlag
+		from
+			erp_visit_service_item d,
+			erp_visit_service_item_record a,
+			erp_visit_service_info c
+		where d.del_flag = '0'
+		and a.del_flag = '0'
+		and c.del_flag = '0'
+		and d.service_item_code = a.service_item_code
+		and a.service_info_id = c.id
+		and c.audit_status = '4'
+		and d.service_flag = '3'
+		and a.complete_flag = 'N'
+		and c.service_goal_code = '1'
+		and c.shop_info_id = #{shopInfoId}
+		and c.proc_ins_id = #{procInsId}
+		</if>
+		order by serviceItemCode + 0
+	</select>
+	
+	<select id="queryServiceGoalData" resultType="java.util.HashMap">
+		select
+			distinct d.service_goal_code as serviceGoalCode,d.service_goal as serviceGoal
+		from
+			erp_visit_service_item d
+		where
+			d.del_flag = '0'
+			<if test="serviceTypeCode != null and serviceTypeCode != ''">
+			and d.service_type_code = #{serviceTypeCode}
+			</if>
+		order by
+			d.service_goal_code + 0
+	</select>
+	
+	<select id="queryTrainItemRecord" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceItemRecord">
+		select
+			d.service_item_code as serviceItemCode,
+			d.service_item as serviceItem,
+			a.service_end_time as serviceEndTime,
+			a.complete_flag as completeFlag
+		from
+			erp_visit_service_item d,
+			erp_visit_service_item_record a,
+			erp_visit_service_info c,
+			erp_shop_info si
+		where d.del_flag = '0'
+		and a.del_flag = '0'
+		and c.del_flag = '0'
+		and a.complete_flag='Y'
+		and d.service_item_code = a.service_item_code
+		and a.service_info_id = c.id
+		and c.shop_info_id = si.id
+		and d.service_flag = '3'
+		and d.service_goal_code in ('1','2')
+		and (c.shop_info_id = #{shopInfoId} or si.zhangbei_id = #{shopInfoId})
+		GROUP BY d.service_item_code 
+		order by serviceItemCode + 0
+	</select>
+	
+	<select id="queryTrainItem" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceItem">
+		select
+			d.service_item_code as serviceItemCode,
+			d.service_item as serviceItem,
+			d.service_flag as serviceFlag,
+			d.service_time_length as serviceTimeLength,
+			d.service_time_length_txt as serviceTimeLengthTxt,
+			d.service_item_attendees as serviceItemAttendees,
+			d.default_flag as defaultFlag
+		from
+			erp_visit_service_item d
+		where
+			d.del_flag = '0'
+		and d.service_flag = '3'
+		and d.service_goal_code in ('1','2')
+		order by serviceItemCode + 0
+	</select>
+	
+	<select id="checkAppointedDate" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceInfo">
+		select 
+			d.id as id,
+			d.appointed_start_time as appointedStartTime
+		from 
+			erp_visit_service_info d 
+		where 
+			d.service_user = #{serviceUser} 
+		and 
+			d.appointed_start_time between date_add(#{appointedStartTime}, interval -2 hour) and date_add(#{appointedStartTime}, interval 2 hour)
+		and
+			d.audit_status in ('0','1','2','3')
+	</select>
+	
+	<select id="getHeader" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceInfo">
+		SELECT
+			c.service_type_code as serviceTypeCode,
+			c.service_type as serviceTypeTxt,
+			GROUP_CONCAT(
+					DISTINCT c.service_goal 
+				 SEPARATOR ',') as serviceGoal
+		from
+			erp_visit_service_item c
+		GROUP BY
+			c.service_type_code
+		ORDER BY c.service_type_code,c.service_goal
+	</select>
+	
+	<select id="getHeaderText" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceInfo">
+		SELECT
+			DISTINCT c.service_goal as serviceGoal
+		from
+			erp_visit_service_item c
+		where
+			c.service_type_code = #{serviceGoalTxt}
+		ORDER BY
+			c.sort_col
+	</select>
+	
+	<select id="getVisitDetail" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceInfo">
+		SELECT DISTINCT service_type as serviceTypeTxt,service_goal as serviceGoalTxt from erp_visit_service_item where service_goal_code=#{serviceGoalCode}
+	</select>
+	
+	<select id="queryTeamByRole" resultType="java.util.HashMap">
+		select
+			a.id as teamId,
+			a.team_name as teamName
+		from
+			erp_team a
+		where
+			a.del_flag = '0'
+			and a.company_type in('branch','agent')
+			<choose><!-- 权限判断 -->
+				<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("visitService:dataQuery:all")'>
+					and 1=1
+				</when>
+				<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("visitService:dataQuery:company")'>
+					and a.id in (select d.team_id from erp_team_user d where d.del_flag = '0' and d.user_id = #{userId})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+	</select>
+	
+	<select id="queryTeamUserServiceCount" resultType="java.util.HashMap">
+		select
+			 a.service_user as serviceUser,
+			 (select u.name from sys_user u where u.id = a.service_user and u.del_flag = '0') as serviceUserName,
+			 (select group_concat(a.team_name) from 
+			 	erp_team a,erp_team_user b where a.id = b.team_id	
+			 	and a.del_flag = '0' and b.del_flag = '0' 
+			 	and 
+			 	(<trim prefixOverrides="or">
+					<choose><!-- 权限判断 -->
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:all")'>
+							or a.company_type in ('agent','branch') 
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:serviceCompany")'>
+							or a.company_type = 'agent'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:branchCompany")'>
+							or a.company_type = 'branch'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:company")'>
+							or a.id in (
+								SELECT
+									team1.id
+								from
+									erp_team team1
+								LEFT JOIN erp_team_user teamUser1 on
+									team1.id = teamUser1.team_id
+									and teamUser1.del_flag = '0'
+								where
+									teamUser1.user_id = #{paramObj.userId}
+									and teamUser1.leader_flag = '1'
+							)
+						</when>
+						<otherwise>
+							or 1=2
+						</otherwise>
+					</choose>
+				</trim>
+				)
+			 	and b.user_id = a.service_user group by b.user_id
+			 ) as teamTxt,
+			 (
+				SELECT
+					count(vsi.id)
+				from
+					erp_visit_service_info vsi
+				where
+					vsi.del_flag = '0'
+					and vsi.service_user = a.service_user
+					and vsi.service_goal_code = 3
+					and vsi.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+			 ) as service_jykjf,
+			 (
+			 SELECT
+				count(vsi.id)
+			 from
+				erp_visit_service_info vsi
+			 where
+				vsi.del_flag = '0'
+				and vsi.service_user = a.service_user
+				and vsi.service_goal_code = 1
+				and vsi.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+			 ) as service_scsmchyx,
+			 (
+			 SELECT
+				count(vsi.id)
+			 from
+				erp_visit_service_info vsi
+			 where
+				vsi.del_flag = '0'
+				and vsi.service_user = a.service_user
+				and vsi.service_goal_code = 2
+				and vsi.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+			 ) as service_wlfw,
+			 (
+			 SELECT
+				count(vsi.id)
+			 from
+				erp_visit_service_info vsi
+			 where
+				vsi.del_flag = '0'
+				and vsi.service_user = a.service_user
+				and vsi.service_goal_code = 7
+				and vsi.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+			 ) as service_scsmjc,
+			 (
+			 SELECT
+				count(vsi.id)
+			 from
+				erp_visit_service_info vsi
+			 where
+				vsi.del_flag = '0'
+				and vsi.service_user =a.service_user
+				and vsi.service_goal_code = 9
+				and vsi.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+			 ) as service_zhctjf,
+			 (
+			 SELECT
+				count(vsi.id)
+			 from
+				erp_visit_service_info vsi
+			 where
+				vsi.del_flag = '0'
+				and vsi.service_user =a.service_user
+				and vsi.service_goal_code = 6
+				and vsi.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+			 ) as service_shsmsf,
+			 (
+			 SELECT
+				count(vsi.id)
+			 from
+				erp_visit_service_info vsi
+			 where
+				vsi.del_flag = '0'
+				and vsi.service_user =a.service_user
+				and vsi.service_goal_code = 5
+				and vsi.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+			 ) as service_smpxmf,
+			 (
+			 SELECT
+				count(vsi.id)
+			 from
+				erp_visit_service_info vsi
+			 where
+				vsi.del_flag = '0'
+				and vsi.service_user =a.service_user
+				and vsi.service_goal_code = 4
+				and vsi.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+			 ) as service_shsmtsmf,
+			 (
+			SELECT
+				count(vsi.id)
+			from
+				erp_visit_service_info vsi
+			where
+				vsi.del_flag = '0'
+				and vsi.service_user =a.service_user
+				and vsi.service_goal_code = 8
+				and vsi.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+			) as service_wlgx
+		from
+		 	erp_visit_service_info a
+		where
+		 	a.del_flag = '0'
+		    and a.service_user in(
+				  select
+				   		tu.user_id
+				  from
+				   		erp_team_user tu
+				  where
+				   		tu.del_flag = '0'
+				   	<if test="paramObj.teamIds != null and paramObj.teamIds.size()> 0">
+				  		AND tu.team_id in
+				  		<foreach item="teamId" index="index" collection="paramObj.teamIds" open="(" separator="," close=")">  
+				    		#{teamId}
+				    	</foreach>
+				  	</if>
+				  	and 
+				  	(<trim prefixOverrides="or">
+						<choose><!-- 权限判断 -->
+							<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:all")'>
+								or tu.team_id in (select t.id from erp_team t where t.del_flag = '0' and t.company_type in ('agent','branch')) 
+							</when>
+							<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:serviceCompany")'>
+								or tu.team_id in (select t.id from erp_team t where t.del_flag = '0' and t.company_type = 'agent')
+							</when>
+							<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:branchCompany")'>
+								or tu.team_id in (select t.id from erp_team t where t.del_flag = '0' and t.company_type = 'branch')
+							</when>
+							<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:company")'>
+								or tu.team_id in (SELECT
+										team1.id
+									from
+										erp_team team1
+									LEFT JOIN erp_team_user teamUser1 on
+										team1.id = teamUser1.team_id
+										and teamUser1.del_flag = '0'
+									where
+										teamUser1.user_id = #{paramObj.userId}
+										and teamUser1.leader_flag = '1'
+								)
+							</when>
+							<otherwise>
+								or 1=2
+							</otherwise>
+						</choose>
+					</trim>
+					)
+		 		)
+		 <if test="paramObj.serviceUsers != null and paramObj.serviceUsers.size()> 0">
+	  		and a.service_user in
+	  		<foreach item="serviceUser" index="index" collection="paramObj.serviceUsers" open="(" separator="," close=")">  
+	    		#{serviceUser}
+	    	</foreach>
+	  	</if>
+		<if test="paramObj.startDateStr != null and paramObj.endDateStr != null">
+		 and a.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+		 </if>
+		 group by a.service_user 
+	</select>
+	
+	<select id="queryTeamUserServiceTotal" resultType="java.util.HashMap">
+		select
+			 sum(case when a.service_goal_code = '3' then 1 else 0 end) as service_jykjf,
+			 sum(case when a.service_goal_code = '1' then 1 else 0 end) as service_scsmchyx,
+			 sum(case when a.service_goal_code = '2' then 1 else 0 end) as service_wlfw,
+			 sum(case when a.service_goal_code = '7' then 1 else 0 end) as service_scsmjc,
+			 sum(case when a.service_goal_code = '9' then 1 else 0 end) as service_zhctjf,
+			 sum(case when a.service_goal_code = '6' then 1 else 0 end) as service_shsmsf,
+			 sum(case when a.service_goal_code = '5' then 1 else 0 end) as service_smpxmf,
+			 sum(case when a.service_goal_code = '4' then 1 else 0 end) as service_shsmtsmf,
+			 sum(case when a.service_goal_code = '8' then 1 else 0 end) as service_wlgx
+		from
+		 	erp_visit_service_info a
+		where
+		 	a.del_flag = '0'
+		 and 
+		 	a.audit_status = '4'
+		and 
+			a.service_user in(
+				  select
+				   		tu.user_id
+				  from
+				   		erp_team_user tu
+				  where
+				   		tu.del_flag = '0'
+			   		<if test="paramObj.teamIds != null and paramObj.teamIds.size()> 0">
+				  		AND tu.team_id in
+				  		<foreach item="teamId" index="index" collection="paramObj.teamIds" open="(" separator="," close=")">  
+				    		#{teamId}
+				    	</foreach>
+				  	</if>
+				   	<choose><!-- 权限判断 -->
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:deliveryServicePerformanceTeamUrl:service")'>
+							and (
+							<trim prefixOverrides="or">
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:all")'>
+									or 1=1
+								</if>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:serviceCompany")'>
+									or tu.team_id in (select t.id from erp_team t where t.del_flag = '0' and t.company_type = 'agent')
+								</if>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:branchCompany")'>
+									or tu.team_id in (select t.id from erp_team t where t.del_flag = '0' and t.company_type = 'branch')
+								</if>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:company")'>
+									or tu.team_id in (select t.id from erp_team t where t.del_flag = '0' and t.agent_id = #{agentId})
+								</if>
+							</trim>
+							)
+						</when>
+						<otherwise>
+							and 1=2
+						</otherwise>
+					</choose>
+		 		)
+ 		<if test="paramObj.serviceUsers != null and paramObj.serviceUsers.size()> 0">
+	  		and a.service_user in
+	  		<foreach item="serviceUser" index="index" collection="paramObj.serviceUsers" open="(" separator="," close=")">  
+	    		#{serviceUser}
+	    	</foreach>
+	  	</if>
+		 <if test="paramObj.startDateStr != null and paramObj.endDateStr != null">
+		 	and a.service_end_time between #{paramObj.startDateStr} and #{paramObj.endDateStr}
+		 </if>
+	</select>
+	
+	 <!--  根据流程id 和 上门目的code 获取唯一上门信息 -->
+    <select id="getByGoalCode" resultType="ErpVisitServiceInfo">
+        SELECT
+            <include refid="erpVisitServiceInfoColumns"/>
+        FROM erp_visit_service_info a
+        where
+            a.del_flag = '0'
+            AND a.proc_ins_id = #{procInsId}
+            AND a.service_goal_code = #{serviceGoalCode}
+    </select>
+    
+    
+    <select id="queryShopServiceDetailList" resultType="com.yunnex.ops.erp.modules.visit.entity.ErpVisitServiceDetailInfo">
+		select
+			a.id as id,
+			a.service_user as serviceUser,
+			(select u.name from sys_user u where u.id = a.service_user and u.del_flag = '0') as serviceUserName,
+			si.name as shopInfoName,
+			si.id as shopInfoId,
+			a.service_type_code as serviceTypeCode,
+			(select st.service_type from erp_visit_service_item st where st.service_type_code = a.service_type_code and st.del_flag = '0' limit 1) as serviceTypeTxt,
+			a.service_goal_code as serviceGoalCode,
+			(select st.service_goal from erp_visit_service_item st where st.service_goal_code = a.service_goal_code and st.del_flag = '0' limit 1) as serviceGoalTxt,
+			a.appointed_start_time as appointedStartTime,
+			a.appointed_end_time as appointedEndTime,
+			a.service_start_time as serviceStartTime,
+			a.service_end_time as serviceEndTime,
+			a.audit_user as auditUser,
+			(select u.name from sys_user u where u.id = a.audit_user and u.del_flag = '0') as auditUserName,
+			a.audit_status as auditStatus,
+			(case when a.audit_status = '0' then '已预约'
+					 when a.audit_status = '1' then '待审核'
+					 when a.audit_status = '2' then '已审核（待上门）'
+					 when a.audit_status = '3' then '审核不通过'
+					 when a.audit_status = '4' then '已上门'
+					 when a.audit_status = '5' then '已取消'
+			end) as auditStatusTxt,
+			a.cancel_reason as cancelReason,
+			a.proc_ins_id as procInsId,
+			(select group_concat(a.team_name) from 	erp_team a,erp_team_user b where a.id = b.team_id	and a.del_flag = '0' and b.del_flag = '0' and a.company_type in ('branch','agent') and b.user_id = a.service_user group by b.user_id) as teamTxt,
+			(select CONCAT(e.score) from erp_service_acceptance e where e.proc_ins_id = a.proc_ins_id and e.del_flag=0 limit 1) as score
+		from
+			erp_visit_service_info a 
+		left join 
+			erp_shop_info si
+		on
+			a.shop_info_id = si.id
+		where
+			a.del_flag = '0'
+		<if test='paramObj.cloumnType == "a"'>
+		and a.service_goal_code = 3
+		</if>
+		<if test='paramObj.cloumnType == "b"'>
+		and a.service_goal_code = 1
+		</if>
+		<if test='paramObj.cloumnType == "c"'>
+		and a.service_goal_code = 2
+		</if>
+		<if test='paramObj.cloumnType == "d"'>
+		and a.service_goal_code = 7
+		</if>
+		<if test='paramObj.cloumnType == "e"'>
+		and a.service_goal_code = 9
+		</if>
+		<if test='paramObj.cloumnType == "f"'>
+		and a.service_goal_code = 6
+		</if>
+		<if test='paramObj.cloumnType == "g"'>
+		and a.service_goal_code = 5
+		</if>
+		<if test='paramObj.cloumnType == "h"'>
+		and a.service_goal_code = 4
+		</if>
+		<if test='paramObj.cloumnType == "i"'>
+		and a.service_goal_code = 8
+		</if>
+		<if test="paramObj.shopInfoName != null and paramObj.shopInfoName != ''">
+		and si.name like concat('%',#{paramObj.shopInfoName},'%')
+		</if>
+		<if test="paramObj.teamId != null and paramObj.teamId != ''">
+		and exists (select 1 from erp_team_user etu where etu.del_flag = '0' and etu.user_id = a.service_user and etu.team_id = #{paramObj.teamId})
+		</if>
+		<if test="paramObj.serviceUser != null and paramObj.serviceUser != ''">
+		and a.service_user = #{paramObj.serviceUser}
+		</if>
+		<if test="paramObj.auditStatus != null and paramObj.auditStatus != ''">
+		and a.audit_status = #{paramObj.auditStatus}
+		</if>
+		<if test="paramObj.appointedStartTime != null">
+		and a.appointed_start_time <![CDATA[>=]]> #{paramObj.appointedStartTime}
+		</if>
+		<if test="paramObj.appointedEndTime != null">
+		and a.appointed_end_time <![CDATA[<=]]> #{paramObj.appointedEndTime}
+		</if>
+		<if test="paramObj.startDateStr != null">
+		and a.service_end_time <![CDATA[>=]]> #{paramObj.startDateStr}
+		</if>
+		<if test="paramObj.endDateStr != null">
+		and a.service_end_time <![CDATA[<=]]> #{paramObj.endDateStr}
+		</if>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				order by a.appointed_start_time desc
+			</otherwise>
+		</choose>
+	</select>
+	<select id="getListByProcIdAndGoalCode" resultType="ErpVisitServiceInfo">
+        SELECT
+            <include refid="erpVisitServiceInfoColumns"/>
+        FROM erp_visit_service_info a
+        where
+            a.del_flag = '0'
+            AND a.proc_ins_id = #{procInsId}
+            AND a.service_goal_code != #{serviceGoalCode}
+    </select>
+    
+    <update id="resetByProcInsId">
+    	update erp_visit_service_info set proc_ins_id = #{newProcInsId},audit_status ='' ,cancel_reason='',modify_suggest='',remind_flag='N' where proc_ins_id = #{oldProcInsId}
+    </update>
+    
+    <update id="updateServiceUser">
+    	update erp_visit_service_info set service_user = #{serviceUser} where proc_ins_id = #{procInsId} and audit_status not in ('4','5')
+    </update>
+	
+</mapper>

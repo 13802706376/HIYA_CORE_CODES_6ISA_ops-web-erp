@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.store.dao.JykOrderChoiceStoreDao">
+
+	<sql id="jykOrderChoiceStoreColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.split_id AS "splitId",
+		a.PROC_INS_ID AS "procInsId",
+		a.choice_store AS "choiceStore",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag"
+	</sql>
+
+	<sql id="jykOrderChoiceStoreJoins">
+	</sql>
+
+	<select id="get" resultType="JykOrderChoiceStore">
+		SELECT
+		<include refid="jykOrderChoiceStoreColumns"/>
+		FROM jyk_order_choice_store a
+		<include refid="jykOrderChoiceStoreJoins"/>
+		WHERE a.del_flag = 0 AND a.id = #{id}
+	</select>
+
+	<select id="findList" resultType="JykOrderChoiceStore">
+		SELECT
+		<include refid="jykOrderChoiceStoreColumns"/>
+		FROM jyk_order_choice_store a
+		<include refid="jykOrderChoiceStoreJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findAllList" resultType="JykOrderChoiceStore">
+		SELECT
+		<include refid="jykOrderChoiceStoreColumns"/>
+		FROM jyk_order_choice_store a
+		<include refid="jykOrderChoiceStoreJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<insert id="insert">
+		INSERT INTO jyk_order_choice_store(
+			id,
+			order_id,
+			split_id,
+			PROC_INS_ID,
+			choice_store,
+			create_date,
+			create_by,
+			update_date,
+			update_by,
+			remark,
+			sort,
+			del_flag
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{splitId},
+			#{procInsId},
+			#{choiceStore},
+			#{createDate},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{sort},
+			#{delFlag}
+		)
+	</insert>
+
+	<update id="update">
+		UPDATE jyk_order_choice_store SET 	
+			order_id = #{orderId},
+			split_id = #{splitId},
+			PROC_INS_ID = #{procInsId},
+			choice_store = #{choiceStore},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remark = #{remark},
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+
+	<update id="delete">
+		UPDATE jyk_order_choice_store SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<select id="getBySplitId" resultType="JykOrderChoiceStore">
+		SELECT
+		<include refid="jykOrderChoiceStoreColumns"/>
+		FROM jyk_order_choice_store a
+		<include refid="jykOrderChoiceStoreJoins"/>
+		<where>
+			a.del_flag = '0'
+			AND a.split_id=#{splitId}
+		</where>
+	</select>
+
+	<select id="getStoreIdBySplitId" resultType="String">
+		select choice_store from jyk_order_choice_store where del_flag = 0 AND split_id = #{splitId}
+	</select>
+
+	<select id="getStoreIdByProcInsId" resultType="String">
+		select choice_store from jyk_order_choice_store where del_flag = 0 AND PROC_INS_ID = #{procInsId}
+	</select>
+
+	<update id="deleteByByProcInsId">
+		UPDATE jyk_order_choice_store SET 
+			del_flag = 1
+		where PROC_INS_ID = #{procInsId}
+	</update>
+
+	<select id="getAllStoreIdBySplitId" resultType="String">
+		select choice_store from jyk_order_choice_store where del_flag = 0 AND split_id = #{splitId}
+	</select>
+
+	<select id="getAdvAuditStatus" resultType="com.yunnex.ops.erp.modules.workflow.flow.dto.AdvAuditStatusDto">
+		SELECT
+			store.short_name AS "storeName", friends.audit_status AS "friendsAuditStatus",
+			momo.audit_status AS "momoAuditStatus", weibo.audit_status AS "weiboAuditStatus"
+		FROM jyk_order_choice_store jocs
+		LEFT JOIN erp_store_info store ON jocs.choice_store = store.id AND store.del_flag = '0' AND store.sync_oem = 'N'
+		LEFT JOIN erp_store_advertiser_friends friends ON store.advertiser_friends_id = friends.id AND friends.del_flag = '0'
+		LEFT JOIN erp_store_advertiser_momo momo ON store.advertiser_momo_id = momo.id AND momo.del_flag = '0'
+		LEFT JOIN erp_store_advertiser_weibo weibo ON store.advertiser_weibo_id = weibo.id AND weibo.del_flag = '0'
+		WHERE jocs.split_id = #{splitId}
+		AND jocs.del_flag = '0'
+	</select>
+
+</mapper>

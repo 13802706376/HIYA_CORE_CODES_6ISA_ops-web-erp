@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.flow.dao.SdiFlowDao">
+
+	<sql id="sdiFlowColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.sdi_id AS "sdiId",
+		a.proc_ins_id AS "procInsId",
+		a.operation_manager AS "operationManager",
+		a.operation_adviser AS "operationAdviser",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag"
+	</sql>
+
+	<sql id="sdiFlowJoins">
+	</sql>
+	
+	<select id="getByProcInstId" resultType="SdiFlow">
+		SELECT
+		<include refid="sdiFlowColumns" />
+		FROM sdi_flow a
+		<include refid="sdiFlowJoins" />
+		WHERE a.proc_ins_id = #{procInsId}
+	</select>
+
+
+	<select id="get" resultType="SdiFlow">
+		SELECT
+		<include refid="sdiFlowColumns" />
+		FROM sdi_flow a
+		<include refid="sdiFlowJoins" />
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findList" resultType="SdiFlow">
+		SELECT
+		<include refid="sdiFlowColumns" />
+		FROM sdi_flow a
+		<include refid="sdiFlowJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findAllList" resultType="SdiFlow">
+		SELECT
+		<include refid="sdiFlowColumns" />
+		FROM sdi_flow a
+		<include refid="sdiFlowJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<insert id="insert">
+		INSERT INTO sdi_flow(
+		id,
+		order_id,
+		sdi_id,
+		proc_ins_id,
+		operation_manager,
+		operation_adviser,
+		create_date,
+		create_by,
+		update_date,
+		update_by,
+		remark,
+		sort,
+		del_flag
+		) VALUES (
+		#{id},
+		#{orderId},
+		#{sdiId},
+		#{procInsId},
+		#{operationManager},
+		#{operationAdviser},
+		#{createDate},
+		#{createBy.id},
+		#{updateDate},
+		#{updateBy.id},
+		#{remark},
+		#{sort},
+		#{delFlag}
+		)
+	</insert>
+
+	<update id="update">
+		UPDATE sdi_flow SET
+		order_id = #{orderId},
+		sdi_id = #{sdiId},
+		operation_manager = #{operationManager},
+		operation_adviser = #{operationAdviser},
+		update_date = #{updateDate},
+		update_by = #{updateBy.id},
+		remark = #{remark},
+		sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateFlowByProcIncId">
+		UPDATE sdi_flow SET
+		<if test="operationManager != null">
+			operation_manager = #{operationManager},
+		</if>
+		<if test="operationAdviser != null">
+			operation_adviser = #{operationAdviser},
+		</if>
+		update_date = #{updateDate},
+		update_by =#{updateBy.id}
+		WHERE proc_ins_id = #{procInsId}
+	</update>
+
+
+	<update id="delete">
+		UPDATE sdi_flow SET
+		del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<select id="getSdiinfoByShopId" resultType="SdiFlow">
+		SELECT
+		<include refid="sdiFlowColumns" />
+		FROM sdi_flow a
+		<include refid="sdiFlowJoins" />
+		LEFT JOIN erp_shop_data_input b ON a.sdi_id = b.id
+		<where>
+			b.shop_id = #{shopId}
+		</where>
+		ORDER BY a.create_date DESC
+	</select>
+
+</mapper>

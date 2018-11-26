@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.team.dao.ErpUserTotalDao">
+	<select id="findTeamNameByUser" resultType="com.yunnex.ops.erp.modules.team.entity.ErpUserTotal">
+		SELECT
+			GROUP_CONCAT(DISTINCT u2.team_name) as teamName
+		from
+			erp_team_user u1,
+			erp_team u2
+		where
+			u1.team_id = u2.id
+			and u1.del_flag = 0
+			and u2.del_flag = 0
+			and u1.user_id = #{userId}
+			and u2.company_type in(
+				'agent',
+				'branch'
+			)
+	</select>
+	<select id="findServiceTypeByUser" resultType="com.yunnex.ops.erp.modules.team.entity.ErpUserTotal">
+		SELECT
+			roleFlow.name as flowName
+		from
+			sys_role_flow roleFlow
+			LEFT JOIN erp_order_flow_user erpFlow
+			on roleFlow.flow_role = erpFlow.flow_user_id
+		where
+			erpFlow.user_id = #{userId} 
+		GROUP BY
+			roleFlow.name
+	</select>
+	
+    <select id="getTeamNameByUser" resultType="com.yunnex.ops.erp.modules.team.entity.ErpUserTotal">
+		SELECT
+			erpFlow22.user_id as userId,
+			group_concat(
+				DISTINCT roleFlow22.name
+			) as flowName
+		from
+			sys_role_flow roleFlow22,
+			erp_order_flow_user erpFlow22
+		where
+			roleFlow22.flow_role = erpFlow22.flow_user_id
+			and erpFlow22.user_id IN(
+				select
+					erpFlow.user_id as userId
+				from
+					erp_team_user teamUser
+				LEFT JOIN erp_order_flow_user erpFlow on
+					teamUser.user_id = erpFlow.user_id
+					and teamUser.del_flag = '0'
+				LEFT JOIN erp_order_original_info erpOrder on
+					erpFlow.order_id = erpOrder.id
+				LEFT JOIN erp_delivery_service erpDelivery on
+					erpDelivery.order_id = erpOrder.id
+				where
+					1=1 
+					and erpOrder.buy_date &gt;= #{startDateStr} 
+					AND erpOrder.buy_date &lt;= #{endDateStr} 
+					<if test="userId != null">
+						AND teamUser.user_id = #{userId}
+					</if>
+					<if test="teamId != null">
+						AND teamUser.team_id = #{teamId}
+					</if>
+					<if test="agentIdList != null and agentIdList.size() > 0">
+				  		AND erpOrder.agent_id in
+				  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+				    		#{itemAgentId}
+				    	</foreach>
+				  	</if>
+				  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+						AND erpOrder.order_type in
+						<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+				    		#{itemOrderType}
+				    	</foreach>
+					</if>
+					<if test="serviceType != null">
+						AND erpDelivery.service_type = #{serviceType}
+					</if>
+					<if test="flowUserId != null">
+						AND erpFlow.flow_user_id = #{flowUserId}
+					</if>
+				GROUP BY
+					erpFlow.user_id
+			)
+		GROUP by
+			erpFlow22.user_id
+	</select>
+	
+    <select id="getUserByTeam" resultType="com.yunnex.ops.erp.modules.team.entity.ErpUserTotal">
+		SELECT
+			erpOrder0.user_id AS userId,
+			roleFlow22.flow_role as flowRole,
+			roleFlow22.name as flowName,
+			(
+				SELECT t.name from sys_user t where t.id = erpOrder0.user_id
+			) as userName,
+			(
+				select group_concat(distinct a.team_name)
+				from erp_team a, erp_team_user b
+				where a.id = b.team_id and a.del_flag = '0' and b.del_flag = '0' 
+				and (
+					<trim prefixOverrides="or">
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:all")'>
+							or a.company_type in ('agent','branch')
+						</if>
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:serviceCompany")'>
+							or a.company_type = 'agent'
+						</if>
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:branchCompany")'>
+							or a.company_type = 'branch'
+						</if>
+						<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:company")'>
+							or a.agent_id in (
+									SELECT
+										team.agent_id
+									from
+										erp_team team
+									LEFT JOIN erp_team_user teamUser on
+										team.id = teamUser.team_id
+										and teamUser.del_flag = '0'
+									where
+										teamUser.user_id = #{userId}
+										and teamUser.leader_flag = '1'
+								)
+						</if>
+					</trim>
+				)
+				and b.user_id = erpOrder0.user_id
+			) as teamName,
+			(
+				SELECT COUNT(erpOrder20.id) AS curCount FROM erp_order_original_info erpOrder20, erp_delivery_service erpDelivery20 
+				WHERE erpDelivery20.order_id = erpOrder20.id 
+				and erpOrder20.del_flag = 0 AND erpOrder20.cancel = 0 AND erpOrder20.order_status !=-1
+				AND erpOrder20.buy_date BETWEEN #{startDateStr} and #{endDateStr}
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder21 WHERE erpDelivery20.proc_ins_id = erpOrder21.flow_id 
+				AND erpOrder21.user_id = erpOrder0.user_id and erpOrder21.flow_user_id=roleFlow22.flow_role
+				)
+			) as newCount,
+			count( erpOrder1.id ) as newCountOther,
+			(CASE roleFlow22.flow_role 
+			 WHEN 'accountAdviser' THEN 
+			 (
+			 SELECT COUNT(erpOrder9.id) AS curCount FROM erp_order_original_info erpOrder9, erp_delivery_service erpDelivery9 
+			 WHERE erpDelivery9.order_id = erpOrder9.id 
+			 and erpOrder9.del_flag = 0 AND erpOrder9.cancel = 0 AND erpOrder9.order_status !=-1
+			 AND erpDelivery9.should_train_test_time BETWEEN #{startDateStr} and #{endDateStr}
+			 AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder10 WHERE erpDelivery9.proc_ins_id = erpOrder10.flow_id 
+			 AND erpOrder10.user_id = erpOrder0.user_id and erpOrder10.flow_user_id=roleFlow22.flow_role)
+			 )
+			 WHEN 'materialAdviser' THEN 
+			 (
+			 SELECT COUNT(erpOrder9.id) AS curCount FROM erp_order_original_info erpOrder9, erp_delivery_service erpDelivery9 
+			 WHERE erpDelivery9.order_id = erpOrder9.id 
+			 and erpOrder9.del_flag = 0 AND erpOrder9.cancel = 0 AND erpOrder9.order_status !=-1
+			 AND erpDelivery9.should_materiel_time BETWEEN #{startDateStr} and #{endDateStr}
+			 AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder10 WHERE erpDelivery9.proc_ins_id = erpOrder10.flow_id 
+			 AND erpOrder10.user_id = erpOrder0.user_id and erpOrder10.flow_user_id=roleFlow22.flow_role)
+			 )
+			 WHEN 'OperationAdviser' THEN 
+			 (
+			 SELECT COUNT(erpOrder9.id) AS curCount FROM erp_order_original_info erpOrder9, erp_delivery_service erpDelivery9 
+			 WHERE erpDelivery9.order_id = erpOrder9.id 
+			 and erpOrder9.del_flag = 0 AND erpOrder9.cancel = 0 AND erpOrder9.order_status !=-1
+			 AND erpDelivery9.should_visit_service_time BETWEEN #{startDateStr} and #{endDateStr}
+			 AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder10 WHERE erpDelivery9.proc_ins_id = erpOrder10.flow_id 
+			 AND erpOrder10.user_id = erpOrder0.user_id and erpOrder10.flow_user_id=roleFlow22.flow_role)
+			 )
+			 ELSE 
+			 (
+				SELECT COUNT(erpOrder9.id) AS curCount FROM erp_order_original_info erpOrder9, erp_delivery_service erpDelivery9 
+				WHERE erpDelivery9.order_id = erpOrder9.id 
+				and erpOrder9.del_flag = 0 AND erpOrder9.cancel = 0 AND erpOrder9.order_status !=-1
+				AND erpDelivery9.should_flow_end_time BETWEEN #{startDateStr} and #{endDateStr}
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder10 WHERE erpDelivery9.proc_ins_id = erpOrder10.flow_id 
+				AND erpOrder10.user_id = erpOrder0.user_id and erpOrder10.flow_user_id=roleFlow22.flow_role)
+			)END) as shouldFlowCount,
+			(CASE roleFlow22.flow_role 
+			 WHEN 'accountAdviser' THEN 
+			 (
+			 SELECT COUNT(erpOrder9.id) AS curCount FROM erp_order_original_info erpOrder9, erp_delivery_service erpDelivery9 
+			 WHERE erpDelivery9.order_id = erpOrder9.id 
+			 and erpOrder9.del_flag = 0 AND erpOrder9.cancel = 0 AND erpOrder9.order_status !=-1
+			 AND erpDelivery9.train_test_time BETWEEN #{startDateStr} and #{endDateStr}
+			 AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder10 WHERE erpDelivery9.proc_ins_id = erpOrder10.flow_id 
+			 AND erpOrder10.user_id = erpOrder0.user_id and erpOrder10.flow_user_id=roleFlow22.flow_role)
+			 )
+			 WHEN 'materialAdviser' THEN 
+			 (
+			 SELECT COUNT(erpOrder9.id) AS curCount FROM erp_order_original_info erpOrder9, erp_delivery_service erpDelivery9 
+			 WHERE erpDelivery9.order_id = erpOrder9.id 
+			 and erpOrder9.del_flag = 0 AND erpOrder9.cancel = 0 AND erpOrder9.order_status !=-1
+			 AND erpDelivery9.materiel_time BETWEEN #{startDateStr} and #{endDateStr}
+			 AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder10 WHERE erpDelivery9.proc_ins_id = erpOrder10.flow_id 
+			 AND erpOrder10.user_id = erpOrder0.user_id and erpOrder10.flow_user_id=roleFlow22.flow_role)
+			 )
+			 WHEN 'OperationAdviser' THEN 
+			 (
+			 SELECT COUNT(erpOrder9.id) AS curCount FROM erp_order_original_info erpOrder9, erp_delivery_service erpDelivery9 
+			 WHERE erpDelivery9.order_id = erpOrder9.id 
+			 and erpOrder9.del_flag = 0 AND erpOrder9.cancel = 0 AND erpOrder9.order_status !=-1
+			 AND erpDelivery9.visit_service_time BETWEEN #{startDateStr} and #{endDateStr}
+			 AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder10 WHERE erpDelivery9.proc_ins_id = erpOrder10.flow_id 
+			 AND erpOrder10.user_id = erpOrder0.user_id and erpOrder10.flow_user_id=roleFlow22.flow_role)
+			 )
+			 ELSE 
+			 (
+				SELECT COUNT(erpOrder9.id) AS curCount FROM erp_order_original_info erpOrder9, erp_delivery_service erpDelivery9 
+				WHERE erpDelivery9.order_id = erpOrder9.id 
+				and erpOrder9.del_flag = 0 AND erpOrder9.cancel = 0 AND erpOrder9.order_status !=-1
+				AND erpDelivery9.flow_end_time BETWEEN #{startDateStr} and #{endDateStr}
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder10 WHERE erpDelivery9.proc_ins_id = erpOrder10.flow_id 
+				AND erpOrder10.user_id = erpOrder0.user_id and erpOrder10.flow_user_id=roleFlow22.flow_role)
+			)END) as flowEndCount,
+			(CASE roleFlow22.flow_role 
+			 WHEN 'accountAdviser' THEN 
+			 (
+			 SELECT COUNT(erpOrder2.id) FROM erp_order_original_info erpOrder2, erp_delivery_service erpDelivery2 
+			 WHERE erpDelivery2.order_id = erpOrder2.id 
+			 and erpOrder2.del_flag = 0 AND erpOrder2.cancel = 0 AND erpOrder2.order_status !=-1
+			 AND erpDelivery2.should_train_test_time BETWEEN #{startDateStr} and #{endDateStr}
+			 AND if(erpDelivery2.train_test_time > '0000-00-00 00:00:00', 'Y', 'N') = 'N' 
+			 AND DATEDIFF(if(erpDelivery2.train_test_time > '0000-00-00 00:00:00',erpDelivery2.train_test_time,NOW()),
+				if(erpDelivery2.should_train_test_time > '0000-00-00 00:00:00',erpDelivery2.should_train_test_time,NOW()))> 0
+			 AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder3 WHERE erpDelivery2.proc_ins_id = erpOrder3.flow_id 
+			 AND erpOrder3.user_id = erpOrder0.user_id and erpOrder3.flow_user_id=roleFlow22.flow_role)
+			 )
+			 WHEN 'materialAdviser' THEN 
+			 (
+			 SELECT COUNT(erpOrder2.id) FROM erp_order_original_info erpOrder2, erp_delivery_service erpDelivery2 
+			 WHERE erpDelivery2.order_id = erpOrder2.id 
+			 and erpOrder2.del_flag = 0 AND erpOrder2.cancel = 0 AND erpOrder2.order_status !=-1
+			 AND erpDelivery2.should_materiel_time BETWEEN #{startDateStr} and #{endDateStr}
+			 AND if(erpDelivery2.materiel_time > '0000-00-00 00:00:00', 'Y', 'N') = 'N' 
+			 AND DATEDIFF(if(erpDelivery2.materiel_time > '0000-00-00 00:00:00',erpDelivery2.materiel_time,NOW()),
+				if(erpDelivery2.should_materiel_time > '0000-00-00 00:00:00',erpDelivery2.should_materiel_time,NOW()))> 0
+			 AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder3 WHERE erpDelivery2.proc_ins_id = erpOrder3.flow_id 
+			 AND erpOrder3.user_id = erpOrder0.user_id and erpOrder3.flow_user_id=roleFlow22.flow_role)
+			 )
+			 WHEN 'OperationAdviser' THEN 
+			 (
+			 SELECT COUNT(erpOrder2.id) FROM erp_order_original_info erpOrder2, erp_delivery_service erpDelivery2 
+			 WHERE erpDelivery2.order_id = erpOrder2.id 
+			 and erpOrder2.del_flag = 0 AND erpOrder2.cancel = 0 AND erpOrder2.order_status !=-1
+			 AND erpDelivery2.should_visit_service_time BETWEEN #{startDateStr} and #{endDateStr}
+			 AND if(erpDelivery2.visit_service_time > '0000-00-00 00:00:00', 'Y', 'N') = 'N' 
+			 AND DATEDIFF(if(erpDelivery2.visit_service_time > '0000-00-00 00:00:00',erpDelivery2.visit_service_time,NOW()),
+				if(erpDelivery2.should_visit_service_time > '0000-00-00 00:00:00',erpDelivery2.should_visit_service_time,NOW()))> 0
+			 AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder3 WHERE erpDelivery2.proc_ins_id = erpOrder3.flow_id 
+			 AND erpOrder3.user_id = erpOrder0.user_id and erpOrder3.flow_user_id=roleFlow22.flow_role)
+			 )
+			 ELSE 
+			 (
+				SELECT COUNT(erpOrder2.id) FROM erp_order_original_info erpOrder2, erp_delivery_service erpDelivery2 
+				 WHERE erpDelivery2.order_id = erpOrder2.id 
+				 and erpOrder2.del_flag = 0 AND erpOrder2.cancel = 0 AND erpOrder2.order_status !=-1
+				 AND erpDelivery2.should_flow_end_time BETWEEN #{startDateStr} and #{endDateStr}
+				 AND if(erpDelivery2.flow_end_time > '0000-00-00 00:00:00', 'Y', 'N') = 'N' 
+				 AND DATEDIFF(if(erpDelivery2.flow_end_time > '0000-00-00 00:00:00',erpDelivery2.flow_end_time,NOW()),
+					if(erpDelivery2.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery2.should_flow_end_time,NOW()))> 0
+				 AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder3 WHERE erpDelivery2.proc_ins_id = erpOrder3.flow_id 
+				 AND erpOrder3.user_id = erpOrder0.user_id and erpOrder3.flow_user_id=roleFlow22.flow_role)
+			)END) as noCompleteCount,
+			(CASE roleFlow22.flow_role 
+			 WHEN 'accountAdviser' THEN 
+			 (
+				SELECT COUNT(erpOrder4.id) FROM erp_order_original_info erpOrder4, erp_delivery_service erpDelivery4 WHERE 
+				erpDelivery4.order_id = erpOrder4.id AND erpDelivery4.train_test_time BETWEEN #{startDateStr} and #{endDateStr} 
+				and erpOrder4.del_flag = 0 AND erpOrder4.cancel = 0 AND erpOrder4.order_status !=-1
+				AND if(erpDelivery4.train_test_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+				AND DATEDIFF(if(erpDelivery4.train_test_time > '0000-00-00 00:00:00', erpDelivery4.train_test_time, NOW()), 
+				if(erpDelivery4.should_train_test_time > '0000-00-00 00:00:00', erpDelivery4.should_train_test_time, NOW())) > 0 
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder5 WHERE erpDelivery4.proc_ins_id = erpOrder5.flow_id 
+				AND erpOrder5.user_id = erpOrder0.user_id and erpOrder5.flow_user_id=roleFlow22.flow_role)
+			 )
+			 WHEN 'materialAdviser' THEN 
+			 (
+				SELECT COUNT(erpOrder4.id) FROM erp_order_original_info erpOrder4, erp_delivery_service erpDelivery4 WHERE 
+				erpDelivery4.order_id = erpOrder4.id AND erpDelivery4.materiel_time BETWEEN #{startDateStr} and #{endDateStr}
+				AND if(erpDelivery4.materiel_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+				and erpOrder4.del_flag = 0 AND erpOrder4.cancel = 0 AND erpOrder4.order_status !=-1
+				AND DATEDIFF(if(erpDelivery4.materiel_time > '0000-00-00 00:00:00', erpDelivery4.materiel_time, NOW()), 
+				if(erpDelivery4.should_materiel_time > '0000-00-00 00:00:00', erpDelivery4.should_materiel_time, NOW())) > 0 
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder5 WHERE erpDelivery4.proc_ins_id = erpOrder5.flow_id 
+				AND erpOrder5.user_id = erpOrder0.user_id and erpOrder5.flow_user_id=roleFlow22.flow_role)
+			 )
+			 WHEN 'OperationAdviser' THEN 
+			 (
+				SELECT COUNT(erpOrder4.id) FROM erp_order_original_info erpOrder4, erp_delivery_service erpDelivery4 WHERE 
+				erpDelivery4.order_id = erpOrder4.id AND erpDelivery4.visit_service_time BETWEEN #{startDateStr} and #{endDateStr}
+				AND if(erpDelivery4.visit_service_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+				and erpOrder4.del_flag = 0 AND erpOrder4.cancel = 0 AND erpOrder4.order_status !=-1
+				AND DATEDIFF(if(erpDelivery4.visit_service_time > '0000-00-00 00:00:00', erpDelivery4.visit_service_time, NOW()), 
+				if(erpDelivery4.should_visit_service_time > '0000-00-00 00:00:00', erpDelivery4.should_visit_service_time, NOW())) > 0 
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder5 WHERE erpDelivery4.proc_ins_id = erpOrder5.flow_id 
+				AND erpOrder5.user_id = erpOrder0.user_id and erpOrder5.flow_user_id=roleFlow22.flow_role)
+			 )
+			 ELSE 
+			 (
+				SELECT COUNT(erpOrder4.id) FROM erp_order_original_info erpOrder4, erp_delivery_service erpDelivery4 WHERE 
+				erpDelivery4.order_id = erpOrder4.id AND erpDelivery4.flow_end_time BETWEEN #{startDateStr} and #{endDateStr}
+				AND if(erpDelivery4.flow_end_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+				and erpOrder4.del_flag = 0 AND erpOrder4.cancel = 0 AND erpOrder4.order_status !=-1
+				AND DATEDIFF(if(erpDelivery4.flow_end_time > '0000-00-00 00:00:00', erpDelivery4.flow_end_time, NOW()), 
+				if(erpDelivery4.should_flow_end_time > '0000-00-00 00:00:00', erpDelivery4.should_flow_end_time, NOW())) > 0 
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder5 WHERE erpDelivery4.proc_ins_id = erpOrder5.flow_id 
+				AND erpOrder5.user_id = erpOrder0.user_id and erpOrder5.flow_user_id=roleFlow22.flow_role)
+			)END) as completeCount,
+			(CASE roleFlow22.flow_role 
+			 WHEN 'accountAdviser' THEN 
+			 (
+			 	SELECT COUNT(erpOrder5.id) FROM erp_order_original_info erpOrder5, erp_delivery_service erpDelivery5 WHERE 
+				erpDelivery5.order_id = erpOrder5.id AND erpDelivery5.train_test_time BETWEEN #{startDateStr} and #{endDateStr}
+				AND if(erpDelivery5.train_test_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+				and erpOrder5.del_flag = 0 AND erpOrder5.cancel = 0 AND erpOrder5.order_status !=-1
+				and erpDelivery5.excption_logo is null 
+				AND DATEDIFF(if(erpDelivery5.train_test_time > '0000-00-00 00:00:00', erpDelivery5.train_test_time, NOW()), 
+				if(erpDelivery5.should_train_test_time > '0000-00-00 00:00:00', erpDelivery5.should_train_test_time, NOW())) > 0 
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder6 WHERE erpDelivery5.proc_ins_id = erpOrder6.flow_id 
+				AND erpOrder6.user_id = erpOrder0.user_id and erpOrder6.flow_user_id=roleFlow22.flow_role) 
+			 )
+			 WHEN 'materialAdviser' THEN 
+			 (
+			 	SELECT COUNT(erpOrder5.id) FROM erp_order_original_info erpOrder5, erp_delivery_service erpDelivery5 WHERE 
+				erpDelivery5.order_id = erpOrder5.id AND erpDelivery5.materiel_time BETWEEN #{startDateStr} and #{endDateStr}
+				AND if(erpDelivery5.materiel_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+				and erpDelivery5.excption_logo is null 
+				and erpOrder5.del_flag = 0 AND erpOrder5.cancel = 0 AND erpOrder5.order_status !=-1
+				AND DATEDIFF(if(erpDelivery5.materiel_time > '0000-00-00 00:00:00', erpDelivery5.materiel_time, NOW()), 
+				if(erpDelivery5.should_materiel_time > '0000-00-00 00:00:00', erpDelivery5.should_materiel_time, NOW())) > 0 
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder6 WHERE erpDelivery5.proc_ins_id = erpOrder6.flow_id 
+				AND erpOrder6.user_id = erpOrder0.user_id and erpOrder6.flow_user_id=roleFlow22.flow_role)
+			 )
+			 WHEN 'OperationAdviser' THEN 
+			 (
+			 	SELECT COUNT(erpOrder5.id) FROM erp_order_original_info erpOrder5, erp_delivery_service erpDelivery5 WHERE 
+				erpDelivery5.order_id = erpOrder5.id AND erpDelivery5.visit_service_time BETWEEN #{startDateStr} and #{endDateStr} 
+				AND if(erpDelivery5.visit_service_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+				and erpDelivery5.excption_logo is null 
+				and erpOrder5.del_flag = 0 AND erpOrder5.cancel = 0 AND erpOrder5.order_status !=-1
+				AND DATEDIFF(if(erpDelivery5.visit_service_time > '0000-00-00 00:00:00', erpDelivery5.visit_service_time, NOW()), 
+				if(erpDelivery5.should_visit_service_time > '0000-00-00 00:00:00', erpDelivery5.should_visit_service_time, NOW())) > 0 
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder6 WHERE erpDelivery5.proc_ins_id = erpOrder6.flow_id 
+				AND erpOrder6.user_id = erpOrder0.user_id and erpOrder6.flow_user_id=roleFlow22.flow_role)
+			 )
+			 ELSE 
+			 (
+				SELECT COUNT(erpOrder4.id) FROM erp_order_original_info erpOrder4, erp_delivery_service erpDelivery4 WHERE 
+				erpDelivery4.order_id = erpOrder4.id AND erpDelivery4.flow_end_time BETWEEN #{startDateStr} and #{endDateStr}
+				AND if(erpDelivery4.flow_end_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+				and erpDelivery4.excption_logo is null 
+				and erpOrder4.del_flag = 0 AND erpOrder4.cancel = 0 AND erpOrder4.order_status !=-1
+				AND DATEDIFF(if(erpDelivery4.flow_end_time > '0000-00-00 00:00:00', erpDelivery4.flow_end_time, NOW()), 
+				if(erpDelivery4.should_flow_end_time > '0000-00-00 00:00:00', erpDelivery4.should_flow_end_time, NOW())) > 0 
+				AND EXISTS ( SELECT 1 FROM erp_order_flow_user erpOrder5 WHERE erpDelivery4.proc_ins_id = erpOrder5.flow_id 
+				AND erpOrder5.user_id = erpOrder0.user_id and erpOrder5.flow_user_id=roleFlow22.flow_role)
+			)END) as completeExCount
+		from
+			erp_order_flow_user erpOrder0 
+			LEFT JOIN sys_role_flow roleFlow22 on roleFlow22.flow_role = erpOrder0.flow_user_id 
+			LEFT JOIN erp_delivery_service erpDelivery on erpDelivery.proc_ins_id= erpOrder0.flow_id
+			LEFT JOIN erp_order_original_info erpOrder1 on erpOrder1.id= erpDelivery.order_id
+			LEFT JOIN erp_team_user teamUser on teamUser.user_id = erpOrder0.user_id
+			LEFT JOIN erp_team eteam on eteam.id = teamUser.team_id
+		where
+			erpOrder1.buy_date BETWEEN #{startDateStr} and #{endDateStr}
+			and roleFlow22.flow_role in ('OperationAdviser','materialAdviser','accountAdviser','operationManager')
+			and eteam.del_flag = '0'
+			<if test="userIds != null and userIds.size()> 0">
+				AND teamUser.user_id in
+		  		<foreach item="userId" index="index" collection="userIds" open="(" separator="," close=")">  
+		    		#{userId}
+		    	</foreach>
+			</if>
+			<if test="teamIds != null and teamIds.size()> 0">
+				AND teamUser.team_id in
+		  		<foreach item="teamId" index="index" collection="teamIds" open="(" separator="," close=")">  
+		    		#{teamId}
+		    	</foreach>
+			</if>
+			and (
+				<trim prefixOverrides="or">
+					<choose><!-- 权限判断 -->
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:all")'>
+							or eteam.company_type in ('agent','branch') 
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:serviceCompany")'>
+							or eteam.company_type = 'agent'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:branchCompany")'>
+							or eteam.company_type = 'branch'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:company")'>
+							or eteam.agent_id in (
+								SELECT
+									team.agent_id
+								from
+									erp_team team
+								LEFT JOIN erp_team_user teamUser on
+									team.id = teamUser.team_id
+									and teamUser.del_flag = '0'
+								where
+									teamUser.user_id = #{userId}
+									and teamUser.leader_flag = '1'
+							)
+						</when>
+						<otherwise>
+							or 1=2
+						</otherwise>
+					</choose>
+				</trim>
+			)
+			<if test="flowUserId != null">
+				AND erpOrder0.flow_user_id = #{flowUserId}
+			</if>
+			GROUP BY erpOrder0.user_id,roleFlow22.flow_role
+	</select>
+	
+	<select id="getUserByTeamByCount" resultType="long">
+		select count(*) from (SELECT
+			erpOrder0.user_id AS userId
+		from
+			erp_order_flow_user erpOrder0 
+			LEFT JOIN sys_role_flow roleFlow22 on roleFlow22.flow_role = erpOrder0.flow_user_id 
+			LEFT JOIN erp_delivery_service erpDelivery on erpDelivery.proc_ins_id= erpOrder0.flow_id
+			LEFT JOIN erp_order_original_info erpOrder1 on erpOrder1.id= erpDelivery.order_id
+			LEFT JOIN erp_team_user teamUser on teamUser.user_id = erpOrder0.user_id
+			LEFT JOIN erp_team eteam on eteam.id = teamUser.team_id
+		where
+			erpOrder1.buy_date BETWEEN #{startDateStr} and #{endDateStr}
+			and roleFlow22.flow_role in ('OperationAdviser','materialAdviser','accountAdviser','operationManager')
+			and eteam.del_flag = '0'
+			<if test="userIds != null and userIds.size()> 0">
+				AND teamUser.user_id in
+		  		<foreach item="userId" index="index" collection="userIds" open="(" separator="," close=")">  
+		    		#{userId}
+		    	</foreach>
+			</if>
+			<if test="teamIds != null and teamIds.size()> 0">
+				AND teamUser.team_id in
+		  		<foreach item="teamId" index="index" collection="teamIds" open="(" separator="," close=")">  
+		    		#{teamId}
+		    	</foreach>
+			</if>
+			and (
+				<trim prefixOverrides="or">
+					<choose><!-- 权限判断 -->
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:all")'>
+							or eteam.company_type in ('agent','branch') 
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:serviceCompany")'>
+							or eteam.company_type = 'agent'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:branchCompany")'>
+							or eteam.company_type = 'branch'
+						</when>
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:company")'>
+							or eteam.agent_id in (
+								SELECT
+									team.agent_id
+								from
+									erp_team team
+								LEFT JOIN erp_team_user teamUser on
+									team.id = teamUser.team_id
+									and teamUser.del_flag = '0'
+								where
+									teamUser.user_id = #{userId}
+									and teamUser.leader_flag = '1'
+							)
+						</when>
+						<otherwise>
+							or 1=2
+						</otherwise>
+					</choose>
+				</trim>
+			)
+			<if test="flowUserId != null">
+				AND erpOrder0.flow_user_id = #{flowUserId}
+			</if>
+			GROUP BY erpOrder0.user_id,roleFlow22.flow_role
+			) as tatol
+	</select>
+	
+	<select id="findUserCount" resultType="com.yunnex.ops.erp.modules.team.entity.ErpUserTotal">
+		SELECT
+			teamUser.user_id as userId,
+			team.id as teamId,
+			team.team_name as teamName,
+			team.agent_id as agentId,
+			(SELECT roleFlow.name from sys_role_flow roleFlow where roleFlow.flow_role = erpFlow.flow_user_id) as flowName,
+			erpFlow.flow_user_id as flowUserId
+		from erp_team_user teamUser,erp_team team
+			where
+			 team.id = teamUser.team_id
+			 and team.agent_id in(
+				select
+					erpOrder.agent_id
+				from
+					erp_order_original_info erpOrder
+				where
+				    erpOrder.buy_date &gt;= #{startDateStr}
+					AND erpOrder.buy_date &lt;= #{endDateStr}
+				GROUP BY
+					erpOrder.agent_id
+			) 
+			<if test="agentIdList != null and agentIdList.size() > 0">
+		  		AND erpOrder.agent_id in
+		  		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+	        		#{itemAgentId}
+	        	</foreach>
+		  	</if>
+		  	<if test="orderTypeList != null and orderTypeList.size() > 0">
+				AND erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+	        		#{itemOrderType}
+	        	</foreach>
+			</if>
+			GROUP BY teamUser.user_id
+	</select>
+	<select id="findNewCount" resultType="java.lang.Integer">
+		select
+			count(erpOrder.id) as curCount
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpOrder.buy_date &gt;= #{startDateStr}
+			AND erpOrder.buy_date &lt;= #{endDateStr}
+			and erpOrder.id in(
+				select
+					erpOrder.order_id
+				from
+					erp_order_flow_user erpOrder
+				where
+					erpOrder.user_id = #{userId}
+			)
+	</select>
+	<select id="findShouldflowCount" resultType="com.yunnex.ops.erp.modules.team.entity.ErpUserTotal">
+		select
+			count(erpOrder.id) as curCount,
+			'FIRST' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('JYK','FMPS','FMPS_BASIC','INTO_PIECES')
+			and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id = #{userId}
+						)
+		UNION ALL
+		select
+			count(erpOrder.id) as curCount,
+			'MU' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('MU')
+			and erpOrder.id in(
+				select
+					erpOrder.order_id
+				from
+					erp_order_flow_user erpOrder
+				where
+					erpOrder.user_id = #{userId}
+			)
+		UNION ALL
+		select
+			count(erpOrder.id) as curCount,
+			'FIRST' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('VC')
+			and erpOrder.id in(
+				select
+					erpOrder.order_id
+				from
+					erp_order_flow_user erpOrder
+				where
+					erpOrder.user_id = #{userId}
+			)
+	</select>
+	<select id="flowEndCount" resultType="com.yunnex.ops.erp.modules.team.entity.ErpUserTotal">
+		select
+			count(erpOrder.id) as curCount,
+			'FIRST' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('JYK','FMPS','FMPS_BASIC','INTO_PIECES')
+			and erpOrder.id in(
+					select
+						erpOrder.order_id
+					from
+						erp_order_flow_user erpOrder
+					where
+						erpOrder.user_id = #{userId}
+						)
+		UNION ALL
+		select
+			count(erpOrder.id) as curCount,
+			'MU' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('MU')
+			and erpOrder.id in(
+				select
+					erpOrder.order_id
+				from
+					erp_order_flow_user erpOrder
+				where
+					erpOrder.user_id = #{userId}
+			)
+		UNION ALL
+		select
+			count(erpOrder.id) as curCount,
+			'FIRST' as serviceType
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.flow_end_time &lt;= #{endDateStr}
+			and erpDelivery.service_type in ('VC')
+			and erpOrder.id in(
+				select
+					erpOrder.order_id
+				from
+					erp_order_flow_user erpOrder
+				where
+					erpOrder.user_id = #{userId}
+			)
+	</select>
+	
+	<select id="noCompleteCount" resultType="java.lang.Integer">
+		select
+			count(1) as curCount
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.should_flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.should_flow_end_time &lt;= #{endDateStr}
+			AND DATEDIFF(
+				if(
+					erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.flow_end_time,
+					NOW()
+				),
+				if(
+					erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.should_flow_end_time,
+					NOW()
+				)
+			)> 0
+			AND if(
+				erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+				'Y',
+				'N'
+			)= 'N'
+			and erpOrder.id in(
+				select
+					erpOrder.order_id
+				from
+					erp_order_flow_user erpOrder
+				where
+					erpOrder.user_id =#{userId}
+			)
+	</select>
+	
+	<select id="completeCount" resultType="java.lang.Integer">
+		select
+			count(erpOrder.id) as curCount
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.flow_end_time &lt;= #{endDateStr}
+			AND DATEDIFF(
+				if(
+					erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.flow_end_time,
+					NOW()
+				),
+				if(
+					erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.should_flow_end_time,
+					NOW()
+				)
+			)> 0
+			AND if(
+				erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+				'Y',
+				'N'
+			)= 'Y'
+			and erpOrder.id in(
+				select
+					erpOrder.order_id
+				from
+					erp_order_flow_user erpOrder
+				where
+					erpOrder.user_id =#{userId}
+			)
+	</select>
+	<select id="completeExCount" resultType="java.lang.Integer">
+		select
+			count(erpOrder.id) as curCount
+		from
+			erp_order_original_info erpOrder,erp_delivery_service erpDelivery
+		where
+			erpDelivery.order_id=erpOrder.id 
+			and erpDelivery.flow_end_time &gt;= #{startDateStr}
+			and erpDelivery.flow_end_time &lt;= #{endDateStr}
+			AND DATEDIFF(
+				if(
+					erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.flow_end_time,
+					NOW()
+				),
+				if(
+					erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.should_flow_end_time,
+					NOW()
+				)
+			)> 0
+			AND if(
+				erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+				'Y',
+				'N'
+			)= 'Y'
+			and erpOrder.id in(
+				select
+					erpOrder.order_id
+				from
+					erp_order_flow_user erpOrder
+				where
+					erpOrder.user_id =#{userId}
+			)
+			and erpDelivery.excption_logo is null
+	</select>
+</mapper>

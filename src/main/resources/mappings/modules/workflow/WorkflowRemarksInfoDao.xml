@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.remarks.dao.WorkflowRemarksInfoDao">
+    
+	<sql id="workflowRemarksInfoColumns">
+		a.id AS "id",
+		a.proc_ins_id AS "procInsId",
+		a.flow_type AS "flowType",
+		a.remark_text AS "remarkText",
+		a.create_by AS "createBy.id",
+		a.create_by AS "createUserId",
+		b.name AS "createUserName",
+		a.update_by AS "updateBy.id",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="workflowRemarksInfoJoins">
+		LEFT JOIN sys_user b ON (a.create_by = b.id)
+	</sql>
+    
+	<select id="get" resultType="WorkflowRemarksInfo">
+		SELECT 
+			<include refid="workflowRemarksInfoColumns"/>
+		FROM workflow_remarks_info a 
+		<include refid="workflowRemarksInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="WorkflowRemarksInfo">
+		SELECT 
+			<include refid="workflowRemarksInfoColumns"/>
+		FROM workflow_remarks_info a
+		<include refid="workflowRemarksInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="WorkflowRemarksInfo">
+		SELECT 
+			<include refid="workflowRemarksInfoColumns"/>
+		FROM workflow_remarks_info a
+		<include refid="workflowRemarksInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListByProcInsId" resultType="com.yunnex.ops.erp.modules.workflow.remarks.entity.WorkflowRemarksInfo">
+		select
+			a.id as id,
+			d.remark_item_name as remarkItemName,
+			a.remark_item_type as remarkItemType,
+			a.flow_type as flowType,
+			a.remark_text as remarkText,
+			a.create_date as createDate,
+			a.create_by as createUserId,
+			(select u.name from sys_user u where u.id = a.create_by) as createUserName
+		from
+			workflow_remarks_info a 
+		left join 
+			workflow_remarks_item d
+		on
+			a.remark_item_id = d.id and d.del_flag = '0'
+		where 
+			a.del_flag = '0'
+		and
+			a.proc_ins_id = #{procInsId}
+		order by a.update_date desc
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO workflow_remarks_info(
+			id,
+			proc_ins_id,
+			<if test="flowType != null">flow_type,</if>
+			<if test="remarkItemId != null">remark_item_id,</if>
+			<if test="remarkItemType != null">remark_item_type,</if>
+			<if test="remarkText != null">remark_text,</if>
+			<if test="sort != null">sort,</if>
+			<if test="delFlag != null">del_flag,</if>
+			create_by,
+			update_by,
+			create_date,
+			update_date
+		) VALUES (
+			#{id},
+			#{procInsId},
+			<if test="flowType != null">#{flowType},</if>
+			<if test="remarkItemId != null">#{remarkItemId},</if>
+			<if test="remarkItemType != null">#{remarkItemType},</if>
+			<if test="remarkText != null">#{remarkText},</if>
+			<if test="sort != null">#{sort},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+			#{createBy.id},
+			#{updateBy.id},
+			#{createDate},
+			#{updateDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE workflow_remarks_info SET 	
+			proc_ins_id = #{procInsId},
+			flow_type = #{flowType},
+			remark_item_id = #{remarkItemId},
+			remark_item_type = #{remarkItemType},
+			remark_text = #{remarkText},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE workflow_remarks_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="queryRemarkItems" resultType="java.util.HashMap">
+		select
+			d.id as remarkItemId,
+			d.remark_item_name as remarkItemName,
+			d.remark_item_type as remarkItemType
+		from
+			workflow_remarks_item d
+		where
+			d.del_flag = '0'
+		and 
+			d.workflow_key = #{workflowKey}
+		and 
+			d.workflow_node_key = #{workflowNodeKey}
+		order by d.sort asc
+	</select>
+	
+	<select id="findMessageByProcInsId" resultType="String">
+		SELECT
+			GROUP_CONCAT(
+			DISTINCT ritem.remark_item_name
+			) as message
+		from
+			workflow_remarks_item ritem,
+			workflow_remarks_info rinfo
+		where
+			rinfo.remark_item_id = ritem.id and rinfo.proc_ins_id=#{procInsId}
+	</select>
+	
+</mapper>

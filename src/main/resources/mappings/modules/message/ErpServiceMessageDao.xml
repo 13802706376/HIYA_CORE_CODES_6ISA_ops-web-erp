@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.message.dao.ErpServiceMessageDao">
+    
+    <sql id="erpServiceMessageColumns">
+        a.id AS "id",
+        a.service_nums AS "serviceNums",
+        a.content AS "content",
+        a.type AS "type",
+        a.start_time AS "startTime",
+        a.end_time AS "endTime",
+        a.link_type AS "linkType",
+        a.link_param AS "linkParam",
+        a.zhangbei_id AS "zhangbeiId",
+        a.proc_ins_id AS "procInsId",
+        a.task_definition_key AS "taskDefinitionKey",
+        a.service_type AS "serviceType",
+        a.node_type AS "nodeType",
+        a.node_name AS "nodeName",
+        a.remarks AS "remarks",
+        a.del_flag AS "delFlag",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate"
+    </sql>
+
+    <sql id="erpServiceMessageJoins">
+    </sql>
+    
+    <select id="get" resultType="ErpServiceMessage">
+        SELECT
+            <include refid="erpServiceMessageColumns"/>
+        FROM erp_service_message a
+        <include refid="erpServiceMessageJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="ErpServiceMessage">
+        SELECT
+            <include refid="erpServiceMessageColumns"/>
+        FROM erp_service_message a
+        <include refid="erpServiceMessageJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+            <if test="procInsId != null">
+            	AND a.proc_ins_id = #{procInsId}
+            </if>
+            <if test="nodeType != null">
+            	AND a.node_type = #{nodeType}
+            </if>
+            <if test="serviceType != null">
+            	AND a.service_type = #{serviceType}
+            </if>
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpServiceMessage">
+        SELECT
+            <include refid="erpServiceMessageColumns"/>
+        FROM erp_service_message a
+        <include refid="erpServiceMessageJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO erp_service_message
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="serviceNums != null">service_nums,</if>
+			<if test="content != null">content,</if>
+			<if test="nodeType != null">node_type,</if>
+			<if test="nodeName != null">node_name,</if>
+			<if test="type != null">type,</if>
+			<if test="startTime != null">start_time,</if>
+			<if test="endTime != null">end_time,</if>
+			<if test="linkType != null">link_type,</if>
+			<if test="linkParam != null">link_param,</if>
+			<if test="zhangbeiId != null">zhangbei_id,</if>
+			<if test="procInsId != null">proc_ins_id,</if>
+			<if test="taskDefinitionKey != null">task_definition_key,</if>
+			<if test="serviceType != null">service_type,</if>
+			<if test="remarks != null">remarks,</if>
+			<if test="delFlag != null">del_flag,</if>
+			<if test="createBy != null and createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+			<if test="updateBy != null and updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="serviceNums != null">#{serviceNums},</if>
+			<if test="content != null">#{content},</if>
+			<if test="nodeType != null">#{nodeType},</if>
+			<if test="nodeName != null">#{nodeName},</if>
+			<if test="type != null">#{type},</if>
+			<if test="startTime != null">#{startTime},</if>
+			<if test="endTime != null">#{endTime},</if>
+			<if test="linkType != null">#{linkType},</if>
+			<if test="linkParam != null">#{linkParam},</if>
+			<if test="zhangbeiId != null">#{zhangbeiId},</if>
+			<if test="procInsId != null">#{procInsId},</if>
+			<if test="taskDefinitionKey != null">#{taskDefinitionKey},</if>
+			<if test="serviceType != null">#{serviceType},</if>
+			<if test="remarks != null">#{remarks},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+			<if test="createBy != null and createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+			<if test="updateBy != null and updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE erp_service_message
+            <set>
+                <if test="serviceNums != null">service_nums = #{serviceNums},</if>
+                <if test="content != null">content = #{content},</if>
+                <if test="type != null">type = #{type},</if>
+                <if test="endTime != null">end_time = #{endTime},</if>
+                <if test="linkType != null">link_type = #{linkType},</if>
+                <if test="linkParam != null">link_param = #{linkParam},</if>
+                <if test="procInsId != null">proc_ins_id = #{procInsId},</if>
+                <if test="taskDefinitionKey != null">task_definition_key = #{taskDefinitionKey},</if>
+                <if test="serviceType != null">service_type = #{serviceType},</if>
+                <if test="remarks != null">remarks = #{remarks},</if>
+                <if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+                <if test="updateDate != null">update_date = #{updateDate},</if>
+            </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+        UPDATE erp_service_message SET
+            del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 根据流程id 和 节点类型 获取 服务通知数据 -->
+    <select id="findByProcInsIdAndNodeType" resultType="ErpServiceMessage">
+        SELECT
+            <include refid="erpServiceMessageColumns"/>
+        FROM erp_service_message a
+    	where a.del_flag = '0' 
+    		<if test="procInsId != null">
+    			AND a.proc_ins_id = #{procInsId}
+    		</if> 
+    		<if test="nodeType != null">
+    			AND a.node_type = #{nodeType}
+    		</if> 
+    </select>
+
+</mapper>

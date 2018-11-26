@@ -1,0 +1,1 @@
+.hint{position:relative}.hint:before{content:"*";position:absolute;top:5px;right:-6px;color:red}

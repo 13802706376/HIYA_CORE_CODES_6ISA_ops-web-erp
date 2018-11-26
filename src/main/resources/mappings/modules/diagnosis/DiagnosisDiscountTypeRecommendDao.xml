@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.diagnosis.dao.DiagnosisDiscountTypeRecommendDao">
+    
+	<sql id="diagnosisDiscountTypeRecommendColumns">
+		a.id AS "id",
+		a.split_id AS "splitId",
+		a.discount_type_id AS "discountTypeId",
+		a.recommend_score AS "recommendScore",
+		a.checked AS "checked",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="diagnosisDiscountTypeRecommendJoins">
+	</sql>
+    
+	<select id="get" resultType="DiagnosisDiscountTypeRecommend">
+		SELECT 
+			<include refid="diagnosisDiscountTypeRecommendColumns"/>
+		FROM diagnosis_discount_type_recommend a
+		<include refid="diagnosisDiscountTypeRecommendJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DiagnosisDiscountTypeRecommend">
+		SELECT 
+			<include refid="diagnosisDiscountTypeRecommendColumns"/>
+		FROM diagnosis_discount_type_recommend a
+		<include refid="diagnosisDiscountTypeRecommendJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DiagnosisDiscountTypeRecommend">
+		SELECT 
+			<include refid="diagnosisDiscountTypeRecommendColumns"/>
+		FROM diagnosis_discount_type_recommend a
+		<include refid="diagnosisDiscountTypeRecommendJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO diagnosis_discount_type_recommend(
+			id,
+			split_id,
+			discount_type_id,
+			recommend_score,
+			checked,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{splitId},
+			#{discountTypeId},
+			#{recommendScore},
+			#{checked},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE diagnosis_discount_type_recommend SET 	
+			split_id = #{splitId},
+			discount_type_id = #{discountTypeId},
+			recommend_score = #{recommendScore},
+			checked = #{checked},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE diagnosis_discount_type_recommend SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+    
+    <select id="findRecommendList" resultType="DiagnosisDiscountTypeRecommend">
+         select 
+            <include refid="diagnosisDiscountTypeRecommendColumns"/>, b.label AS "discountTypeName", b.remarks AS "example" 
+         from diagnosis_discount_type_recommend a 
+         left join sys_dict b on a.discount_type_id = b.id
+         where split_id = #{splitId}
+         order by a.recommend_score desc
+    </select>
+    
+    <select id="findRecommendSummaryList" resultType="DiagnosisDiscountTypeRecommend">
+        select 
+            a.discount_type_id as discountTypeId, a.recommend_score as recommendScore, 'N' as checked, b.label AS "discountTypeName", b.remarks AS "example" 
+        from (
+	        select discount_type_id, sum(score) as recommend_score from diagnosis_discount_type_config
+	        where industry_attribute_id = #{industryId}
+	        and activity_requirement_id in
+	        <foreach collection="list" item="item" open="(" close=")" separator=",">
+	          #{item}
+	        </foreach>
+	        group by discount_type_id 
+	        order by recommend_score desc
+        ) a 
+        left join 
+            sys_dict b 
+        on 
+            a.discount_type_id = b.id
+    </select>
+    
+    <delete id="deleteBySplitId">
+        delete from diagnosis_discount_type_recommend where split_id = #{splitId}
+    </delete>
+    
+    <insert id="saveBatch">
+       <if test="list != null and list.size > 0">
+           INSERT INTO diagnosis_discount_type_recommend(
+                id,
+	            split_id,
+	            discount_type_id,
+	            recommend_score,
+	            checked,
+	            create_by,
+	            create_date,
+	            update_by,
+	            update_date,
+	            remarks,
+	            del_flag
+            ) VALUES
+            <foreach collection="list" item="item" index="index" separator=",">
+                (
+                    #{item.id},
+					#{item.splitId},
+					#{item.discountTypeId},
+					#{item.recommendScore},
+					#{item.checked},
+					#{item.createBy.id},
+					#{item.createDate},
+					#{item.updateBy.id},
+					#{item.updateDate},
+					#{item.remarks},
+					#{item.delFlag}
+                )
+            </foreach>
+        </if>
+    </insert>
+	
+</mapper>

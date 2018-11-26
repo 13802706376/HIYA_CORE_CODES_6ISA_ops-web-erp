@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.statistics.dao.DeliveryServiceStatisticsDao">
+ 
+ 	 
+ 	<!-- 获取分单明细分页列表 -->
+	<select id="findStatistics" resultType="com.yunnex.ops.erp.modules.statistics.entity.DeliveryServiceStatistics">
+		 SELECT
+			erpOrder.id "orderId",erpOrder.order_number "orderNumber",erpOrder.buy_date "buyDate",
+			concat_ws(IF(erpDelivery.zhct_type is null,'',','),IFNULL(erpDelivery.service_type,''),IFNULL(erpDelivery.zhct_type,'')) as serviceType,
+			erpOrder.order_type "orderType",
+			'' as "serviceTypeNames",
+			erpDelivery.train_test_time "trainTestTime",
+			erpDelivery.should_train_test_time "shouldTrainTestTime",
+			erpDelivery.visit_service_time "visitServiceTime",
+			erpDelivery.should_visit_service_time "shouldVisitServiceTime",
+			erpDelivery.materiel_time "materielTime",
+			erpDelivery.should_materiel_time "shouldMaterielTime"
+			,erpOrder.shop_name "shopName",erpOrder.agent_name "agentName",erpDelivery.flow_end_time "flowEndTime"
+			,left(erpDelivery.excption_logo,char_length(erpDelivery.excption_logo)-1) as excptionLogo 
+			,if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N') "flowEndFlag"
+			,erpDelivery.start_time "startTime",erpDelivery.should_flow_end_time "shouldFlowEndTime",erpDelivery.proc_ins_id
+			,if((@delayDuration :=DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())))>0,@delayDuration,0) "delayDuration"
+			,if((@openDelayDuration :=DATEDIFF(if(erpDelivery.train_test_time > '0000-00-00 00:00:00',erpDelivery.train_test_time,NOW()),if(erpDelivery.should_train_test_time > '0000-00-00 00:00:00',erpDelivery.should_train_test_time,NOW())))>0,@openDelayDuration,0) "openDelayDuration"
+			,if((@materielDelayDuration :=DATEDIFF(if(erpDelivery.materiel_time > '0000-00-00 00:00:00',erpDelivery.materiel_time,NOW()),if(erpDelivery.should_materiel_time > '0000-00-00 00:00:00',erpDelivery.should_materiel_time,NOW())))>0,@materielDelayDuration,0) "materielDelayDuration"
+			,if((@operationDelayDuration :=DATEDIFF(if(erpDelivery.visit_service_time > '0000-00-00 00:00:00',erpDelivery.visit_service_time,NOW()),if(erpDelivery.should_visit_service_time > '0000-00-00 00:00:00',erpDelivery.should_visit_service_time,NOW())))>0,@operationDelayDuration,0) "operationDelayDuration"
+			,if(@delayDuration > 0,'Y','N') "delayFlag",if(@openDelayDuration > 0,'Y','N') "openDelayFlag",if(@materielDelayDuration > 0,'Y','N') "materielDelayFlag",if(@operationDelayDuration > 0,'Y','N') "operationDelayFlag"
+			,shop.id "shopId"			
+			,sysUser.`name` "operationAdviserName",
+			(
+				SELECT
+					GROUP_CONCAT(erpFlow.flow_user_id)
+				from
+					erp_order_flow_user erpFlow
+				where
+					erpFlow.flow_id = erpDelivery.proc_ins_id
+			) as roles
+		FROM
+			erp_delivery_service erpDelivery
+		LEFT JOIN erp_order_original_info erpOrder ON erpDelivery.order_id = erpOrder.id
+		LEFT JOIN erp_shop_info shop ON erpDelivery.shop_id = shop.zhangbei_id and shop.del_flag = 0
+		LEFT JOIN erp_order_flow_user erpFlow on erpDelivery.proc_ins_id = erpFlow.flow_id AND erpFlow.flow_user_id = 'OperationAdviser' and erpFlow.del_flag = 0
+		LEFT JOIN sys_user sysUser on erpFlow.user_id = sysUser.id
+		LEFT JOIN ACT_HI_TASKINST hiTask on erpDelivery.proc_ins_id = hiTask.PROC_INST_ID_
+		LEFT JOIN erp_order_original_good orderGood on orderGood.order_id = erpOrder.id
+		WHERE erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+		<if test="serviceCode == null and serviceCodes == null">
+			<if test="serviceTypes != null and serviceTypes.size()> 0">
+				and (
+				erpDelivery.service_type in 
+				<foreach item="serviceType" index="index" collection="serviceTypes" open="(" separator="," close=")">  
+	       			#{serviceType}
+	      		</foreach>
+	      		<if test="isFlag == null">
+	      			or erpDelivery.zhct_type in ('ZHCT','ZHCT_OLD')
+	      		</if>
+	      		)
+			</if>
+		</if>
+		<if test="serviceCodes != null">
+			and (
+			erpDelivery.service_type in 
+			<foreach item="serviceCd" index="index" collection="serviceCodes" open="(" separator="," close=")">  
+       			#{serviceCd}
+      		</foreach>
+      		or 
+      		erpDelivery.zhct_type in 
+			<foreach item="serviceCd" index="index" collection="serviceCodes" open="(" separator="," close=")">  
+       			#{serviceCd}
+      		</foreach>
+      		)
+		</if>
+		<if test="serviceCode != null">
+			and (erpDelivery.service_type = #{serviceCode} 
+			<if test="isFlag == null">
+	      		or erpDelivery.zhct_type LIKE CONCAT('%',#{serviceCode},'%')
+	      	</if>
+			)
+		</if>
+		<if test="userIdList != null and userIdList.size() > 0">
+	   		AND hiTask.ASSIGNEE_ in
+	   		<foreach item="itemUserId" index="index" collection="userIdList" open="(" separator="," close=")">  
+          			#{itemUserId}
+          		</foreach>
+	   	</if>
+		<if test="orderNum != null">
+	   		AND erpOrder.order_number LIKE CONCAT('%',#{orderNum},'%')
+	   	</if>
+	   	<if test="shopName != null">
+			AND erpOrder.shop_name LIKE CONCAT('%',#{shopName},'%')
+		</if>
+		<if test="agentIdList != null and agentIdList.size() > 0">
+	   		AND erpOrder.agent_id in
+	   		<foreach item="itemAgentId" index="index" collection="agentIdList" open="(" separator="," close=")">  
+          		#{itemAgentId}
+          	</foreach>
+	   	</if>
+	   	<if test="orderTypeList != null and orderTypeList.size() > 0">
+			AND erpOrder.order_type in
+			<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+          		#{itemOrderType}
+          	</foreach>
+		</if>
+	   	<if test="serviceTypeList != null and serviceTypeList.size() > 0">
+ 			AND 
+	   		<foreach item="itemServiceType" index="index" collection="serviceTypeList" open="(" separator="OR" close=")"> 
+	   		(
+   				<if test="itemServiceType.includeList != null and itemServiceType.includeList.size() > 0">
+   					<if test="itemServiceType.includeList[0]==5">
+   						erpDelivery.service_type = 'JYK'
+   					</if>
+   					<if test="itemServiceType.includeList[0]==6">
+   						erpDelivery.service_type in ('FMPS','FMPS_BASIC','MU','VC','INTO_PIECES')
+   					</if>
+   					<if test="itemServiceType.includeList[0]==11">
+   						erpDelivery.zhct_type = 'ZHCT' OR erpDelivery.zhct_type='ZHCT_OLD'
+   					</if>
+   				</if>
+   			)
+          	</foreach>
+ 		</if>
+	   	<if test="flowEndFlag != null">
+	   		<choose>
+	   			<when test='flowEndFlag == "Y"'>
+	   				AND erpDelivery.flow_end_time &gt; '0000-00-00 00:00:00'
+	   			</when>
+	   			<otherwise>
+       				AND (erpDelivery.flow_end_time = '0000-00-00 00:00:00' or erpDelivery.flow_end_time is null)
+   				</otherwise>
+	   		</choose>
+	   	</if>
+	   	<if test="delayFlag != null">
+	   		<choose>
+	   			<when test='delayFlag == "Y"'>
+	   				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())) &gt; 0
+	   			</when>
+	   			<otherwise>
+       				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())) &lt;= 0 
+   				</otherwise>
+	   		</choose>
+	   	</if>
+		<choose>
+   			<when test='dateType == "buy"'>
+        		AND erpOrder.buy_date &gt;=#{startDateStr} AND erpOrder.buy_date &lt;=#{endDateStr}
+   			</when>
+   			<when test='dateType == "start"'>
+				AND erpDelivery.start_time &gt;=#{startDateStr} AND erpDelivery.start_time &lt;=#{endDateStr}  			
+			</when>
+			<when test='dateType == "shouldFlowEnd"'>
+				AND erpDelivery.should_flow_end_time &gt;=#{startDateStr} AND erpDelivery.should_flow_end_time &lt;=#{endDateStr}  
+			</when>
+   		<otherwise>
+       		AND (
+       				(erpOrder.buy_date &gt;=#{startDateStr} AND erpOrder.buy_date &lt;=#{endDateStr}) 
+       				or (erpDelivery.start_time &gt;=#{startDateStr} AND erpDelivery.start_time &lt;=#{endDateStr})
+       				or (erpDelivery.should_flow_end_time &gt;=#{startDateStr} AND erpDelivery.should_flow_end_time &lt;=#{endDateStr})
+       			)
+   		</otherwise>
+		</choose>
+		<!-- 权限配置过滤 -->
+		<if test="orderSecurity != null">
+			AND (1=2
+			<if test="orderSecurity.agentIdList != null and orderSecurity.agentIdList.size() > 0">
+				OR erpOrder.agent_id in
+				<foreach item="itemAgentId" index="index" collection="orderSecurity.agentIdList" open="(" separator="," close=")">  
+	          		#{itemAgentId}
+	          	</foreach>
+			</if>
+			<if test="orderSecurity.orderTypeList != null and orderSecurity.orderTypeList.size() > 0">
+				OR erpOrder.order_type in
+				<foreach item="itemOrderType" index="index" collection="orderSecurity.orderTypeList" open="(" separator="," close=")">  
+	          		#{itemOrderType}
+	          	</foreach>
+			</if>
+			)
+		</if>
+		
+		GROUP BY erpDelivery.id
+		order by 
+		<choose>
+   			<when test='dateType == "buy"'>
+        		erpOrder.buy_date
+   			</when>
+   			<when test='dateType == "start"'>
+				erpDelivery.start_time		
+			</when>
+			<when test='dateType == "shouldFlowEnd"'>
+				erpDelivery.should_flow_end_time 
+			</when>
+   		<otherwise>
+       		erpOrder.buy_date
+   		</otherwise>
+		</choose>
+		desc
+	</select>
+	
+	<select id="findFlow" resultType="map">
+		SELECT
+			DISTINCT flowUser.flow_user_id as flowUserId,
+			(CASE WHEN flowUser.flow_user_id='OperationAdviser' THEN '运营顾问' 
+			WHEN flowUser.flow_user_id='accountAdviser' THEN '开户顾问'  
+			WHEN flowUser.flow_user_id='materialAdviser' THEN '物料顾问' 
+			end) as flowUserName
+		from
+			erp_order_flow_user flowUser
+		where 
+			flowUser.flow_user_id in('OperationAdviser','accountAdviser','materialAdviser')
+			<if test="teamIds != null and teamIds.size() > 0">
+				and flowUser.user_id in(
+					SELECT
+						teamUser.user_id
+					from
+						erp_team_user teamUser
+					where
+						teamUser.team_id in
+						<foreach item="teamId" index="index" collection="teamIds" open="(" separator="," close=")">  
+			          		#{teamId}
+			          	</foreach>
+				)
+			</if>
+			<if test="userIds != null and userIds.size() > 0">
+				and flowUser.user_id in
+					<foreach item="userId" index="index" collection="userIds" open="(" separator="," close=")">  
+		          		#{userId}
+		          	</foreach>
+			</if>
+	</select>
+</mapper>

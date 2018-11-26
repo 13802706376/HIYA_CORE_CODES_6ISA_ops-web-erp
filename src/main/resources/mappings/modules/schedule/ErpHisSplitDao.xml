@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.schedule.dao.ErpHisSplitDao">
+    
+	<sql id="erpHisSplitColumns">
+		a.id AS "id",
+		a.store_info_id AS "erpStoreInfoId",
+		a.shop_info_id AS "shopInfoId",
+		a.order_num AS "orderNum",
+		a.order_id AS "orderId",
+		a.split_num AS "splitNum",
+		a.split_id AS "splitId",
+		a.process_title AS "processTitle",
+		a.process_type AS "processType"
+		a.create_date AS "createDate",
+	</sql>
+	
+	<sql id="erpHisSplitJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpHisSplit">
+		SELECT 
+			<include refid="erpHisSplitColumns"/>
+		FROM erp_his_split a
+		<include refid="erpHisSplitJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpHisSplit">
+		SELECT 
+			<include refid="erpHisSplitColumns"/>
+		FROM erp_his_split a
+		<include refid="erpHisSplitJoins"/>
+		<where>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpHisSplit">
+		SELECT 
+			<include refid="erpHisSplitColumns"/>
+		FROM erp_his_split a
+		<include refid="erpHisSplitJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_his_split(
+			id,
+			store_info_id,
+			shop_info_id,
+			order_num,
+			order_id,
+			split_num,
+			split_id,
+			process_title,
+			process_type,
+			create_date
+		) VALUES (
+			#{id},
+			#{erpStoreInfoId},
+			#{shopInfoId},
+			#{orderNum},
+			#{orderId},
+			#{splitNum},
+			#{splitId},
+			#{processTitle},
+			#{processType},
+			#{createDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_his_split SET 	
+			store_info_id = #{erpStoreInfoId},
+			shop_info_id = #{shopInfoId},
+			order_num = #{orderNum},
+			order_id = #{orderId},
+			split_num = #{splitNum},
+			split_id = #{splitId},
+			process_title = #{processTitle},
+			process_type=#{processType},
+			create_date=#{createDate}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM erp_his_split
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

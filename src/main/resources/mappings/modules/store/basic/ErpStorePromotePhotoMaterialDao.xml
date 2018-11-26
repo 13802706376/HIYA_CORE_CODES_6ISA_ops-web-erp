@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.store.basic.dao.ErpStorePromotePhotoMaterialDao">
+    
+	<sql id="erpStorePromotePhotoMaterialColumns">
+		a.audit_status AS "auditStatus",
+		a.id AS "id",
+		a.environment_photo AS "environmentPhoto",
+		a.product_photo AS "productPhoto",
+		a.environment_photo_count AS "environmentPhotoCount",
+		a.product_photo_count AS "productPhotoCount",
+		a.store_info_id AS "storeInfoId",
+		a.menu_or_service_photo AS "menuPhoto",
+		a.menu_or_service_photo_count AS "menuPhotoCount",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpStorePromotePhotoMaterialJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpStorePromotePhotoMaterial">
+		SELECT 
+			<include refid="erpStorePromotePhotoMaterialColumns"/>
+		FROM erp_store_promote_photo_material a
+		<include refid="erpStorePromotePhotoMaterialJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpStorePromotePhotoMaterial">
+		SELECT 
+			<include refid="erpStorePromotePhotoMaterialColumns"/>
+		FROM erp_store_promote_photo_material a
+		<include refid="erpStorePromotePhotoMaterialJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="auditStatus != null and auditStatus != ''">
+				AND a.audit_status = #{auditStatus}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpStorePromotePhotoMaterial">
+		SELECT 
+			<include refid="erpStorePromotePhotoMaterialColumns"/>
+		FROM erp_store_promote_photo_material a
+		<include refid="erpStorePromotePhotoMaterialJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_store_promote_photo_material(
+			audit_status,
+			id,
+			environment_photo,
+			product_photo,
+			environment_photo_count,
+			product_photo_count,
+			store_info_id,
+			menu_or_service_photo,
+			menu_or_service_photo_count,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{auditStatus},
+			#{id},
+			#{environmentPhoto},
+			#{productPhoto},
+			#{environmentPhotoCount},
+			#{productPhotoCount},
+			#{storeInfoId},
+			#{menuPhoto},
+			#{menuPhotoCount},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_store_promote_photo_material SET 	
+			audit_status = #{auditStatus},
+			environment_photo = #{environmentPhoto},
+			product_photo = #{productPhoto},
+			environment_photo_count = #{environmentPhotoCount},
+			product_photo_count = #{productPhotoCount},
+			store_info_id = #{storeInfoId},
+			menu_or_service_photo=#{menuPhoto},
+			menu_or_service_photo_count=#{menuPhotoCount},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_store_promote_photo_material SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	<select id="countWhereStoreId" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM erp_store_promote_photo_material a
+		<where>
+			a.del_flag = #{del} AND a.store_info_id=#{id}
+		</where>
+	</select>
+	
+	<select id="findlistWhereStoreId" resultType="ErpStorePromotePhotoMaterial">
+		SELECT 
+			<include refid="erpStorePromotePhotoMaterialColumns"/>
+		FROM erp_store_promote_photo_material a
+		<where>
+			a.del_flag = #{del} AND a.store_info_id=#{id}
+		</where>
+	</select>
+	
+</mapper>

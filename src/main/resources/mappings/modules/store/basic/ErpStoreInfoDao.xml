@@ -1,0 +1,1386 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.store.basic.dao.ErpStoreInfoDao">
+
+	<sql id="erpStoreInfoColumns">
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.is_old_shop_store AS "isOldShopStore",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.store_extension AS "storeExtension",
+		a.friend_extension AS "friendExtension",
+		a.momo_extension AS "momoExtension",
+		a.weibo_extension AS "weiboExtension",
+		a.sync_oem AS "syncOem"
+	</sql>
+	
+	<sql id="erpStoreInfoColumnsTwo">
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.store_extension AS "storeExtension",
+		a.friend_extension AS "friendExtension",
+		a.momo_extension AS "momoExtension",
+		a.weibo_extension AS "weiboExtension",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sync_oem AS "syncOem",
+		b.contact_name AS "contentName",
+		b.contact_phone AS "contentPhone",
+		b.id AS "shopId",
+		b.name AS "shopName",
+		c.environment_photo_count AS "environmentPhotoCount",
+		c.product_photo_count AS "productPhotoCount",
+		c.menu_or_service_photo_count AS "menuPhotoCount",
+		(select esl.name from erp_store_linkman esl where esl.store_info_id = a.id and esl.del_flag = '0' limit 1) as "stroeLinkMan.name",
+		(select esl.phone from erp_store_linkman esl where esl.store_info_id = a.id and esl.del_flag = '0' limit 1) as "stroeLinkMan.phone"
+	</sql>
+	
+	<sql id="manytoOne">
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.store_extension AS "storeExtension",
+		a.friend_extension AS "friendExtension",
+		a.momo_extension AS "momoExtension",
+		a.weibo_extension AS "weiboExtension",
+		a.sync_oem AS "syncOem",
+		wx.id AS "wxPay.id",
+		wx.bank_id AS "wxPay.bankId",
+		wx.provide_account_info AS "wxPay.provideAccountInfo",
+		wx.public_account_no AS "wxPay.publicAccountNo",
+		wx.public_account_password AS "wxPay.publicAccountPassword",
+		wx.public_account_appid AS "wxPay.publicAccountAppid",
+		wx.audit_status AS "wxPay.auditStatus",
+		wx.audit_content AS"wxPay。auditContent",
+		un.id AS "unionPay.id",
+		un.audit_status AS "unionPay.auditStatus",
+		un.audit_content AS"unionPay.auditContent",
+		un.bank_id AS "unionPay.bankId",
+		un.lian_dan AS "unionPay.lianDan",
+		un.store_photo_door_head AS "unionPay.storePhotoDoorHead",
+		un.store_photo_cashier_desk AS "unionPay.storePhotoCashierDesk",
+		un.store_photo_environment AS "unionPay.storePhotoEnvironment",
+		un.additional_photo AS "unionPay.additionalPhoto",
+		fd.id AS "friend.id",
+		fd.provide_account_info AS "friend.provideAccountInfo",
+		fd.account_no AS "friend.accountNo",
+		fd.account_password AS "friend.accountPassword",
+		fd.account_original_id AS "friend.accountOriginalId",
+		fd.advertiser_screenshot AS "friend.advertiserScreenshot",
+		fd.store_screenshot AS "friend.storeScreenshot",
+		fd.audit_status AS "friend.auditStatus",
+		mo.id AS "momo.id",
+		mo.account_no AS "momo.accountNo",
+		mo.brand_name AS "momo.brandName",
+		mo.icp AS "momo.icp",
+		mo.follow_zhangbei_screenshot AS "momo.followZhangbeiScreenshot",
+		mo.audit_status AS "momo.auditStatus",
+		mo.delivery_pic AS "momo.deliverypic",
+		mo.copywriting_plan AS "momo.copywritingPlan",
+		mo.expected_delivery_time AS "momo.expectedDeliveryTime",
+		mo.delivery_url AS "momo.deliveryUrl",
+		bo.id AS "weibo.id",
+		bo.account_type AS "weibo.accountType",
+		bo.account_no AS "weibo.accountNo",
+		bo.account_password AS "weibo.accountPassword",
+		bo.uid AS "weibo.uid",
+		bo.nick_name AS "weibo.nickName",
+		bo.relation_prove_letter AS "weibo.relationProveLetter",
+		bo.adv_auth_letter AS "weibo.advAuthLetter",
+		bo.promote_promise_letter AS "weibo.promotePromiseLetter",
+		bo.audit_status AS "weibo.auditStatus",
+		photo.id AS "photoMaterial.id",
+		photo.audit_status AS "photoMaterial.auditStatus",
+		photo.environment_photo AS "photoMaterial.environmentPhoto",
+		photo.product_photo AS "photoMaterial.productPhoto",
+		photo.environment_photo_count AS "photoMaterial.environmentPhotoCount",
+		photo.product_photo_count AS "photoMaterial.productPhotoCount",
+		photo.store_info_id AS "photoMaterial.storeInfoId",
+		photo.menu_or_service_photo AS "photoMaterial.menuPhoto",
+		photo.menu_or_service_photo_count AS "photoMaterial.menuPhotoCount"
+		
+	</sql>
+	
+	<sql id="basicinformation">
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.store_extension AS "storeExtension",
+		a.friend_extension AS "friendExtension",
+		a.momo_extension AS "momoExtension",
+		a.weibo_extension AS "weiboExtension",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sync_oem AS "syncOem",
+		p.id AS "person.id",
+		p.name AS "person.name",
+		p.id_card_no AS "person.idCardNo",
+		p.id_card_start_date AS "person.idCardStartDate",
+		p.id_card_end_date AS "person.idCardEndDate",
+		p.id_card_front_photo AS "person.idCardFrontPhoto",
+		p.id_card_reverse_photo AS "person.idCardReversePhoto",
+		p.id_card_in_hand_photo AS "person.idCardInHandPhoto",
+		p.is_longterm AS "person.isLongterm",
+		c.id AS "credentials.id",
+		c.register_name AS "credentials.registerName",
+		c.register_no AS "credentials.registerNo",
+		c.register_city AS "credentials.registerCity",
+		c.register_address AS "credentials.registerAddress",
+		c.business_scope AS "credentials.businessScope",
+		c.start_date AS "credentials.startDate",
+		c.end_date AS "credentials.endDate",
+		c.is_long_time AS "credentials.isLongTime",
+		c.organization_code_certificate_no AS "credentials.organizationCodeCertificateNo",
+		c.organization_code_certificate AS "credentials.organizationCodeCertificate",
+		c.business_licence AS "credentials.businessLicence",
+		c.special_certificate AS "credentials.specialCertificate"
+		
+	</sql>
+	
+	
+	<sql id="wxpayopen">
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.store_extension AS "storeExtension",
+		a.friend_extension AS "friendExtension",
+		a.momo_extension AS "momoExtension",
+		a.weibo_extension AS "weiboExtension",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sync_oem AS "syncOem",
+		p.id AS "person.id",
+		p.name AS "person.name",
+		p.id_card_no AS "person.idCardNo",
+		p.id_card_start_date AS "person.idCardStartDate",
+		p.id_card_end_date AS "person.idCardEndDate",
+		p.id_card_front_photo AS "person.idCardFrontPhoto",
+		p.id_card_reverse_photo AS "person.idCardReversePhoto",
+		p.id_card_in_hand_photo AS "person.idCardInHandPhoto",
+		c.id AS "credentials.id",
+		c.register_name AS "credentials.registerName",
+		c.register_no AS "credentials.registerNo",
+		c.register_city AS "credentials.registerCity",
+		c.register_address AS "credentials.registerAddress",
+		c.business_scope AS "credentials.businessScope",
+		c.start_date AS "credentials.startDate",
+		c.end_date AS "credentials.endDate",
+		c.is_long_time AS "credentials.isLongTime",
+		c.organization_code_certificate_no AS "credentials.organizationCodeCertificateNo",
+		c.organization_code_certificate AS "credentials.organizationCodeCertificate",
+		c.business_licence AS "credentials.businessLicence",
+		c.special_certificate AS "credentials.specialCertificate",
+		wx.id AS "wxPay.id",
+		wx.bank_id AS "wxPay.bankId",
+		wx.provide_account_info AS "wxPay.provideAccountInfo",
+		wx.public_account_no AS "wxPay.publicAccountNo",
+		wx.public_account_password AS "wxPay.publicAccountPassword",
+		wx.public_account_appid AS "wxPay.publicAccountAppid",
+		wx.multi_account_application_form AS "wxPay.multiAccountApplicationForm",
+		wx.audit_status AS "wxPay.auditStatus",
+		wx.audit_content AS"wxPay。auditContent",
+		wx.number AS "wxPay.number",
+		b.bank_id  AS  "wxPay.bank.bankId",
+		b.bank_name AS "wxPay.bank.bankName",
+		b.id AS "wxPay.bank.id",
+		b.open_account_licence AS "wxPay.bank.openAccountLicence",
+		b.credit_card_front_photo AS "wxPay.bank.creditCardFrontPhoto",
+		b.credit_card_reverse_photo AS "wxPay.bank.creditCardReversePhoto",
+		b.authorize_proxy AS "wxPay.bank.authorizeProxy",
+		b.account_type AS "wxPay.bank.accountType",
+		b.open_account_name AS "wxPay.bank.openAccountName",
+		b.branch_bank_name AS "wxPay.bank.branchBankName",
+		b.credit_card_no AS "wxPay.bank.creditCardNo",
+		b.bank_no AS "wxPay.bank.bankNo",
+		b.zhangbei_bind_count AS "wxPay.bank.zhangbeiBindCount",
+		b.pay_way AS "wxPay.bank.payWay",		
+		b.province AS "wxPay.bank.province",
+		b.city AS "wxPay.bank.city",
+		b.province_name AS "wxPay.bank.provinceName",
+		b.city_name AS "wxPay.bank.cityName",
+		b.area AS "wxPay.bank.area",
+		b.area_name AS "wxPay.bank.areaName"
+		
+	</sql>
+	
+	
+		<sql id="unionopen">
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.store_extension AS "storeExtension",
+		a.friend_extension AS "friendExtension",
+		a.momo_extension AS "momoExtension",
+		a.weibo_extension AS "weiboExtension",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sync_oem AS "syncOem",
+		p.id AS "person.id",
+		p.name AS "person.name",
+		p.id_card_no AS "person.idCardNo",
+		p.id_card_start_date AS "person.idCardStartDate",
+		p.id_card_end_date AS "person.idCardEndDate",
+		p.id_card_front_photo AS "person.idCardFrontPhoto",
+		p.id_card_reverse_photo AS "person.idCardReversePhoto",
+		p.id_card_in_hand_photo AS "person.idCardInHandPhoto",
+		c.id AS "credentials.id",
+		c.register_name AS "credentials.registerName",
+		c.register_no AS "credentials.registerNo",
+		c.register_city AS "credentials.registerCity",
+		c.register_address AS "credentials.registerAddress",
+		c.business_scope AS "credentials.businessScope",
+		c.start_date AS "credentials.startDate",
+		c.end_date AS "credentials.endDate",
+		c.is_long_time AS "credentials.isLongTime",
+		c.organization_code_certificate_no AS "credentials.organizationCodeCertificateNo",
+		c.organization_code_certificate AS "credentials.organizationCodeCertificate",
+		c.business_licence AS "credentials.businessLicence",
+		c.special_certificate AS "credentials.specialCertificate",
+		un.id AS "unionPay.id",
+		un.audit_status AS "unionPay.auditStatus",
+		un.audit_content AS"unionPay.auditContent",
+		un.bank_id AS "unionPay.bankId",
+		un.lian_dan AS "unionPay.lianDan",
+		un.store_photo_door_head AS "unionPay.storePhotoDoorHead",
+		un.store_photo_cashier_desk AS "unionPay.storePhotoCashierDesk",
+		un.store_photo_environment AS "unionPay.storePhotoEnvironment",
+		un.additional_photo AS "unionPay.additionalPhoto",
+		un.number AS "unionPay.number",
+		un.multi_account_application_form AS "unionPay.multiAccountApplicationForm",
+		b.bank_id  AS  "unionPay.bank.bankId",
+		b.bank_name AS "unionPay.bank.bankName",
+		b.id AS "unionPay.bank.id",
+		b.open_account_licence AS "unionPay.bank.openAccountLicence",
+		b.credit_card_front_photo AS "unionPay.bank.creditCardFrontPhoto",
+		b.credit_card_reverse_photo AS "unionPay.bank.creditCardReversePhoto",
+		b.authorize_proxy AS "unionPay.bank.authorizeProxy",
+		b.account_type AS "unionPay.bank.accountType",
+		b.open_account_name AS "unionPay.bank.openAccountName",
+		b.branch_bank_name AS "unionPay.bank.branchBankName",
+		b.credit_card_no AS "unionPay.bank.creditCardNo",
+		b.bank_no AS "unionPay.bank.bankNo",
+		b.zhangbei_bind_count AS "unionPay.bank.zhangbeiBindCount",
+		b.pay_way AS "unionPay.bank.payWay",		
+		b.province AS "unionPay.bank.province",
+		b.city AS "unionPay.bank.city",
+		b.province_name AS "unionPay.bank.provinceName",
+		b.city_name AS "unionPay.bank.cityName",
+		b.area AS "unionPay.bank.area",
+		b.area_name AS "unionPay.bank.areaName"
+		
+	</sql>
+	
+	
+	<sql id="wxpay">
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.store_extension AS "storeExtension",
+		a.friend_extension AS "friendExtension",
+		a.momo_extension AS "momoExtension",
+		a.weibo_extension AS "weiboExtension",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sync_oem AS "syncOem",
+		wx.id AS "wxPay.id",
+		wx.bank_id AS "wxPay.bankId",
+		wx.provide_account_info AS "wxPay.provideAccountInfo",
+		wx.public_account_no AS "wxPay.publicAccountNo",
+		wx.public_account_password AS "wxPay.publicAccountPassword",
+		wx.public_account_appid AS "wxPay.publicAccountAppid",
+		wx.audit_status AS "wxPay.auditStatus",
+		wx.audit_content AS"wxPay。auditContent",
+		c.id AS "credentials.id",
+		c.register_name AS "credentials.registerName",
+		c.register_no AS "credentials.registerNo",
+		c.register_city AS "credentials.registerCity",
+		c.register_address AS "credentials.registerAddress",
+		c.business_scope AS "credentials.businessScope",
+		c.start_date AS "credentials.startDate",
+		c.end_date AS "credentials.endDate",
+		c.is_long_time AS "credentials.isLongTime",
+		c.organization_code_certificate_no AS "credentials.organizationCodeCertificateNo",
+		c.organization_code_certificate AS "credentials.organizationCodeCertificate",
+		c.business_licence AS "credentials.businessLicence",
+		c.special_certificate AS "credentials.specialCertificate"
+	
+	</sql>
+	
+	
+	<sql id="friendchecklist">
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.store_extension AS "storeExtension",
+		a.friend_extension AS "friendExtension",
+		a.momo_extension AS "momoExtension",
+		a.weibo_extension AS "weiboExtension",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sync_oem AS "syncOem",
+		fd.id AS "friend.id",
+		fd.provide_account_info AS "friend.provideAccountInfo",
+		fd.account_no AS "friend.accountNo",
+		fd.account_password AS "friend.accountPassword",
+		fd.account_original_id AS "friend.accountOriginalId",
+		fd.advertiser_screenshot AS "friend.advertiserScreenshot",
+		fd.store_screenshot AS "friend.storeScreenshot",
+		fd.audit_status AS "friend.auditStatus",
+		fd.audit_content AS "friend.auditContent"
+	</sql>
+	<sql id="momochecklist">
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.store_extension AS "storeExtension",
+		a.friend_extension AS "friendExtension",
+		a.momo_extension AS "momoExtension",
+		a.weibo_extension AS "weiboExtension",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sync_oem AS "syncOem",
+		mo.id AS "momo.id",
+		mo.account_no AS "momo.accountNo",
+		mo.brand_name AS "momo.brandName",
+		mo.icp AS "momo.icp",
+		mo.follow_zhangbei_screenshot AS "momo.followZhangbeiScreenshot",
+		mo.audit_status AS "momo.auditStatus",
+		mo.audit_content AS "momo.auditContent",
+		mo.delivery_pic AS "momo.deliverypic",
+		mo.copywriting_plan AS "momo.copywritingPlan",
+		mo.expected_delivery_time AS "momo.expectedDeliveryTime",
+		mo.delivery_url AS "momo.deliveryUrl"
+	</sql>
+	<sql id="weibochecklist">
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.store_extension AS "storeExtension",
+		a.friend_extension AS "friendExtension",
+		a.momo_extension AS "momoExtension",
+		a.weibo_extension AS "weiboExtension",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.sync_oem AS "syncOem",
+		c.id AS "credentials.id",
+		c.register_name AS "credentials.registerName",
+		c.register_no AS "credentials.registerNo",
+		c.register_city AS "credentials.registerCity",
+		c.register_address AS "credentials.registerAddress",
+		c.business_scope AS "credentials.businessScope",
+		c.start_date AS "credentials.startDate",
+		c.end_date AS "credentials.endDate",
+		c.is_long_time AS "credentials.isLongTime",
+		c.organization_code_certificate_no AS "credentials.organizationCodeCertificateNo",
+		c.organization_code_certificate AS "credentials.organizationCodeCertificate",
+		c.business_licence AS "credentials.businessLicence",
+		c.special_certificate AS "credentials.specialCertificate",
+		bo.id AS "weibo.id",
+		bo.account_type AS "weibo.accountType",
+		bo.account_no AS "weibo.accountNo",
+		bo.account_password AS "weibo.accountPassword",
+		bo.uid AS "weibo.uid",
+		bo.nick_name AS "weibo.nickName",
+		bo.relation_prove_letter AS "weibo.relationProveLetter",
+		bo.adv_auth_letter AS "weibo.advAuthLetter",
+		bo.promote_promise_letter AS "weibo.promotePromiseLetter",
+		bo.audit_status AS "weibo.auditStatus",
+		bo.audit_content AS "weibo.auditContent"
+	</sql>
+	
+	
+	
+	<sql id="erpStoreInfoJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpStoreInfo">
+		SELECT 
+			<include refid="erpStoreInfoColumns"/>
+		FROM erp_store_info a
+		<include refid="erpStoreInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpStoreInfo">
+		SELECT 
+			<include refid="erpStoreInfoColumns"/>
+		FROM erp_store_info a
+		<include refid="erpStoreInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="isMain != null and isMain != ''">
+				AND a.is_main = #{isMain}
+			</if>
+			<if test="shortName != null and shortName != ''">
+				AND a.short_name = #{shortName}
+			</if>
+			<if test="city != null and city != ''">
+				AND a.city = #{city}
+			</if>
+			<if test="businessType != null and businessType != ''">
+				AND a.business_type = #{businessType}
+			</if>
+			AND a.sync_oem = "N"
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpStoreInfo">
+		SELECT 
+			<include refid="erpStoreInfoColumns"/>
+		FROM erp_store_info a
+		<include refid="erpStoreInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND a.sync_oem = "N"
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_store_info(
+			id,
+			is_main,
+			short_name,
+			address,
+			city,
+			province,
+			area,
+			province_name,
+			city_name,
+			area_name,
+			<if test="telephone != null">telephone,</if>
+			company_url,
+			product_name,
+			product_concrete_info,
+			business_type,
+			is_old_shop_store,
+			audit_status,
+			audit_content,
+			shop_info_id,
+			legal_person_id,
+			credentials_id,
+			weixin_pay_id,
+			unionpay_id,
+			advertiser_friends_id,
+			advertiser_weibo_id,
+			advertiser_momo_id,
+			icp_message,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			store_extension,
+			friend_extension,
+			momo_extension,
+			weibo_extension,
+			sync_oem
+		) VALUES (
+			#{id},
+			#{isMain},
+			#{shortName},
+			#{address},
+			#{city},
+			#{province},
+			#{area},
+			#{provinceName},
+			#{cityName},
+			#{areaName},
+			<if test="telephone != null">#{telephone},</if>
+			#{companyUrl},
+			#{productName},
+			#{productConcreteInfo},
+			#{businessType},
+			#{isOldShopStore},
+			#{auditStatus},
+			#{auditContent},
+			#{shopInfoId},
+			#{legalPersonId},
+			#{credentialsId},
+			#{weixinPayId},
+			#{unionpayId},
+			#{advertiserFriendsId},
+			#{advertiserWeiboId},
+			#{advertiserMomoId},
+			#{icpMessage},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{storeExtension},
+			#{friendExtension},
+			#{momoExtension},
+			#{weiboExtension},
+			#{syncOem}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_store_info 
+		<set>
+			<if test="isMain != null">is_main = #{isMain},</if>	
+			<if test="shortName != null">short_name = #{shortName},</if>
+			<if test="address != null">address = #{address},</if>
+			<if test="city != null">city = #{city},</if>
+			<if test="province != null">province=#{province},</if>
+			<if test="area != null">area=#{area},</if>
+			<if test="provinceName != null">province_name=#{provinceName},</if>
+			<if test="cityName != null">city_name=#{cityName},</if>
+			<if test="areaName != null">area_name=#{areaName},</if>
+			<if test="telephone != null">telephone = #{telephone},</if>
+			<if test="companyUrl != null">company_url = #{companyUrl},</if>
+			<if test="productName != null">product_name = #{productName},</if>
+			<if test="productConcreteInfo != null">product_concrete_info = #{productConcreteInfo},</if>
+			<if test="businessType != null">business_type = #{businessType},</if>
+			<if test="auditStatus != null">audit_status = #{auditStatus},</if>
+			<if test="auditContent != null">audit_content=#{auditContent},</if>
+			<if test="shopInfoId != null">shop_info_id = #{shopInfoId},</if>
+			<if test="legalPersonId != null">legal_person_id = #{legalPersonId},</if>
+			<if test="credentialsId != null">credentials_id = #{credentialsId},</if>
+			<if test="weixinPayId != null">weixin_pay_id = #{weixinPayId},</if>
+			<if test="unionpayId != null">unionpay_id = #{unionpayId},</if>
+			<if test="advertiserFriendsId != null">advertiser_friends_id = #{advertiserFriendsId},</if>
+			<if test="advertiserWeiboId != null">advertiser_weibo_id = #{advertiserWeiboId},</if>
+			<if test="advertiserMomoId != null">advertiser_momo_id = #{advertiserMomoId},</if>
+			<if test="icpMessage != null">icp_message=#{icpMessage},</if>
+			<if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+			<if test="updateDate != null">update_date = #{updateDate},</if>
+			<if test="remarks != null">remarks = #{remarks},</if>
+			<if test="storeExtension != null">store_extension=#{storeExtension},</if>
+			<if test="friendExtension != null">friend_extension=#{friendExtension},</if>
+			<if test="momoExtension != null">momo_extension=#{momoExtension},</if>
+			<if test="weiboExtension != null">weibo_extension=#{weiboExtension},</if>
+			<if test="notOpenUnionpayFlag != null">not_open_unionpay_flag=#{notOpenUnionpayFlag},</if>
+			<if test="syncOem != null">sync_oem=#{syncOem}</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_store_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findAllListWhereShopId" resultType="ErpStoreInfo">
+		SELECT 
+			<include refid="erpStoreInfoColumnsTwo"/>
+		from `erp_store_info` a LEFT JOIN `erp_shop_info` b ON b.id=a.shop_info_id LEFT JOIN `erp_store_promote_photo_material` c ON a.id=c.store_info_id  AND c.del_flag = 0
+		<where>
+			a.del_flag = #{del} AND a.shop_info_id=#{id} AND a.sync_oem = "N"
+		</where>		
+	</select>
+	
+	<select id="findCountWhereShopId" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM erp_store_info a
+		<where>
+			a.del_flag = #{del} AND a.shop_info_id=#{id} AND a.sync_oem = "N"
+		</where>		
+	</select>
+	
+	<select id="findOnetoManyAll" resultType="ErpStoreInfo">
+		SELECT 
+			<include refid="manytoOne"/>
+		FROM erp_store_info a LEFT JOIN erp_store_pay_weixin wx ON a.weixin_pay_id=wx.id LEFT JOIN erp_store_pay_unionpay un ON a.unionpay_id=un.id
+		LEFT JOIN erp_store_advertiser_friends fd ON a.advertiser_friends_id=fd.id LEFT JOIN erp_store_advertiser_momo mo ON a.advertiser_momo_id=mo.id
+		LEFT JOIN erp_store_advertiser_weibo bo ON a.advertiser_weibo_id=bo.id LEFT JOIN erp_store_promote_photo_material photo ON a.id=photo.store_info_id AND photo.del_flag = 0
+		where a.del_flag = #{del} AND a.id=#{id} AND a.sync_oem = "N"
+		limit 1
+	</select>
+	
+	<select id="findBasicInformation" resultType="ErpStoreInfo">
+	SELECT 
+	<include refid="basicinformation"/>,
+	wx.audit_status AS "wxStatus",
+	un.audit_status AS "unionStatus"
+	FROM erp_store_info a LEFT JOIN erp_store_legal_person p ON a.legal_person_id=p.id LEFT JOIN erp_store_credentials c ON a.credentials_id=c.id
+	LEFT JOIN  `erp_store_pay_weixin` wx ON wx.id=a.`weixin_pay_id`
+	LEFT JOIN `erp_store_pay_unionpay` un ON un.`id`=a.`unionpay_id`
+	where a.del_flag=#{del} AND a.id=#{id}
+	</select>
+	<select id="findShopInfoByStoreId" resultType="ErpStoreInfo">
+	SELECT 
+	<include refid="erpStoreInfoColumns"/>,
+	s.abbreviation AS shopAbbreviation
+ FROM erp_store_info a 
+ LEFT JOIN erp_shop_info s 
+ ON a.shop_info_id=s.id
+	where a.del_flag=#{del} AND a.id=#{id}
+	</select>
+	
+	<select id="getIsmainStore" resultType="ErpStoreInfo">
+	SELECT 
+	<include refid="basicinformation"/>
+	FROM erp_store_info a LEFT JOIN erp_store_legal_person p ON a.legal_person_id=p.id LEFT JOIN erp_store_credentials c ON a.credentials_id=c.id
+	where a.del_flag=#{del} AND a.shop_info_id=#{id} AND a.is_main=#{ismain} AND a.sync_oem = "N"
+	</select>
+	
+	<select id="countIsMain" resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM   
+		erp_store_info WHERE is_main=#{ismain} AND shop_info_id=#{id} AND del_flag=#{del} AND sync_oem = "N"
+	</select>
+	
+	<select id="findwhereshopidList" resultType="ErpStoreInfo">
+		SELECT 
+			<include refid="erpStoreInfoColumns"/>
+		FROM erp_store_info a
+		WHERE  a.shop_info_id=#{shopid} AND a.del_flag=#{del} AND a.sync_oem = "N"
+	</select>
+	
+	<select id="findismain" resultType="ErpStoreInfo">
+		SELECT 
+			<include refid="erpStoreInfoColumns"/>
+		FROM erp_store_info a
+		WHERE a.is_main='1' AND a.shop_info_id=#{shopid} AND a.del_flag=#{del} AND a.sync_oem = "N"
+	</select>
+	
+	<select id="findzhangbeiaudit" resultType="ErpStoreInfo">
+	SELECT 
+	<include refid="basicinformation"/>
+	FROM erp_store_info a LEFT JOIN erp_store_legal_person p ON a.legal_person_id=p.id LEFT JOIN erp_store_credentials c ON a.credentials_id=c.id
+	where a.del_flag=#{del} AND a.id=#{id} AND a.sync_oem = "N"
+	</select>
+	
+	<update id="updateWhereShopId">
+		UPDATE erp_store_info SET 	
+			is_main = 0
+		WHERE shop_info_id = #{shopid} AND sync_oem = "N"
+	</update>
+	<update id="updateWhereStoreId">
+		UPDATE erp_store_info SET 	
+			is_main = 1
+		WHERE id = #{id} AND sync_oem = "N"
+	</update>
+
+	<!-- 微信支付显示list -->
+	<select id="findwxpayaudit" resultType="ErpStoreInfo">
+	SELECT a.id AS "id",a.short_name AS "shortName",a.is_main AS "isMain",c.register_name AS "credentials.registerName",c.register_no AS "credentials.registerNo",ba.open_account_name AS "wxPay.bank.openAccountName",ba.credit_card_no AS "wxPay.bank.creditCardNo",wx.audit_status AS "wxPay.auditStatus",wx.audit_content AS "wxPay.auditContent"   
+	FROM `erp_store_info` a LEFT JOIN `erp_store_credentials` c ON a.credentials_id=c.id LEFT JOIN `erp_store_pay_weixin` wx ON a.weixin_pay_id=wx.id
+	LEFT JOIN `erp_store_bank` ba ON wx.bank_id=ba.id where a.shop_info_id=#{shopid} AND a.del_flag=#{del} AND a.sync_oem = "N"
+	</select>
+
+	<!-- 某个商户的所有门店的所有微信进件审核状态 -->
+	<select id="findWxpayAuditStatus" resultType="com.yunnex.ops.erp.modules.workflow.flow.dto.PayAuditStatusDto">
+		SELECT esi.short_name AS "storeName", espw.audit_status AS "auditStatus"
+		FROM erp_store_info esi
+		LEFT JOIN erp_store_pay_weixin espw ON esi.weixin_pay_id = espw.id AND espw.del_flag = '0'
+		WHERE esi.shop_info_id = #{shopId} AND esi.sync_oem = 'N' AND esi.del_flag = '0'
+	</select>
+
+	<!-- 微信支付提交审核材料 -->
+	<select id="wxpayaudit" resultType="ErpStoreInfo">
+	SELECT 
+	<include refid="wxpayopen"/>
+	FROM erp_store_info a LEFT JOIN erp_store_legal_person p ON a.legal_person_id=p.id LEFT JOIN erp_store_credentials c ON a.credentials_id=c.id LEFT JOIN `erp_store_pay_weixin` wx ON a.weixin_pay_id=wx.id LEFT JOIN `erp_store_bank` b ON wx.bank_id=b.id
+	where a.del_flag=#{del} AND a.id=#{id} AND a.sync_oem = "N"
+	</select>
+
+	<!-- 银联支付显示list -->
+	<select id="findunionaudit" resultType="ErpStoreInfo">
+  	SELECT
+		a.id AS "id",
+		a.short_name AS "shortName",
+		a.is_main AS "isMain",
+		un.machine_tool_number as machineToolNumber,
+		c.register_name AS "credentials.registerName",
+		c.register_no AS "credentials.registerNo",
+		ba.open_account_name AS "unionPay.bank.openAccountName",
+		ba.credit_card_no AS "unionPay.bank.creditCardNo",
+		un.audit_status AS "unionPay.auditStatus",
+		un.audit_content AS "unionPay.auditContent"
+	FROM
+		`erp_store_info` a
+	LEFT JOIN `erp_store_credentials` c ON
+		a.credentials_id = c.id
+	LEFT JOIN `erp_store_pay_unionpay` un ON
+		a.unionpay_id = un.id
+	LEFT JOIN `erp_store_bank` ba ON
+		un.bank_id = ba.id
+	where
+		a.shop_info_id = #{shopid}
+		AND a.del_flag = #{del}
+		AND a.sync_oem = "N"
+	</select>
+
+	<!-- 某个商户的所有门店的所有银联进件审核状态 -->
+	<select id="findUnionpayAuditStatus" resultType="com.yunnex.ops.erp.modules.workflow.flow.dto.PayAuditStatusDto">
+		SELECT esi.short_name AS "storeName", espu.audit_status AS "auditStatus",esi.is_main AS 'isMain', esi.not_open_unionpay_flag as 'notOpenUnionpayFlag'
+		FROM erp_store_info esi
+		LEFT JOIN erp_store_pay_unionpay espu ON esi.unionpay_id = espu.id AND espu.del_flag = '0'
+		WHERE esi.shop_info_id = #{shopId} AND esi.sync_oem = 'N' AND esi.del_flag = '0'
+	</select>
+
+	<!-- 银联支付提交审核材料 -->
+	<select id="unionaudit" resultType="ErpStoreInfo">
+	SELECT 
+	<include refid="unionopen"/>
+	FROM erp_store_info a LEFT JOIN erp_store_legal_person p ON a.legal_person_id=p.id LEFT JOIN erp_store_credentials c ON a.credentials_id=c.id LEFT JOIN `erp_store_pay_unionpay` un ON a.unionpay_id=un.id LEFT JOIN `erp_store_bank` b ON un.bank_id=b.id
+	where a.del_flag=#{del} AND a.id=#{id} AND a.sync_oem = "N"
+	</select>
+	
+	
+	<select id="getPayQualifyById" resultType="String">
+		SELECT b.audit_status from erp_store_info a 
+			LEFT JOIN erp_store_pay_weixin b ON a.weixin_pay_id = b.id
+		WHERE a.id = #{id} AND a.sync_oem = "N"
+	</select>
+	
+	<select id="syncwxpayaudit" resultType="ErpStoreInfo">
+		SELECT 
+		a.id AS "id",
+		a.is_main AS "isMain",
+		a.short_name AS "shortName",
+		a.address AS "address",
+		a.city AS "city",
+		a.province AS "province",
+		a.area AS "area",
+		a.province_name AS "provinceName",
+		a.city_name AS "cityName",
+		a.area_name AS "areaName",
+		a.telephone AS "telephone",
+		a.company_url AS "companyUrl",
+		a.product_name AS "productName",
+		a.product_concrete_info AS "productConcreteInfo",
+		a.business_type AS "businessType",
+		a.audit_status AS "auditStatus",
+		a.audit_content AS"auditContent",
+		a.shop_info_id AS "shopInfoId",
+		a.legal_person_id AS "legalPersonId",
+		a.credentials_id AS "credentialsId",
+		a.weixin_pay_id AS "weixinPayId",
+		a.unionpay_id AS "unionpayId",
+		a.advertiser_friends_id AS "advertiserFriendsId",
+		a.advertiser_weibo_id AS "advertiserWeiboId",
+		a.advertiser_momo_id AS "advertiserMomoId",
+		a.icp_message AS "icpMessage",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		wx.id AS "wxPay.id",
+		wx.bank_id AS "wxPay.bankId",
+		wx.provide_account_info AS "wxPay.provideAccountInfo",
+		wx.public_account_no AS "wxPay.publicAccountNo",
+		wx.public_account_password AS "wxPay.publicAccountPassword",
+		wx.public_account_appid AS "wxPay.publicAccountAppid",
+		wx.audit_status AS "wxPay.auditStatus",
+		wx.audit_content AS"wxPay。auditContent"
+		FROM `erp_store_info` a 
+		LEFT JOIN `erp_store_pay_weixin` wx ON wx.id=a.weixin_pay_id 
+		WHERE a.shop_info_id=#{shopid} AND wx.audit_status=2 AND a.sync_oem = "N"
+	</select>
+	
+
+	<select id="findrolecount" resultType="java.lang.Integer">
+		SELECT count(*) FROM
+		 `sys_user_role` a 
+		 LEFT JOIN `sys_user` u ON a.user_id=u.id  
+		 LEFT JOIN `sys_role` r ON a.role_id=r.id 
+		 WHERE a.user_id=#{userId}  AND r.enname=#{enname}
+	</select>
+
+	<select id="getStorePayInfo" resultType="ErpStoreInfo">
+		SELECT
+			esi.id AS "id",
+			esi.is_main AS "isMain",
+			espw.audit_status AS "wxPay.auditStatus",
+			espw.audit_content AS "wxPay.auditContent",
+			espu.audit_status AS "unionPay.auditStatus",
+			espu.audit_content AS "unionPay.auditContent"
+		FROM
+			erp_store_info esi
+		LEFT JOIN
+			erp_store_pay_weixin espw
+		ON
+			esi.weixin_pay_id = espw.id AND espw.del_flag = 0
+		LEFT JOIN
+			erp_store_pay_unionpay espu
+		ON
+			esi.unionpay_id = espu.id AND espu.del_flag = 0
+		WHERE
+			esi.del_flag = 0
+		AND
+			esi.id = #{id}
+		AND 
+			esi.sync_oem = "N"
+	</select>
+	
+	
+	<!--朋友圈开通list-->
+	<select id="findfriendaudit" resultType="com.yunnex.ops.erp.modules.store.basic.api.ErpFriendCheckApi">
+		SELECT
+			a.id AS "storeId",
+			a.short_name AS "storeName",
+			fd.account_original_id AS "appId",
+			fd.audit_status AS "auditState",
+			fd.audit_content AS "auditContent"
+		FROM
+			`erp_store_info` a
+		LEFT JOIN `erp_store_advertiser_friends` fd ON
+			a.advertiser_friends_id = fd.id
+		WHERE
+			a.shop_info_id = #{shopId}
+			AND a.sync_oem = "N"
+		order by
+			a.update_date desc
+	</select>
+	<!--朋友圈开通-->
+	<select id="friendaudit" resultType="ErpStoreInfo">
+		SELECT 
+		<include refid="friendchecklist"/>
+		FROM `erp_store_info` a 
+		LEFT JOIN `erp_store_advertiser_friends` fd ON a.advertiser_friends_id=fd.id
+		WHERE 1=1 <!-- a.store_extension="1" AND a.friend_extension="1" //3.2优化，不管是否开通推广通道，都可以提审-->
+		AND a.id=#{storeId} AND a.sync_oem = "N"
+	</select>
+	
+	<select id="getFriendsPromotionInfobyProcInsId" resultType="ErpStoreInfo">
+		SELECT 
+		<include refid="friendchecklist"/>
+		FROM `erp_store_info` a 
+		LEFT JOIN `erp_store_credentials` c ON c.id=a.credentials_id
+		LEFT JOIN `erp_store_advertiser_friends` fd ON a.advertiser_friends_id=fd.id
+		WHERE 1=1 
+		AND fd.proc_ins_id=#{procInsId}
+	</select>
+	
+	
+	
+	<!--陌陌开通list、
+	  -->
+	<select id="findmomoaudit" resultType="ErpStoreInfo">
+	SELECT 
+	<include refid="momochecklist"/>
+	FROM `erp_store_info` a 
+	LEFT JOIN `erp_store_advertiser_momo` mo ON a.advertiser_momo_id=mo.id
+	WHERE a.store_extension="1" AND a.momo_extension="1"
+	AND a.shop_info_id=#{shopId} AND a.sync_oem = "N"
+	</select>
+	<!--陌陌开通、
+	  -->
+	<select id="momoaudit" resultType="ErpStoreInfo">
+	SELECT 
+	<include refid="momochecklist"/>
+	FROM `erp_store_info` a 
+	LEFT JOIN `erp_store_advertiser_momo` mo ON a.advertiser_momo_id=mo.id
+	WHERE a.store_extension="1" AND a.momo_extension="1"
+	AND a.id=#{storeId} AND a.sync_oem = "N"
+	</select>
+	
+	<!--微博开通list-->
+	<select id="findweiboaudit" resultType="com.yunnex.ops.erp.modules.store.basic.api.ErpWeiboCheckApi">
+		SELECT
+			a.id AS "storeId",
+			a.short_name AS "storeName",
+			bo.account_no AS "weiboNum",
+			bo.audit_status AS "auditState",
+			bo.audit_content AS "auditContent"
+		FROM `erp_store_info` a 
+			LEFT JOIN `erp_store_advertiser_weibo` bo ON a.advertiser_weibo_id=bo.id
+		WHERE
+			a.shop_info_id = #{shopId}
+			AND a.sync_oem = "N"
+		order by
+			a.update_date desc
+	</select>
+	
+	<!--微博开通 -->
+	<select id="weiboaudit" resultType="ErpStoreInfo">
+	SELECT 
+	<include refid="weibochecklist"/>
+	FROM `erp_store_info` a 
+	LEFT JOIN `erp_store_credentials` c ON c.id=a.credentials_id
+	LEFT JOIN `erp_store_advertiser_weibo` bo ON a.advertiser_weibo_id=bo.id
+	WHERE 1=1 <!--a.store_extension="1" AND a.weibo_extension="1"//3.2优化，不管是否开通推广通道，都可以提审-->
+	AND a.id=#{storeId} AND a.sync_oem = "N"
+	</select>	
+	
+	<select id="getWeiboPromotionInfobyProcInsId" resultType="ErpStoreInfo">
+	SELECT 
+	<include refid="weibochecklist"/>
+	FROM `erp_store_info` a 
+	LEFT JOIN `erp_store_credentials` c ON c.id=a.credentials_id
+	LEFT JOIN `erp_store_advertiser_weibo` bo ON a.advertiser_weibo_id=bo.id
+	WHERE 1=1 <!--a.store_extension="1" AND a.weibo_extension="1"//3.2优化，不管是否开通推广通道，都可以提审-->
+	AND bo.proc_ins_id=#{procInsId}
+	</select>	
+	
+	<select id="getPromotionStores" resultType="ErpStoreInfo">
+		SELECT
+			<include refid="erpStoreInfoColumns"/>
+		FROM
+			erp_store_info a
+		WHERE
+			a.id IN (
+				SELECT
+					choice_store
+				FROM
+					`jyk_order_choice_store`
+				WHERE
+					split_id = #{splitId}
+				AND del_flag = 0
+			)
+		AND a.sync_oem = "N"
+	</select>
+	
+	<!-- add by SunQ 2018-4-3 14:27:51 对于从OEM同步回来的门店信息,单独使用查询方法，防止与之前的业务发生冲突 start -->
+	<select id="findwhereshopidListForOEM" resultType="ErpStoreInfo">
+		SELECT 
+			<include refid="erpStoreInfoColumns"/>
+		FROM erp_store_info a
+		WHERE a.shop_info_id=#{shopid} AND a.del_flag=#{del}  
+		<if test="isMain != null and isMain != ''">
+			AND a.is_main = #{isMain}
+		</if>
+		AND a.sync_oem = "Y"
+	</select>
+	
+	<!--微信支付显示list-->
+	<select id="findwxpayauditForOEM" resultType="ErpStoreInfo">
+		SELECT
+			a.id AS "id",
+			a.short_name AS "shortName",
+			a.is_main AS "isMain",
+			c.register_name AS "credentials.registerName",
+			c.register_no AS "credentials.registerNo",
+			ba.open_account_name AS "wxPay.bank.openAccountName",
+			ba.credit_card_no AS "wxPay.bank.creditCardNo",
+			wx.audit_status AS "wxPay.auditStatus",
+			wx.audit_content AS "wxPay.auditContent",
+			eslp.id_card_no as "idCard",
+			CONCAT_WS('_','微信支付进件',SUBSTRING(c.register_no,LENGTH(c.register_no)-3),SUBSTRING(ba.credit_card_no,LENGTH(ba.credit_card_no)-3)) as "payOpenName"
+		FROM
+			`erp_store_info` a
+		JOIN `erp_store_pay_weixin` wx ON
+			a.weixin_pay_id = wx.id
+		LEFT JOIN `erp_store_credentials` c ON
+			a.credentials_id = c.id
+		LEFT JOIN `erp_store_bank` ba ON
+			wx.bank_id = ba.id
+		LEFT JOIN erp_store_legal_person eslp ON
+		 	a.legal_person_id = eslp.id
+		WHERE
+			a.shop_info_id = #{shopid}
+			AND a.del_flag = #{del}
+			AND a.sync_oem = 'Y'
+		ORDER BY a.update_date DESC
+	</select>
+	
+	<!--银联支付显示list-->
+	<select id="findunionauditForOEM" resultType="ErpStoreInfo">
+		SELECT
+			a.id AS "id",
+			a.short_name AS "shortName",
+			a.is_main AS "isMain",
+			c.register_name AS "credentials.registerName",
+			c.register_no AS "credentials.registerNo",
+			ba.open_account_name AS "unionPay.bank.openAccountName",
+			ba.credit_card_no AS "unionPay.bank.creditCardNo",
+			un.audit_status AS "unionPay.auditStatus",
+			un.audit_content AS "unionPay.auditContent",
+			eslp.id_card_no as "idCard",
+			CONCAT_WS('_','银联支付进件',SUBSTRING(c.register_no,LENGTH(c.register_no)-3),SUBSTRING(ba.credit_card_no,LENGTH(ba.credit_card_no)-3)) as "payOpenName"
+		FROM
+			erp_store_info a
+		JOIN erp_store_pay_unionpay un ON
+			a.unionpay_id = un.id
+		LEFT JOIN erp_store_credentials c ON
+			a.credentials_id = c.id
+		LEFT JOIN erp_store_bank ba ON
+			un.bank_id = ba.id
+		LEFT JOIN erp_store_legal_person eslp ON
+		 	a.legal_person_id = eslp.id
+		WHERE
+			a.shop_info_id = #{shopid}
+			AND a.del_flag = #{del}
+			AND a.sync_oem = 'Y'
+		ORDER BY a.update_date DESC
+	</select>
+	
+	<!-- 获取门店数量 -->
+	<select id="countStoreForOEM" resultType="java.lang.Integer">
+		SELECT count(a.id) FROM erp_store_info a 
+			where a.shop_info_id=#{shopid} AND a.del_flag=#{del} AND a.sync_oem = "Y"
+	</select>
+	<!-- add by SunQ 2018-4-3 14:27:51 对于从OEM同步回来的门店信息,单独使用查询方法，防止与之前的业务发生冲突 end -->
+    
+    <update id="updateContactInfo">
+        UPDATE erp_store_info SET 
+            province = #{province}, province_name = #{provinceName}, city = #{city}, city_name = #{cityName}, 
+            area = #{area}, area_name = #{areaName}, address = #{address}, telephone = #{telephone}
+        WHERE id = #{id}
+    </update>
+    
+    <select id="findPublicAccountAndWeibo" resultType="com.yunnex.ops.erp.modules.store.basic.dto.PublicAccountAndWeiboDto">
+        SELECT
+	        esi.id AS "storeInfoId",
+	           esaf.id AS "publicAccountId",
+            esaf.account_no AS "publicAccountNo", 
+            esaf.account_password AS "publicAccountPassword", 
+            esaf.account_original_id AS "publicAccountOriginalId",
+            esaw.id AS "weiboAccountId",
+            esaw.account_no AS "weiboAccountNo", 
+            esaw.account_password AS "weiboAccountPassword"
+        FROM
+            erp_store_info esi
+        LEFT JOIN 
+            erp_store_advertiser_friends esaf
+        ON 
+            esi.advertiser_friends_id = esaf.id
+        LEFT JOIN 
+            erp_store_advertiser_weibo esaw 
+        ON 
+            esi.advertiser_weibo_id = esaw.id
+        WHERE esi.id IN
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    
+    <select id="findTaskIdByStoreId" resultType="String">
+        select ID_ from 
+		(
+		SELECT aa.ID_ FROM ACT_RU_TASK aa 
+		JOIN 
+		(
+		  SELECT a.PROC_INS_ID
+		  FROM erp_order_split_info a 
+		  JOIN jyk_order_choice_store b 
+		  ON a.PROC_INS_ID = b.PROC_INS_ID
+		  WHERE b.choice_store=#{storeId}
+		) mix 
+		ON aa.PROC_INST_ID_ = mix.PROC_INS_ID
+		
+		) a
+		union 
+		select ID_ from
+		(
+		select aa.ID_ FROM ACT_RU_TASK aa 
+		JOIN erp_store_advertiser_friends saf
+		on aa.PROC_INST_ID_=saf.proc_ins_id 
+		JOIN erp_store_info esi
+		on esi.advertiser_friends_id = saf.id
+		where esi.id=#{storeId}
+		) b
+		union 
+		select ID_ from
+		(
+		select aa.ID_ FROM ACT_RU_TASK aa 
+		JOIN erp_store_advertiser_weibo saw
+		on aa.PROC_INST_ID_=saw.proc_ins_id 
+		JOIN erp_store_info esi
+		on esi.advertiser_weibo_id = saw.id
+		where esi.id=#{storeId}
+		) c
+    </select>
+    
+    <update id="updateNotOpenUnionpayFlag">
+         update erp_store_info set not_open_unionpay_flag=#{notOpenUnionpayFlag} where id=#{storeId}
+    </update>
+	
+	<update id="resetExtension">
+		update erp_store_info d 
+			set d.friend_extension = (select (case when af.audit_status = 4 then d.friend_extension else '0' end) from erp_store_advertiser_friends af where af.id = d.advertiser_friends_id),
+				 d.weibo_extension = (select (case when aw.audit_status = 4 then d.weibo_extension else '0' end) from erp_store_advertiser_weibo aw where aw.id = d.advertiser_weibo_id),
+				 d.momo_extension = (select (case when am.audit_status = 4 then d.momo_extension else '0' end) from erp_store_advertiser_momo am where am.id = d.advertiser_momo_id)
+		where d.id = #{storeId}
+	</update>
+    
+</mapper>

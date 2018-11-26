@@ -1,0 +1,774 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.statistics.dao.DeliveryServiceStatisticsDetailDao">
+ 
+ 	 
+ 	<!-- 获取分单明细分页列表 -->
+	<select id="findStatistics" resultType="com.yunnex.ops.erp.modules.statistics.entity.DeliveryServiceStatistics">
+		 SELECT
+			erpOrder.id "orderId",erpOrder.order_number "orderNumber",erpOrder.buy_date "buyDate",
+			concat_ws(IF(erpDelivery.zhct_type is null,'',','),IFNULL(erpDelivery.service_type,''),IFNULL(erpDelivery.zhct_type,'')) as serviceType,
+			erpOrder.order_type "orderType",
+			'' as "serviceTypeNames"
+			,erpOrder.shop_name "shopName",erpOrder.agent_name "agentName",erpDelivery.flow_end_time "flowEndTime",
+			erpDelivery.train_test_time "trainTestTime",
+			erpDelivery.should_train_test_time "shouldTrainTestTime",
+			erpDelivery.visit_service_time "visitServiceTime",
+			erpDelivery.should_visit_service_time "shouldVisitServiceTime",
+			erpDelivery.materiel_time "materielTime",
+			erpDelivery.should_materiel_time "shouldMaterielTime"
+			,left(erpDelivery.excption_logo,char_length(erpDelivery.excption_logo)-1) as excptionLogo 
+			,if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N') "flowEndFlag"
+			,erpDelivery.start_time "startTime",erpDelivery.should_flow_end_time "shouldFlowEndTime",erpDelivery.proc_ins_id
+			,if((@delayDuration :=DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())))>0,@delayDuration,0) "delayDuration"
+			,if((@openDelayDuration :=DATEDIFF(if(erpDelivery.train_test_time > '0000-00-00 00:00:00',erpDelivery.train_test_time,NOW()),if(erpDelivery.should_train_test_time > '0000-00-00 00:00:00',erpDelivery.should_train_test_time,NOW())))>0,@openDelayDuration,0) "openDelayDuration"
+			,if((@materielDelayDuration :=DATEDIFF(if(erpDelivery.materiel_time > '0000-00-00 00:00:00',erpDelivery.materiel_time,NOW()),if(erpDelivery.should_materiel_time > '0000-00-00 00:00:00',erpDelivery.should_materiel_time,NOW())))>0,@materielDelayDuration,0) "materielDelayDuration"
+			,if((@operationDelayDuration :=DATEDIFF(if(erpDelivery.visit_service_time > '0000-00-00 00:00:00',erpDelivery.visit_service_time,NOW()),if(erpDelivery.should_visit_service_time > '0000-00-00 00:00:00',erpDelivery.should_visit_service_time,NOW())))>0,@operationDelayDuration,0) "operationDelayDuration"
+			,if(@delayDuration > 0,'Y','N') "delayFlag",if(@openDelayDuration > 0,'Y','N') "openDelayFlag",if(@materielDelayDuration > 0,'Y','N') "materielDelayFlag",if(@operationDelayDuration > 0,'Y','N') "operationDelayFlag"
+			,shop.id "shopId"			
+			,(
+				SELECT
+					syu.name
+				from
+					erp_order_flow_user erpFlow1,
+					sys_user syu
+				where
+					syu.id = erpFlow1.user_id
+					and erpFlow1.flow_id = erpDelivery.proc_ins_id
+					and flow_user_id = 'OperationAdviser'
+					limit 1
+			) as "operationAdviserName",
+			(
+				SELECT
+					GROUP_CONCAT(erpFlow.flow_user_id)
+				from
+					erp_order_flow_user erpFlow
+				where
+					erpFlow.flow_id = erpDelivery.proc_ins_id
+			) as roles
+		FROM
+			erp_delivery_service erpDelivery
+		LEFT JOIN erp_order_original_info erpOrder ON erpDelivery.order_id = erpOrder.id
+		LEFT JOIN erp_shop_info shop ON erpDelivery.shop_id = shop.zhangbei_id and shop.del_flag = 0
+		LEFT JOIN erp_order_flow_user erpFlow on erpDelivery.proc_ins_id = erpFlow.flow_id AND erpFlow.del_flag = 0
+		LEFT JOIN sys_user sysUser on erpFlow.user_id = sysUser.id
+		LEFT JOIN erp_team_user teamUser on erpFlow.user_id = teamUser.user_id
+		LEFT JOIN erp_order_original_good orderGood on orderGood.order_id = erpOrder.id
+		WHERE erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+		<if test="teamId != null">
+			and teamUser.team_id= #{teamId}
+		</if>
+		<if test="serviceCodes != null">
+			and (
+			erpDelivery.service_type in 
+			<foreach item="serviceCd" index="index" collection="serviceCodes" open="(" separator="," close=")">  
+       			#{serviceCd}
+      		</foreach>
+      		or 
+      		erpDelivery.zhct_type in 
+			<foreach item="serviceCd" index="index" collection="serviceCodes" open="(" separator="," close=")">  
+       			#{serviceCd}
+      		</foreach>
+      		)
+		</if>
+		<if test="orderNum != null">
+	   		AND erpOrder.order_number LIKE CONCAT('%',#{orderNum},'%')
+	   	</if>
+	   	<if test="shopName != null">
+			AND erpOrder.shop_name LIKE CONCAT('%',#{shopName},'%')
+		</if>
+	   	<if test="orderTypeList != null and orderTypeList.size() > 0">
+			AND erpOrder.order_type in
+			<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+          		#{itemOrderType}
+          	</foreach>
+		</if>
+	   	<if test="serviceTypeList != null and serviceTypeList.size() > 0">
+ 			AND 
+	   		<foreach item="itemServiceType" index="index" collection="serviceTypeList" open="(" separator="OR" close=")"> 
+	   		(
+   				<if test="itemServiceType.includeList != null and itemServiceType.includeList.size() > 0">
+   					<if test="itemServiceType.includeList[0]==5">
+   						erpDelivery.service_type = 'JYK'
+   					</if>
+   					<if test="itemServiceType.includeList[0]==6">
+   						erpDelivery.service_type in ('FMPS','FMPS_BASIC','MU','VC','INTO_PIECES')
+   					</if>
+   					<if test="itemServiceType.includeList[0]==11">
+   						erpDelivery.zhct_type = 'ZHCT' OR erpDelivery.zhct_type='ZHCT_OLD'
+   					</if>
+   				</if>
+   			)
+          	</foreach>
+ 		</if>
+ 		<if test='cloumnType == "d"'>
+ 			AND DATEDIFF(
+				if(
+					erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.flow_end_time,
+					NOW()
+				),
+				if(
+					erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.should_flow_end_time,
+					NOW()
+				)
+			)&gt; 0
+			and if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N')='N'
+ 		</if>
+ 		<if test='cloumnType == "e"'>
+ 			AND DATEDIFF(
+				if(
+					erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.flow_end_time,
+					NOW()
+				),
+				if(
+					erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.should_flow_end_time,
+					NOW()
+				)
+			)&gt; 0
+			and if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N')='Y'
+ 		</if>
+ 		<if test='cloumnType == "f"'>
+ 			and erpDelivery.excption_logo is null
+			AND DATEDIFF(
+				if(
+					erpDelivery.flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.flow_end_time,
+					NOW()
+				),
+				if(
+					erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',
+					erpDelivery.should_flow_end_time,
+					NOW()
+				)
+			)&gt; 0
+			and if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N')='Y'
+ 		</if>
+	   	<if test="flowEndFlag != null">
+	   		<choose>
+	   			<when test='flowEndFlag == "Y"'>
+	   				AND erpDelivery.flow_end_time &gt; '0000-00-00 00:00:00'
+	   			</when>
+	   			<otherwise>
+       				AND (erpDelivery.flow_end_time = '0000-00-00 00:00:00' or erpDelivery.flow_end_time is null)
+   				</otherwise>
+	   		</choose>
+	   	</if>
+	   	<if test="delayFlag != null">
+	   		<choose>
+	   			<when test='delayFlag == "Y"'>
+	   				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())) &gt; 0
+	   			</when>
+	   			<otherwise>
+       				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())) &lt;= 0 
+   				</otherwise>
+	   		</choose>
+	   	</if>
+		<choose>
+   			<when test='dateType == "order"'>
+        		AND erpOrder.buy_date &gt;=#{startDateStr} AND erpOrder.buy_date &lt;=#{endDateStr}
+   			</when>
+   			<when test='dateType == "flow"'>
+				AND erpDelivery.flow_end_time &gt;=#{startDateStr} AND erpDelivery.flow_end_time &lt;=#{endDateStr}  	
+			</when>
+			<when test='dateType == "should"'>
+				AND erpDelivery.should_flow_end_time &gt;=#{startDateStr} AND erpDelivery.should_flow_end_time &lt;=#{endDateStr}  
+			</when>
+   		<otherwise>
+       		AND (
+       				(erpOrder.buy_date &gt;=#{startDateStr} AND erpOrder.buy_date &lt;=#{endDateStr}) 
+       				or (erpDelivery.start_time &gt;=#{startDateStr} AND erpDelivery.start_time &lt;=#{endDateStr})
+       				or (erpDelivery.should_flow_end_time &gt;=#{startDateStr} AND erpDelivery.should_flow_end_time &lt;=#{endDateStr})
+       			)
+   		</otherwise>
+		</choose>
+		GROUP BY erpDelivery.id
+		order by 
+		<choose>
+   			<when test='dateType == "buy"'>
+        		erpOrder.buy_date
+   			</when>
+   			<when test='dateType == "flow"'>
+				erpDelivery.start_time		
+			</when>
+			<when test='dateType == "should"'>
+				erpDelivery.should_flow_end_time 
+			</when>
+   		<otherwise>
+       		erpOrder.buy_date
+   		</otherwise>
+		</choose>
+		desc
+	</select>
+	
+	<!-- 获取分单明细分页列表 -->
+	<select id="findStatisticsByUser" resultType="com.yunnex.ops.erp.modules.statistics.entity.DeliveryServiceStatistics">
+		 SELECT
+			erpOrder.id "orderId",erpOrder.order_number "orderNumber",erpOrder.buy_date "buyDate",
+			concat_ws(IF(erpDelivery.zhct_type is null,'',','),IFNULL(erpDelivery.service_type,''),IFNULL(erpDelivery.zhct_type,'')) as serviceType,
+			erpOrder.order_type "orderType",
+			'' as "serviceTypeNames",
+			erpOrder.shop_name "shopName",
+			erpOrder.agent_name "agentName",
+			erpDelivery.flow_end_time "flowEndTime",
+			erpDelivery.train_test_time "trainTestTime",
+			erpDelivery.should_train_test_time "shouldTrainTestTime",
+			erpDelivery.visit_service_time "visitServiceTime",
+			erpDelivery.should_visit_service_time "shouldVisitServiceTime",
+			erpDelivery.materiel_time "materielTime",
+			erpDelivery.should_materiel_time "shouldMaterielTime"
+			,left(erpDelivery.excption_logo,char_length(erpDelivery.excption_logo)-1) as excptionLogo 
+			,if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N') "flowEndFlag"
+			,erpDelivery.start_time "startTime",erpDelivery.should_flow_end_time "shouldFlowEndTime",erpDelivery.proc_ins_id
+			,if((@delayDuration :=DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())))>0,@delayDuration,0) "delayDuration"
+			,if((@openDelayDuration :=DATEDIFF(if(erpDelivery.train_test_time > '0000-00-00 00:00:00',erpDelivery.train_test_time,NOW()),if(erpDelivery.should_train_test_time > '0000-00-00 00:00:00',erpDelivery.should_train_test_time,NOW())))>0,@openDelayDuration,0) "openDelayDuration"
+			,if((@materielDelayDuration :=DATEDIFF(if(erpDelivery.materiel_time > '0000-00-00 00:00:00',erpDelivery.materiel_time,NOW()),if(erpDelivery.should_materiel_time > '0000-00-00 00:00:00',erpDelivery.should_materiel_time,NOW())))>0,@materielDelayDuration,0) "materielDelayDuration"
+			,if((@operationDelayDuration :=DATEDIFF(if(erpDelivery.visit_service_time > '0000-00-00 00:00:00',erpDelivery.visit_service_time,NOW()),if(erpDelivery.should_visit_service_time > '0000-00-00 00:00:00',erpDelivery.should_visit_service_time,NOW())))>0,@operationDelayDuration,0) "operationDelayDuration"
+			,if(@delayDuration > 0,'Y','N') "delayFlag",if(@openDelayDuration > 0,'Y','N') "openDelayFlag",if(@materielDelayDuration > 0,'Y','N') "materielDelayFlag",if(@operationDelayDuration > 0,'Y','N') "operationDelayFlag"
+			,shop.id "shopId"			
+			,(
+				SELECT
+					syu.name
+				from
+					erp_order_flow_user erpFlow1,
+					sys_user syu
+				where
+					syu.id = erpFlow1.user_id
+					and erpFlow1.flow_id = erpDelivery.proc_ins_id
+					and flow_user_id = 'OperationAdviser'
+					limit 1
+			) as "operationAdviserName",
+			(
+				SELECT
+					GROUP_CONCAT(erpFlow.flow_user_id)
+				from
+					erp_order_flow_user erpFlow
+				where
+					erpFlow.flow_id = erpDelivery.proc_ins_id
+			) as roles
+		FROM
+			erp_delivery_service erpDelivery
+		LEFT JOIN erp_order_original_info erpOrder ON erpDelivery.order_id = erpOrder.id
+		LEFT JOIN erp_shop_info shop ON erpDelivery.shop_id = shop.zhangbei_id and shop.del_flag = 0
+		LEFT JOIN erp_order_flow_user erpFlow on erpDelivery.proc_ins_id = erpFlow.flow_id AND erpFlow.del_flag = 0
+		LEFT JOIN sys_user sysUser on erpFlow.user_id = sysUser.id
+		LEFT JOIN erp_team_user teamUser on erpFlow.user_id = teamUser.user_id
+		LEFT JOIN erp_order_original_good orderGood on orderGood.order_id = erpOrder.id
+		WHERE erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+		<if test="userId != null">
+			and erpFlow.user_id= #{userId}
+		</if>
+		<if test="serviceCodes != null">
+			and (
+			erpDelivery.service_type in 
+			<foreach item="serviceCd" index="index" collection="serviceCodes" open="(" separator="," close=")">  
+       			#{serviceCd}
+      		</foreach>
+      		or 
+      		erpDelivery.zhct_type in 
+			<foreach item="serviceCd" index="index" collection="serviceCodes" open="(" separator="," close=")">  
+       			#{serviceCd}
+      		</foreach>
+      		)
+		</if>
+		<if test="orderNum != null">
+	   		AND erpOrder.order_number LIKE CONCAT('%',#{orderNum},'%')
+	   	</if>
+	   	<if test="shopName != null">
+			AND erpOrder.shop_name LIKE CONCAT('%',#{shopName},'%')
+		</if>
+	   	<if test="orderTypeList != null and orderTypeList.size() > 0">
+			AND erpOrder.order_type in
+			<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+          		#{itemOrderType}
+          	</foreach>
+		</if>
+	   	<if test="serviceTypeList != null and serviceTypeList.size() > 0">
+ 			AND 
+	   		<foreach item="itemServiceType" index="index" collection="serviceTypeList" open="(" separator="OR" close=")"> 
+	   		(
+   				<if test="itemServiceType.includeList != null and itemServiceType.includeList.size() > 0">
+   					<if test="itemServiceType.includeList[0]==5">
+   						erpDelivery.service_type = 'JYK'
+   					</if>
+   					<if test="itemServiceType.includeList[0]==6">
+   						erpDelivery.service_type in ('FMPS','FMPS_BASIC','MU','VC','INTO_PIECES')
+   					</if>
+   					<if test="itemServiceType.includeList[0]==11">
+   						erpDelivery.zhct_type = 'ZHCT' OR erpDelivery.zhct_type='ZHCT_OLD'
+   					</if>
+   				</if>
+   			)
+          	</foreach>
+ 		</if>
+ 		<if test='cloumnType == "a"'>
+ 			AND erpOrder.buy_date BETWEEN #{startDateStr} and #{endDateStr}
+ 			and erpFlow.flow_user_id=#{flowRole}
+ 		</if>
+ 		<if test='cloumnType == "b"'>
+ 			<if test='flowRole == "accountAdviser"'>
+ 				and erpDelivery.should_train_test_time BETWEEN #{startDateStr} and #{endDateStr} 
+ 				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "materialAdviser"'>
+ 				and erpDelivery.should_materiel_time BETWEEN #{startDateStr} and #{endDateStr} 
+ 				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "OperationAdviser"'>
+ 				and erpDelivery.should_visit_service_time BETWEEN #{startDateStr} and #{endDateStr} 
+ 				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "operationManager"'>
+ 				and erpDelivery.should_flow_end_time BETWEEN #{startDateStr} and #{endDateStr} 
+ 				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 		</if>
+ 		<if test='cloumnType == "c"'>
+ 			<if test='flowRole == "accountAdviser"'>
+ 				and erpDelivery.train_test_time BETWEEN #{startDateStr} and #{endDateStr} 
+ 				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "materialAdviser"'>
+ 				and erpDelivery.materiel_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "OperationAdviser"'>
+ 				and erpDelivery.visit_service_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "operationManager"'>
+ 				and erpDelivery.flow_end_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 		</if>
+ 		<if test='cloumnType == "d"'>
+ 			<if test='flowRole == "accountAdviser"'>
+ 				and erpDelivery.should_train_test_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.train_test_time > '0000-00-00 00:00:00', 'Y', 'N') = 'N'
+ 				AND DATEDIFF(if(erpDelivery.train_test_time > '0000-00-00 00:00:00', erpDelivery.train_test_time, NOW()), 
+				if(erpDelivery.should_train_test_time > '0000-00-00 00:00:00', erpDelivery.should_train_test_time, NOW())) > 0 
+				and erpFlow.flow_user_id=#{flowRole} 
+ 			</if>
+ 			<if test='flowRole == "materialAdviser"'>
+ 				and erpDelivery.should_materiel_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.materiel_time > '0000-00-00 00:00:00', 'Y', 'N') = 'N'
+ 				AND DATEDIFF(if(erpDelivery.materiel_time > '0000-00-00 00:00:00', erpDelivery.materiel_time, NOW()), 
+				if(erpDelivery.should_materiel_time > '0000-00-00 00:00:00', erpDelivery.should_materiel_time, NOW())) > 0  
+				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "OperationAdviser"'>
+ 				and erpDelivery.should_visit_service_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.visit_service_time > '0000-00-00 00:00:00', 'Y', 'N') = 'N'
+ 				AND DATEDIFF(if(erpDelivery.visit_service_time > '0000-00-00 00:00:00', erpDelivery.visit_service_time, NOW()), 
+				if(erpDelivery.should_visit_service_time > '0000-00-00 00:00:00', erpDelivery.should_visit_service_time, NOW())) > 0 
+				and erpFlow.flow_user_id=#{flowRole} 
+ 			</if>
+ 			<if test='flowRole == "operationManager"'>
+ 				and erpDelivery.should_flow_end_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.flow_end_time > '0000-00-00 00:00:00', 'Y', 'N') = 'N'
+ 				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00', erpDelivery.flow_end_time, NOW()), 
+				if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00', erpDelivery.should_flow_end_time, NOW())) > 0 
+				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 		</if>
+ 		<if test='cloumnType == "e"'>
+ 			<if test='flowRole == "accountAdviser"'>
+ 				and erpDelivery.train_test_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.train_test_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+ 				AND DATEDIFF(if(erpDelivery.train_test_time > '0000-00-00 00:00:00', erpDelivery.train_test_time, NOW()), 
+				if(erpDelivery.should_train_test_time > '0000-00-00 00:00:00', erpDelivery.should_train_test_time, NOW())) > 0  
+				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "materialAdviser"'>
+ 				and erpDelivery.materiel_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.materiel_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+ 				AND DATEDIFF(if(erpDelivery.materiel_time > '0000-00-00 00:00:00', erpDelivery.materiel_time, NOW()), 
+				if(erpDelivery.should_materiel_time > '0000-00-00 00:00:00', erpDelivery.should_materiel_time, NOW())) > 0  
+				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "OperationAdviser"'>
+ 				and erpDelivery.visit_service_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.visit_service_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+ 				AND DATEDIFF(if(erpDelivery.visit_service_time > '0000-00-00 00:00:00', erpDelivery.visit_service_time, NOW()), 
+				if(erpDelivery.should_visit_service_time > '0000-00-00 00:00:00', erpDelivery.should_visit_service_time, NOW())) > 0 
+				and erpFlow.flow_user_id=#{flowRole} 
+ 			</if>
+ 			<if test='flowRole == "operationManager"'>
+ 				and erpDelivery.flow_end_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.flow_end_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+ 				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00', erpDelivery.flow_end_time, NOW()), 
+				if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00', erpDelivery.should_flow_end_time, NOW())) > 0 
+				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 		</if>
+ 		<if test='cloumnType == "f"'>
+ 			<if test='flowRole == "accountAdviser"'>
+ 				and erpDelivery.train_test_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				AND if(erpDelivery.train_test_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y'
+ 				and erpDelivery.excption_logo is null 
+ 				AND DATEDIFF(if(erpDelivery.train_test_time > '0000-00-00 00:00:00', erpDelivery.train_test_time, NOW()), 
+				if(erpDelivery.should_train_test_time > '0000-00-00 00:00:00', erpDelivery.should_train_test_time, NOW())) > 0 
+				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "materialAdviser"'>
+ 				and erpDelivery.materiel_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.materiel_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+ 				and erpDelivery.excption_logo is null
+ 				AND DATEDIFF(if(erpDelivery.materiel_time > '0000-00-00 00:00:00', erpDelivery.materiel_time, NOW()), 
+				if(erpDelivery.should_materiel_time > '0000-00-00 00:00:00', erpDelivery.should_materiel_time, NOW())) > 0 
+				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "OperationAdviser"'>
+ 				and erpDelivery.visit_service_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.visit_service_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+ 				and erpDelivery.excption_logo is null
+ 				AND DATEDIFF(if(erpDelivery.visit_service_time > '0000-00-00 00:00:00', erpDelivery.visit_service_time, NOW()), 
+				if(erpDelivery.should_visit_service_time > '0000-00-00 00:00:00', erpDelivery.should_visit_service_time, NOW())) > 0 
+				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 			<if test='flowRole == "operationManager"'>
+ 				and erpDelivery.flow_end_time BETWEEN #{startDateStr} and #{endDateStr}
+ 				and if(erpDelivery.flow_end_time > '0000-00-00 00:00:00', 'Y', 'N') = 'Y' 
+ 				and erpDelivery.excption_logo is null
+ 				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00', erpDelivery.flow_end_time, NOW()), 
+				if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00', erpDelivery.should_flow_end_time, NOW())) > 0 
+				and erpFlow.flow_user_id=#{flowRole}
+ 			</if>
+ 		</if>
+	   	<if test="flowEndFlag != null">
+	   		<choose>
+	   			<when test='flowEndFlag == "Y"'>
+	   				AND erpDelivery.flow_end_time &gt; '0000-00-00 00:00:00'
+	   			</when>
+	   			<otherwise>
+       				AND (erpDelivery.flow_end_time = '0000-00-00 00:00:00' or erpDelivery.flow_end_time is null)
+   				</otherwise>
+	   		</choose>
+	   	</if>
+	   	<if test="delayFlag != null">
+	   		<choose>
+	   			<when test='delayFlag == "Y"'>
+	   				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())) &gt; 0
+	   			</when>
+	   			<otherwise>
+       				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())) &lt;= 0 
+   				</otherwise>
+	   		</choose>
+	   	</if>
+		GROUP BY erpDelivery.id
+		order by 
+		<choose>
+   			<when test='dateType == "buy"'>
+        		erpOrder.buy_date
+   			</when>
+   			<when test='dateType == "flow"'>
+				erpDelivery.start_time		
+			</when>
+			<when test='dateType == "should"'>
+				erpDelivery.should_flow_end_time 
+			</when>
+   		<otherwise>
+       		erpOrder.buy_date
+   		</otherwise>
+		</choose>
+		desc
+	</select>
+	 <!-- 获取分单明细分页列表 -->
+	<select id="findStatisticsByUser2" resultType="com.yunnex.ops.erp.modules.statistics.entity.DeliveryServiceStatistics">
+		 SELECT
+			erpOrder.id "orderId",erpOrder.order_number "orderNumber",erpOrder.buy_date "buyDate",
+			concat_ws(IF(erpDelivery.zhct_type is null,'',','),IFNULL(erpDelivery.service_type,''),IFNULL(erpDelivery.zhct_type,'')) as serviceType,
+			erpOrder.order_type "orderType",
+			'' as "serviceTypeNames"
+			,erpOrder.shop_name "shopName",erpOrder.agent_name "agentName",erpDelivery.flow_end_time "flowEndTime",
+			erpDelivery.train_test_time "trainTestTime",
+			erpDelivery.should_train_test_time "shouldTrainTestTime",
+			erpDelivery.visit_service_time "visitServiceTime",
+			erpDelivery.should_visit_service_time "shouldVisitServiceTime",
+			erpDelivery.materiel_time "materielTime",
+			erpDelivery.should_materiel_time "shouldMaterielTime"
+			,left(erpDelivery.excption_logo,char_length(erpDelivery.excption_logo)-1) as excptionLogo 
+			,if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N') "flowEndFlag"
+			,erpDelivery.start_time "startTime",erpDelivery.should_flow_end_time "shouldFlowEndTime",erpDelivery.proc_ins_id
+			,if((@delayDuration :=DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())))>0,@delayDuration,0) "delayDuration"
+			,if((@openDelayDuration :=DATEDIFF(if(erpDelivery.train_test_time > '0000-00-00 00:00:00',erpDelivery.train_test_time,NOW()),if(erpDelivery.should_train_test_time > '0000-00-00 00:00:00',erpDelivery.should_train_test_time,NOW())))>0,@openDelayDuration,0) "openDelayDuration"
+			,if((@materielDelayDuration :=DATEDIFF(if(erpDelivery.materiel_time > '0000-00-00 00:00:00',erpDelivery.materiel_time,NOW()),if(erpDelivery.should_materiel_time > '0000-00-00 00:00:00',erpDelivery.should_materiel_time,NOW())))>0,@materielDelayDuration,0) "materielDelayDuration"
+			,if((@operationDelayDuration :=DATEDIFF(if(erpDelivery.visit_service_time > '0000-00-00 00:00:00',erpDelivery.visit_service_time,NOW()),if(erpDelivery.should_visit_service_time > '0000-00-00 00:00:00',erpDelivery.should_visit_service_time,NOW())))>0,@operationDelayDuration,0) "operationDelayDuration"
+			,if(@delayDuration > 0,'Y','N') "delayFlag",if(@openDelayDuration > 0,'Y','N') "openDelayFlag",if(@materielDelayDuration > 0,'Y','N') "materielDelayFlag",if(@operationDelayDuration > 0,'Y','N') "operationDelayFlag"
+			,shop.id "shopId"			
+			,(
+				SELECT
+					syu.name
+				from
+					erp_order_flow_user erpFlow1,
+					sys_user syu
+				where
+					syu.id = erpFlow1.user_id
+					and erpFlow1.flow_id = erpDelivery.proc_ins_id
+					and flow_user_id = 'OperationAdviser' 
+					limit 1
+			) as "operationAdviserName",
+			(
+				SELECT
+					GROUP_CONCAT(erpFlow.flow_user_id)
+				from
+					erp_order_flow_user erpFlow
+				where
+					erpFlow.flow_id = erpDelivery.proc_ins_id
+			) as roles
+		FROM
+			erp_delivery_service erpDelivery
+		LEFT JOIN erp_order_original_info erpOrder ON erpDelivery.order_id = erpOrder.id
+		LEFT JOIN erp_shop_info shop ON erpDelivery.shop_id = shop.zhangbei_id and shop.del_flag = 0
+		LEFT JOIN erp_order_flow_user erpFlow on erpDelivery.order_id = erpFlow.order_id AND erpFlow.del_flag = 0
+		LEFT JOIN sys_user sysUser on erpFlow.user_id = sysUser.id
+		LEFT JOIN erp_team_user teamUser on erpFlow.user_id = teamUser.user_id
+		LEFT JOIN erp_order_original_good orderGood on orderGood.order_id = erpOrder.id
+		WHERE erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+		<if test="userIds != null">
+			and teamUser.user_id in 
+			<foreach collection="userIds" index="index" item="item" open="(" separator="," close=")">
+               #{item}
+            </foreach>
+		</if>
+		and erpDelivery.flow_end_time> '0000-00-00 00:00:00'
+		<if test="serviceCodes != null">
+			and (
+			erpDelivery.service_type in 
+			<foreach item="serviceCd" index="index" collection="serviceCodes" open="(" separator="," close=")">  
+       			#{serviceCd}
+      		</foreach>
+      		or 
+      		erpDelivery.zhct_type in 
+			<foreach item="serviceCd" index="index" collection="serviceCodes" open="(" separator="," close=")">  
+       			#{serviceCd}
+      		</foreach>
+      		)
+		</if>
+		<if test="orderNum != null">
+	   		AND erpOrder.order_number LIKE CONCAT('%',#{orderNum},'%')
+	   	</if>
+	   	<if test="shopName != null">
+			AND erpOrder.shop_name LIKE CONCAT('%',#{shopName},'%')
+		</if>
+	   	<if test="orderTypeList != null and orderTypeList.size() > 0">
+			AND erpOrder.order_type in
+			<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+          		#{itemOrderType}
+          	</foreach>
+		</if>
+	   	<if test="serviceTypeList != null and serviceTypeList.size() > 0">
+ 			AND 
+	   		<foreach item="itemServiceType" index="index" collection="serviceTypeList" open="(" separator="OR" close=")"> 
+	   		(
+   				<if test="itemServiceType.includeList != null and itemServiceType.includeList.size() > 0">
+   					<if test="itemServiceType.includeList[0]==5">
+   						erpDelivery.service_type = 'JYK'
+   					</if>
+   					<if test="itemServiceType.includeList[0]==6">
+   						erpDelivery.service_type in ('FMPS','FMPS_BASIC','MU','VC','INTO_PIECES')
+   					</if>
+   					<if test="itemServiceType.includeList[0]==11">
+   						erpDelivery.zhct_type = 'ZHCT' OR erpDelivery.zhct_type='ZHCT_OLD'
+   					</if>
+   				</if>
+   			)
+          	</foreach>
+ 		</if>
+	   	<if test="flowEndFlag != null">
+	   		<choose>
+	   			<when test='flowEndFlag == "Y"'>
+	   				AND erpDelivery.flow_end_time &gt; '0000-00-00 00:00:00'
+	   			</when>
+	   			<otherwise>
+       				AND (erpDelivery.flow_end_time = '0000-00-00 00:00:00' or erpDelivery.flow_end_time is null)
+   				</otherwise>
+	   		</choose>
+	   	</if>
+	   	<if test="delayFlag != null">
+	   		<choose>
+	   			<when test='delayFlag == "Y"'>
+	   				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())) &gt; 0
+	   			</when>
+	   			<otherwise>
+       				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())) &lt;= 0 
+   				</otherwise>
+	   		</choose>
+	   	</if>
+		<choose>
+   			<when test='dateType == "order"'>
+        		AND erpOrder.buy_date &gt;=#{startDateStr} AND erpOrder.buy_date &lt;=#{endDateStr}
+   			</when>
+   			<when test='dateType == "flow"'>
+				AND erpDelivery.flow_end_time &gt;=#{startDateStr} AND erpDelivery.flow_end_time &lt;=#{endDateStr}  			
+			</when>
+			<when test='dateType == "should"'>
+				AND erpDelivery.should_flow_end_time &gt;=#{startDateStr} AND erpDelivery.should_flow_end_time &lt;=#{endDateStr}  
+			</when>
+   		<otherwise>
+   			<if test="startDateStr != null and endDateStr != null">
+       			AND (
+       				(erpOrder.buy_date &gt;=#{startDateStr} AND erpOrder.buy_date &lt;=#{endDateStr}) 
+       				or (erpDelivery.start_time &gt;=#{startDateStr} AND erpDelivery.start_time &lt;=#{endDateStr})
+       				or (erpDelivery.should_flow_end_time &gt;=#{startDateStr} AND erpDelivery.should_flow_end_time &lt;=#{endDateStr})
+       			)
+       		</if>
+   		</otherwise>
+		</choose>
+		GROUP BY erpDelivery.id
+		order by 
+		<choose>
+   			<when test='dateType == "buy"'>
+        		erpOrder.buy_date
+   			</when>
+   			<when test='dateType == "start"'>
+				erpDelivery.start_time		
+			</when>
+			<when test='dateType == "shouldFlowEnd"'>
+				erpDelivery.should_flow_end_time 
+			</when>
+   		<otherwise>
+       		erpOrder.buy_date
+   		</otherwise>
+		</choose>
+		desc
+	</select>
+	
+	<!-- 获取分单明细分页列表 -->
+	<select id="findStatisticsComplete" resultType="com.yunnex.ops.erp.modules.statistics.entity.DeliveryServiceStatistics">
+		 SELECT
+			erpOrder.id "orderId",erpOrder.order_number "orderNumber",erpOrder.buy_date "buyDate",
+			concat_ws(IF(erpDelivery.zhct_type is null,'',','),IFNULL(erpDelivery.service_type,''),IFNULL(erpDelivery.zhct_type,'')) as serviceType,
+			erpOrder.order_type "orderType",
+			'' as "serviceTypeNames"
+			,erpOrder.shop_name "shopName",erpOrder.agent_name "agentName",erpDelivery.flow_end_time "flowEndTime",
+			erpDelivery.train_test_time "trainTestTime",
+			erpDelivery.should_train_test_time "shouldTrainTestTime",
+			erpDelivery.visit_service_time "visitServiceTime",
+			erpDelivery.should_visit_service_time "shouldVisitServiceTime",
+			erpDelivery.materiel_time "materielTime",
+			erpDelivery.should_materiel_time "shouldMaterielTime"
+			,left(erpDelivery.excption_logo,char_length(erpDelivery.excption_logo)-1) as excptionLogo 
+			,if(erpDelivery.flow_end_time > '0000-00-00 00:00:00','Y','N') "flowEndFlag"
+			,erpDelivery.start_time "startTime",erpDelivery.should_flow_end_time "shouldFlowEndTime",erpDelivery.proc_ins_id
+			,if((@delayDuration :=DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())))>0,@delayDuration,0) "delayDuration"
+			,if((@openDelayDuration :=DATEDIFF(if(erpDelivery.train_test_time > '0000-00-00 00:00:00',erpDelivery.train_test_time,NOW()),if(erpDelivery.should_train_test_time > '0000-00-00 00:00:00',erpDelivery.should_train_test_time,NOW())))>0,@openDelayDuration,0) "openDelayDuration"
+			,if((@materielDelayDuration :=DATEDIFF(if(erpDelivery.materiel_time > '0000-00-00 00:00:00',erpDelivery.materiel_time,NOW()),if(erpDelivery.should_materiel_time > '0000-00-00 00:00:00',erpDelivery.should_materiel_time,NOW())))>0,@materielDelayDuration,0) "materielDelayDuration"
+			,if((@operationDelayDuration :=DATEDIFF(if(erpDelivery.visit_service_time > '0000-00-00 00:00:00',erpDelivery.visit_service_time,NOW()),if(erpDelivery.should_visit_service_time > '0000-00-00 00:00:00',erpDelivery.should_visit_service_time,NOW())))>0,@operationDelayDuration,0) "operationDelayDuration"
+			,if(@delayDuration > 0,'Y','N') "delayFlag",if(@openDelayDuration > 0,'Y','N') "openDelayFlag",if(@materielDelayDuration > 0,'Y','N') "materielDelayFlag",if(@operationDelayDuration > 0,'Y','N') "operationDelayFlag"
+			,shop.id "shopId"			
+			,sysUser.`name` "operationAdviserName",
+			(
+				SELECT
+					GROUP_CONCAT(erpFlow.flow_user_id)
+				from
+					erp_order_flow_user erpFlow
+				where
+					erpFlow.flow_id = erpDelivery.proc_ins_id
+			) as roles
+		FROM
+			erp_delivery_service erpDelivery
+		LEFT JOIN erp_order_original_info erpOrder ON erpDelivery.order_id = erpOrder.id
+		LEFT JOIN erp_shop_info shop ON erpDelivery.shop_id = shop.zhangbei_id and shop.del_flag = 0
+		LEFT JOIN erp_order_flow_user erpFlow on erpDelivery.order_id = erpFlow.order_id AND erpFlow.del_flag = 0
+		LEFT JOIN sys_user sysUser on erpFlow.user_id = sysUser.id
+		LEFT JOIN erp_team_user teamUser on erpFlow.user_id = teamUser.user_id
+		LEFT JOIN erp_order_original_good orderGood on orderGood.order_id = erpOrder.id
+		WHERE erpOrder.del_flag = 0 AND erpOrder.cancel = 0 AND erpOrder.order_status !=-1
+		<if test="teamId != null">
+			and teamUser.team_id= #{teamId}
+		</if>
+		<if test="orderNum != null">
+	   		AND erpOrder.order_number LIKE CONCAT('%',#{orderNum},'%')
+	   	</if>
+	   	<if test="shopName != null">
+			AND erpOrder.shop_name LIKE CONCAT('%',#{shopName},'%')
+		</if>
+	   	<if test="orderTypeList != null and orderTypeList.size() > 0">
+			AND erpOrder.order_type in
+			<foreach item="itemOrderType" index="index" collection="orderTypeList" open="(" separator="," close=")">  
+          		#{itemOrderType}
+          	</foreach>
+		</if>
+	   	<if test="serviceTypeList != null and serviceTypeList.size() > 0">
+ 			AND 
+	   		<foreach item="itemServiceType" index="index" collection="serviceTypeList" open="(" separator="OR" close=")"> 
+	   		(
+   				<if test="itemServiceType.includeList != null and itemServiceType.includeList.size() > 0">
+   					<if test="itemServiceType.includeList[0]==5">
+   						erpDelivery.service_type = 'JYK'
+   					</if>
+   					<if test="itemServiceType.includeList[0]==6">
+   						erpDelivery.service_type in ('FMPS','FMPS_BASIC','MU','VC','INTO_PIECES')
+   					</if>
+   					<if test="itemServiceType.includeList[0]==11">
+   						erpDelivery.zhct_type = 'ZHCT' OR erpDelivery.zhct_type='ZHCT_OLD'
+   					</if>
+   				</if>
+   			)
+          	</foreach>
+ 		</if>
+ 		<if test='cloumnType == "a"'>
+ 			and erpDelivery.service_type = 'FMPS'
+ 		</if>
+ 		<if test='cloumnType == "b"'>
+ 			and erpDelivery.service_type = 'FMPS_BASIC'
+ 		</if>
+ 		<if test='cloumnType == "c"'>
+ 			and erpDelivery.service_type = 'INTO_PIECES'
+ 		</if>
+ 		<if test='cloumnType == "d"'>
+ 			and erpDelivery.service_type = 'JYK'
+ 		</if>
+ 		<if test='cloumnType == "e"'>
+ 			and erpDelivery.zhct_type in ('ZHCT_OLD','ZHCT')
+ 		</if>
+ 		<if test='cloumnType == "f"'>
+ 			and erpDelivery.service_type = 'MU'
+ 		</if>
+ 		<if test='cloumnType == "g"'>
+ 			and erpDelivery.service_type = 'VC'
+ 		</if>
+	   	<if test="flowEndFlag != null">
+	   		<choose>
+	   			<when test='flowEndFlag == "Y"'>
+	   				AND erpDelivery.flow_end_time &gt; '0000-00-00 00:00:00'
+	   			</when>
+	   			<otherwise>
+       				AND (erpDelivery.flow_end_time = '0000-00-00 00:00:00' or erpDelivery.flow_end_time is null)
+   				</otherwise>
+	   		</choose>
+	   	</if>
+	   	<if test="delayFlag != null">
+	   		<choose>
+	   			<when test='delayFlag == "Y"'>
+	   				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())) &gt; 0
+	   			</when>
+	   			<otherwise>
+       				AND DATEDIFF(if(erpDelivery.flow_end_time > '0000-00-00 00:00:00',erpDelivery.flow_end_time,NOW()),if(erpDelivery.should_flow_end_time > '0000-00-00 00:00:00',erpDelivery.should_flow_end_time,NOW())) &lt;= 0 
+   				</otherwise>
+	   		</choose>
+	   	</if>
+       	AND erpDelivery.flow_end_time &gt;=#{startDateStr} AND erpDelivery.flow_end_time &lt;=#{endDateStr}
+		GROUP BY erpDelivery.id
+		order by 
+		<choose>
+   			<when test='dateType == "buy"'>
+        		erpOrder.buy_date
+   			</when>
+   			<when test='dateType == "flow"'>
+				erpDelivery.start_time		
+			</when>
+			<when test='dateType == "should"'>
+				erpDelivery.should_flow_end_time 
+			</when>
+   		<otherwise>
+       		erpOrder.buy_date
+   		</otherwise>
+		</choose>
+		desc
+	</select>
+</mapper>

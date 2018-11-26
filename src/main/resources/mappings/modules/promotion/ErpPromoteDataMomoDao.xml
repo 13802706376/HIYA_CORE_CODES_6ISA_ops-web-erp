@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.promotion.dao.ErpPromoteDataMomoDao">
+    
+	<select id="queryMomoData" parameterType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataMomo" resultType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataMomo">
+		SELECT 
+			a.id AS "id",
+			a.split_order_id AS "splitOrderId",
+			a.data_time AS "dataTime",
+			a.expenditure AS "expenditure",
+			a.show_num AS "showNum",
+			a.click_num AS "clickNum",
+			a.click_percent AS "clickPercent",
+			a.cpm AS "cpm",
+			a.avg_click_univalent AS "avgClickUnivalent",
+			a.create_by AS "createBy.id",
+			a.create_date AS "createDate",
+			a.update_by AS "updateBy.id",
+			a.update_date AS "updateDate",
+			a.del_flag AS "delFlag",
+			a.remark AS "remark"
+		FROM erp_promote_data_momo a
+		WHERE a.split_order_id = #{splitOrderId}
+		<if test="id !=null and id != ''">and a.id=#{id}</if>
+		<choose>
+			<when test="delFlag !=null and delFlag != ''">
+				and a.del_flag = #{delFlag}
+			</when>
+			<otherwise>
+				and a.del_flag = '0'
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.data_time DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_promote_data_momo(
+			id,
+			split_order_id,
+			data_time,
+			<if test="expenditure != null">expenditure,</if>
+			<if test="showNum != null">show_num,</if>
+			<if test="clickNum != null">click_num,</if>
+			<if test="clickPercent != null">click_percent,</if>
+			<if test="cpm != null">cpm,</if>
+			<if test="avgClickUnivalent != null">avg_click_univalent,</if>
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remark
+		) VALUES (
+			#{id},
+			#{splitOrderId},
+			#{dataTime},
+			<if test="expenditure != null">#{expenditure},</if>
+			<if test="showNum != null">#{showNum},</if>
+			<if test="clickNum != null">#{clickNum},</if>
+			<if test="clickPercent != null">#{clickPercent},</if>
+			<if test="cpm != null">#{cpm},</if>
+			<if test="avgClickUnivalent != null">#{avgClickUnivalent},</if>
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remark}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_promote_data_momo 
+		<set>
+			<if test="expenditure != null">expenditure = #{expenditure},</if>
+			<if test="showNum != null">show_num = #{showNum},</if>
+			<if test="clickNum != null">click_num = #{clickNum},</if>
+			<if test="clickPercent != null">click_percent = #{clickPercent},</if>
+			<if test="cpm != null">cpm = #{cpm},</if>
+			<if test="avgClickUnivalent != null">avg_click_univalent = #{avgClickUnivalent},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}
+		</set>	
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_promote_data_momo SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="deleteBySplitIdAndDataTime" parameterType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataMomo">
+		UPDATE erp_promote_data_momo SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE split_order_id = #{splitOrderId}
+		    AND data_time = #{dataTime}
+	</update>
+	
+	<select id="queryMomoDataSum" parameterType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataMomo" resultType="com.yunnex.ops.erp.modules.promotion.entity.ErpPromoteDataMomoSum">
+		select
+			d.split_order_id as splitOrderId,
+			(select opc.promote_status from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '3') as promotionState,
+			(select (case when opc.promote_status='running' then '推广中' when opc.promote_status='success' then '推广结束' else '未开始' end) from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '1') as promotionStateTxt,
+			(select opc.promote_start_date from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '3') as promotionBeginDate,
+			(select opc.promote_end_date from jyk_order_promotion_channel opc where opc.split_id = d.split_order_id and opc.del_flag = '0' and opc.promotion_channel = '3') as promotionEndDate,
+			sum(d.show_num) as showNumSum,
+			sum(d.expenditure) as expenditureSum,
+			ifnull(sum(d.expenditure)/ sum(d.show_num),0) as singleShowCostSum,
+			sum(d.click_num) as clickNumSum,
+			ifnull(sum(d.click_num)/ sum(d.show_num),0) as clickSumPercent
+		from
+			erp_promote_data_momo d
+		where
+			d.split_order_id = #{splitOrderId}
+		and 
+			d.del_flag = '0'
+		group by
+			d.split_order_id
+	</select>
+	
+	<insert id="batchInsert">
+		INSERT INTO erp_promote_data_momo(
+			id,
+			split_order_id,
+			data_time,
+			expenditure,
+			show_num,
+			click_num,
+			click_percent,
+			cpm,
+			avg_click_univalent,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remark
+		) VALUES 
+		<foreach collection ="list" item="momo" separator =",">
+		(
+			uuid(),
+			#{splitOrderId},
+			#{momo.dataTime},
+			<choose>
+				<when test="momo.expenditure!=null">#{momo.expenditure}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="momo.showNum!=null">#{momo.showNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="momo.clickNum!=null">#{momo.clickNum}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="momo.clickPercent!=null">#{momo.clickPercent}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="momo.cpm!=null">#{momo.cpm}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			<choose>
+				<when test="momo.avgClickUnivalent!=null">#{momo.avgClickUnivalent}</when>
+				<otherwise>0</otherwise>
+			</choose>,
+			#{createBy.id},
+			now(),
+			#{updateBy.id},
+			now(),
+			'importData'
+		)
+		</foreach>
+	</insert>
+	
+	<update id="batchDelete">
+		UPDATE erp_promote_data_momo SET 
+			del_flag = '1'
+		WHERE split_order_id = #{splitOrderId}
+		    AND data_time in (<foreach collection ="list" item="momo" separator =",">date(#{momo.dataTime})</foreach>)
+	</update>
+	
+</mapper>

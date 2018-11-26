@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.visit.dao.ErpVisitServiceProductRecordDao">
+    
+    <sql id="erpVisitServiceProductRecordColumns">
+        a.id AS "id",
+        a.visit_service_info_id AS "visitServiceInfoId",
+        a.shop_info_id AS "shopInfoId",
+        a.prod_name AS "prodName",
+        a.prod_type AS "prodType",
+        a.prod_num AS "prodNum",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate",
+        a.del_flag AS "delFlag",
+        a.remark AS "remark"
+    </sql>
+
+    <sql id="erpVisitServiceProductRecordJoins">
+    </sql>
+    
+    <select id="get" resultType="ErpVisitServiceProductRecord">
+        SELECT
+            <include refid="erpVisitServiceProductRecordColumns"/>
+        FROM erp_visit_service_product_record a
+        <include refid="erpVisitServiceProductRecordJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="ErpVisitServiceProductRecord">
+        SELECT
+            <include refid="erpVisitServiceProductRecordColumns"/>
+        FROM erp_visit_service_product_record a
+        <include refid="erpVisitServiceProductRecordJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="ErpVisitServiceProductRecord">
+        SELECT
+            <include refid="erpVisitServiceProductRecordColumns"/>
+        FROM erp_visit_service_product_record a
+        <include refid="erpVisitServiceProductRecordJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO erp_visit_service_product_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="visitServiceInfoId != null">visit_service_info_id,</if>
+			<if test="shopInfoId != null">shop_info_id,</if>
+			<if test="prodName != null">prod_name,</if>
+			<if test="prodType != null">prod_type,</if>
+			<if test="prodNum != null">prod_num,</if>
+			<if test="createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+			<if test="updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+			<if test="delFlag != null">del_flag,</if>
+			<if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="visitServiceInfoId != null">#{visitServiceInfoId},</if>
+			<if test="shopInfoId != null">#{shopInfoId},</if>
+			<if test="prodName != null">#{prodName},</if>
+			<if test="prodType != null">#{prodType},</if>
+			<if test="prodNum != null">#{prodNum},</if>
+			<if test="createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+			<if test="updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+			<if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE erp_visit_service_product_record
+            <set>
+                <if test="visitServiceInfoId != null">visit_service_info_id = #{visitServiceInfoId},</if>
+                <if test="shopInfoId != null">shop_info_id = #{shopInfoId},</if>
+                <if test="prodName != null">prod_name = #{prodName},</if>
+                <if test="prodType != null">prod_type = #{prodType},</if>
+                <if test="prodNum != null">prod_num = #{prodNum},</if>
+                <if test="updateBy.id != null">update_by = #{updateBy.id},</if>
+                <if test="updateDate != null">update_date = #{updateDate},</if>
+                <if test="remark != null">remark = #{remark},</if>
+            </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+        UPDATE erp_visit_service_product_record SET
+            del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+	
+	<select id="getProductInfoByVisitServiceId" resultType="ErpVisitServiceProductRecord">
+        SELECT
+            <include refid="erpVisitServiceProductRecordColumns"/>
+        FROM erp_visit_service_product_record a
+        <include refid="erpVisitServiceProductRecordJoins"/>
+        WHERE a.visit_service_info_id = #{visitServiceInfoId} and a.del_flag =0
+    </select>
+
+	<delete id="deleteVisitProductRecordByVisitId">
+	DELETE FROM erp_visit_service_product_record WHERE visit_service_info_id= #{visitServiceInfoId}
+	
+	</delete>
+
+</mapper>

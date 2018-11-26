@@ -1,0 +1,1405 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.act.dao.ActDao">
+    
+	<update id="updateProcInsIdByBusinessId">
+		UPDATE ${businessTable} SET 
+			proc_ins_id = #{procInsId}
+		WHERE id = #{businessId}
+		
+	</update>
+	
+	<update id="changeRoleUser">
+		update
+			ACT_RU_TASK ast inner join(
+				select
+					U.ID_ as id
+				from
+					ACT_RU_TASK U
+				LEFT JOIN ACT_RE_ACTDEF_EXT T on
+					U.TASK_DEF_KEY_ = T.act_id
+				where
+					U.PROC_INST_ID_ = #{procInsId}
+					and T.assignee = #{roleName}
+			) c on
+			ast.ID_ = c.id
+		set
+			ast.ASSIGNEE_ = #{userId};
+	</update>
+	
+	<update id="changeRoleUser1">
+		update
+			ACT_HI_TASKINST ast inner join(
+				select
+					U.ID_ as id
+				from
+					ACT_HI_TASKINST U
+				LEFT JOIN ACT_RE_ACTDEF_EXT T on
+					U.TASK_DEF_KEY_ = T.act_id
+				where
+					U.PROC_INST_ID_ = #{procInsId}
+					and T.assignee = #{roleName}
+					and U.END_TIME_ is null
+			) c on
+			ast.ID_ = c.id
+		set
+			ast.ASSIGNEE_ = #{userId};
+	</update>
+	
+	<update id="changeRoleUser2">
+		update
+			ACT_HI_ACTINST ast inner join(
+				select
+					U.ID_ as id
+				from
+					ACT_HI_ACTINST U
+				LEFT JOIN ACT_RE_ACTDEF_EXT T on
+					U.ACT_ID_ = T.act_id
+				where
+					U.PROC_INST_ID_ = #{procInsId}
+					and T.assignee = #{roleName}
+					and U.END_TIME_ is null
+			) c on
+			ast.ID_ = c.id
+		set
+			ast.ASSIGNEE_ = #{userId};
+	</update>
+	
+	<delete id="deleteTask">
+		delete from ACT_RU_TASK where id_ = #{id}
+	</delete>
+	
+	<delete id="deleteVaribleByInstId" >
+		delete from ACT_RU_VARIABLE  where PROC_INST_ID_ = #{processInstanceId}
+	</delete>
+	
+	<sql id="jykFlowColumns">
+		art.ID_ AS "act.taskId",
+		art.TASK_DEF_KEY_ AS "act.taskDefKey",
+		art.PROC_DEF_ID_ AS "act.procDefId",
+		art.ASSIGNEE_ AS "act.assignee",
+		art.NAME_ AS "act.taskName",
+		art.PROC_INST_ID_ AS "act.businessId",
+		art.PROC_INST_ID_ AS "act.procInsId",
+		art.EXECUTION_ID_ AS "act.executionId",
+		arp.KEY_ AS "act.procDefKey",
+		aht.START_TIME_ AS "act.taskStarterDate",
+		arte.`status` AS "taskExt.status",
+		arte.`pending_prod_flag` AS "taskExt.pendingProdFlag",
+		jf.split_id AS "jykFlow.splitId",
+		jf.promotion_time AS "jykFlow.promotionTime",
+		eosi.create_date AS "orderDate",
+		eosi.id AS "orderSplitInfo.id",
+		eosi.promotion_time  AS "orderSplitInfo.promotionTime",
+		eosi.next_contact_time  AS "orderSplitInfo.nextContactTime",
+		eosi.next_license_time  AS "orderSplitInfo.nextLicenseTime",
+		eosi.next_qualification_time  AS "orderSplitInfo.nextQualificationTime",
+		eosi.hurry_flag  AS "orderSplitInfo.hurryFlag",
+		eosi.suspend_flag  AS "orderSplitInfo.suspendFlag",
+		eosi.order_id  AS "orderSplitInfo.orderId",
+		eosi.split_id  AS "orderSplitInfo.splitId",
+		eosi.good_name  AS "orderSplitInfo.goodName",
+		eosi.num  AS "orderSplitInfo.num",
+		eosi.good_type_name  AS "orderSplitInfo.goodTypeName",	
+		eosi.timeout_flag  AS "orderSplitInfo.timeoutFlag",	  
+        eosi.pending_produced  AS "orderSplitInfo.pendingProduced", 
+        eosi.activation_time  AS "orderSplitInfo.activationTime",
+        eooi.id  AS "orderOriginalInfo.id",
+		eooi.order_number  AS "orderOriginalInfo.orderNumber",
+		eooi.buy_date  AS "orderOriginalInfo.buyDate",
+		eooi.shop_id  AS "orderOriginalInfo.shopId",
+		eooi.shop_name  AS "orderOriginalInfo.shopName",
+		eooi.shop_name AS "shopName",
+		eooi.agent_name  AS "orderOriginalInfo.agentName",
+		eooi.order_type  AS "orderOriginalInfo.orderType",
+		eooi.contact_name  AS "orderOriginalInfo.contactName",
+		eooi.contact_number  AS "orderOriginalInfo.contactNumber",
+		eooi.promote_contact  AS "orderOriginalInfo.promoteContact",
+		eooi.promote_phone  AS "orderOriginalInfo.promotePhone",
+		eooi.order_version  AS "orderOriginalInfo.orderVersion",
+		esi.id AS "shop.id",
+		esi.zhangbei_id AS "shop.zhangbeiId",
+		esi.zhangbei_state AS "shop.zhangbeiState",
+		esi.zhangbei_remark AS "shop.zhangbeiRemark",
+		esi.wechatpay_state AS "shop.wechatpayState",
+		esi.wechatpay_remark AS "shop.wechatpayRemark",
+		esi.unionpay_state AS "shop.unionpayState",
+		NULL AS "shop.machineToolNumber",
+		esi.unionpay_remark AS "shop.unionpayRemark",
+		esi.`name` AS "shop.name",
+		esi.service_provider AS "shop.serviceProvider",
+		NULL AS "sdiFlow.sdiId",
+		NULL AS "payInto.id",
+		NULL AS "payInto.shopId",
+		NULL AS "payInto.storeId",
+		NULL AS "payInto.intopiecesName",
+		NULL AS "payInto.createDate",
+		IFNULL(arae.task_date_hours, 0) AS "act.taskDateHours",
+		IFNULL(arae.urgent_task_date_hours, 0) AS "act.urgentTaskDateHours",
+		arae.task_user_role AS "act.taskUserRole",
+		arae.task_user_role2 AS "act.taskUserRole2"
+	</sql>
+	
+	<sql id="jykFlowJoins">
+		INNER JOIN 
+			ACT_RE_PROCDEF arp
+		ON
+			art.proc_def_id_ = arp.id_ AND locate('jyk_flow',arp.key_ ) >0
+		LEFT JOIN
+			ACT_HI_TASKINST aht
+		ON 
+			art.ID_ = aht.ID_
+		LEFT JOIN
+			ACT_RU_TASK_EXT arte
+		ON
+			art.ID_ = arte.task_id
+		LEFT JOIN 
+			ACT_RE_ACTDEF_EXT arae 
+		ON 
+			arp.KEY_ = arae.process_define_key AND art.TASK_DEF_KEY_ = arae.act_id 
+		LEFT JOIN
+			jyk_flow jf
+		ON
+			art.PROC_INST_ID_ = jf.PROC_INS_ID AND jf.del_flag = 0
+		LEFT JOIN
+			erp_order_split_info eosi
+		ON
+			jf.split_id = eosi.id AND eosi.del_flag = 0
+		LEFT JOIN 
+			erp_order_original_info eooi 
+		ON 
+			eosi.order_id = eooi.id AND eooi.cancel = 0 AND eooi.del_flag = 0
+		LEFT JOIN 
+			erp_shop_info esi 
+		ON 
+			eooi.shop_id = esi.zhangbei_id AND esi.del_flag = 0
+	</sql>
+	
+	<sql id="jykFlowWhere">
+		<if test="orderNumber != null and orderNumber != ''">
+			AND eooi.order_number LIKE CONCAT('%',#{orderNumber},'%')
+		</if>
+		<if test="hurryFlag != null and hurryFlag != ''">
+			AND eosi.hurry_flag=#{hurryFlag}
+		</if>
+		<if test="suspendFlag != null and suspendFlag != ''">
+			AND eosi.suspendFlag=#{suspendFlag}
+		</if>
+		<if test="timeoutFlag != null and timeoutFlag != ''">
+			AND eosi.timeout_flag=#{timeoutFlag}
+		</if>
+		<if test="null != goodTypes and goodTypes.size > 0">
+			AND eosi.good_type_id IN
+			<foreach collection="goodTypes" index="index" item="item"
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="null != taskStates and taskStates.size > 0">
+			AND arte.`status` IN
+			<foreach collection="taskStates" index="index" item="item"
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="shopName != null and shopName != ''">
+			AND eooi.shop_name LIKE CONCAT('%', #{shopName}, '%')
+		</if>
+	</sql>
+	
+	<sql id="sdiFlowColumns">
+		art.ID_ AS "act.taskId",
+		art.TASK_DEF_KEY_ AS "act.taskDefKey",
+		art.PROC_DEF_ID_ AS "act.procDefId",
+		art.ASSIGNEE_ AS "act.assignee",
+		art.NAME_ AS "act.taskName",
+		art.PROC_INST_ID_ AS "act.businessId",
+		art.PROC_INST_ID_ AS "act.procInsId",
+		art.EXECUTION_ID_ AS "act.executionId",
+		arp.KEY_ AS "act.procDefKey",
+		aht.START_TIME_ AS "act.taskStarterDate",
+		arte.`status` AS "taskExt.status",
+		arte.`pending_prod_flag` AS "taskExt.pendingProdFlag",
+		NULL  AS "jykFlow.splitId",
+		NULL  AS "jykFlow.promotionTime",
+		esdi.create_date AS "orderDate",
+		NULL  AS "orderSplitInfo.id",
+		NULL  AS "orderSplitInfo.promotionTime",
+		NULL  AS "orderSplitInfo.nextContactTime",
+		NULL  AS "orderSplitInfo.nextLicenseTime",
+		NULL  AS "orderSplitInfo.nextQualificationTime",
+		NULL  AS "orderSplitInfo.hurryFlag",
+		NULL  AS "orderSplitInfo.suspendFlag",
+		NULL  AS "orderSplitInfo.orderId",
+		NULL  AS "orderSplitInfo.splitId",
+		NULL  AS "orderSplitInfo.goodName",
+		NULL  AS "orderSplitInfo.num",
+		NULL  AS "orderSplitInfo.goodTypeName",	
+        NULL  AS "orderSplitInfo.timeoutFlag",  
+        NULL  AS "orderSplitInfo.pendingProduced",  
+        NULL  AS "orderSplitInfo.activationTime",
+        eooi.id  AS "orderOriginalInfo.id",
+		eooi.order_number  AS "orderOriginalInfo.orderNumber",
+		eooi.buy_date  AS "orderOriginalInfo.buyDate",
+		eooi.shop_id  AS "orderOriginalInfo.shopId",
+		eooi.shop_name  AS "orderOriginalInfo.shopName",
+		eooi.shop_name AS "shopName",
+		eooi.agent_name  AS "orderOriginalInfo.agentName",
+		eooi.order_type  AS "orderOriginalInfo.orderType",
+		eooi.contact_name  AS "orderOriginalInfo.contactName",
+		eooi.contact_number  AS "orderOriginalInfo.contactNumber",
+		eooi.promote_contact  AS "orderOriginalInfo.promoteContact",
+		eooi.promote_phone  AS "orderOriginalInfo.promotePhone",
+		eooi.order_version  AS "orderOriginalInfo.orderVersion",
+		esi.id AS "shop.id",
+		esi.zhangbei_id AS "shop.zhangbeiId",
+		esi.zhangbei_state AS "shop.zhangbeiState",
+		esi.zhangbei_remark AS "shop.zhangbeiRemark",
+		esi.wechatpay_state AS "shop.wechatpayState",
+		esi.wechatpay_remark AS "shop.wechatpayRemark",
+		esi.unionpay_state AS "shop.unionpayState",
+		NULL AS "shop.machineToolNumber",
+		esi.unionpay_remark AS "shop.unionpayRemark",
+		esi.`name` AS "shop.name",
+		esi.service_provider AS "shop.serviceProvider",
+		sf.sdi_id AS "sdiFlow.sdiId",
+		NULL AS "payInto.id",
+		NULL AS "payInto.shopId",
+		NULL AS "payInto.storeId",
+		NULL AS "payInto.intopiecesName",
+		NULL AS "payInto.createDate",
+		IFNULL(arae.task_date_hours,0) AS "act.taskDateHours",
+		IFNULL(arae.urgent_task_date_hours,0) AS "act.urgentTaskDateHours",
+		arae.task_user_role AS "act.taskUserRole",
+		arae.task_user_role2 AS "act.taskUserRole2"
+	</sql>
+	
+	<sql id="sdiFlowJoins">
+		INNER JOIN 
+			ACT_RE_PROCDEF arp
+		ON
+			art.proc_def_id_ = arp.id_ AND arp.key_ = 'shop_data_input_flow'
+		LEFT JOIN
+			ACT_HI_TASKINST aht
+		ON 
+			art.ID_ = aht.ID_
+		LEFT JOIN
+			ACT_RU_TASK_EXT arte
+		ON
+			art.ID_ = arte.task_id
+		LEFT JOIN 
+			ACT_RE_ACTDEF_EXT arae
+		ON 
+			arp.KEY_ = arae.process_define_key AND art.TASK_DEF_KEY_ = arae.act_id
+		LEFT JOIN
+			erp_shop_data_input esdi
+		ON
+			art.proc_inst_id_ = esdi.proc_ins_id
+		LEFT JOIN 
+			erp_order_original_info eooi
+		ON
+			esdi.order_id = eooi.id AND eooi.cancel=0 AND eooi.del_flag = 0
+		LEFT JOIN 
+			sdi_flow sf
+		ON 
+			esdi.order_id = sf.order_id AND sf.del_flag = 0  AND sf.proc_ins_id = art.PROC_INST_ID_
+		LEFT JOIN 
+			erp_shop_info esi
+		ON
+			esdi.shop_id = esi.zhangbei_id AND esi.del_flag = 0
+	</sql>
+	
+	<sql id="sdiFlowWhere">
+		<if test="orderNumber != null and orderNumber != ''">
+			AND eooi.order_number LIKE CONCAT('%', #{orderNumber}, '%')
+		</if>
+		<if test="shopName != null and shopName != ''">
+			AND esdi.shop_name LIKE CONCAT('%', #{shopName}, '%')
+		</if>
+		<if test="null != taskStates and taskStates.size > 0">
+			AND arte.`status` IN
+			<foreach collection="taskStates" index="index" item="item"
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</sql>
+	
+	
+	<sql id="payFlowColumns">
+		art.ID_ AS "act.taskId",
+		art.TASK_DEF_KEY_ AS "act.taskDefKey",
+		art.PROC_DEF_ID_ AS "act.procDefId",
+		art.ASSIGNEE_ AS "act.assignee",
+		art.NAME_ AS "act.taskName",
+		art.PROC_INST_ID_ AS "act.businessId",
+		art.PROC_INST_ID_ AS "act.procInsId",
+		art.EXECUTION_ID_ AS "act.executionId",
+		arp.KEY_ AS "act.procDefKey",
+		aht.START_TIME_ AS "act.taskStarterDate",
+		NULL  AS "taskExt.status",
+		NULL  AS "taskExt.pendingProdFlag",
+		NULL  AS "jykFlow.splitId",
+		NULL  AS "jykFlow.promotionTime",
+		epi.create_date AS "orderDate",
+		NULL  AS "orderSplitInfo.id",
+		NULL  AS "orderSplitInfo.promotionTime",
+		NULL  AS "orderSplitInfo.nextContactTime",
+		NULL  AS "orderSplitInfo.nextLicenseTime",
+		NULL  AS "orderSplitInfo.nextQualificationTime",
+		NULL  AS "orderSplitInfo.hurryFlag",
+		NULL  AS "orderSplitInfo.suspendFlag",
+		NULL  AS "orderSplitInfo.orderId",
+		NULL  AS "orderSplitInfo.splitId",
+		NULL  AS "orderSplitInfo.goodName",
+		NULL  AS "orderSplitInfo.num",
+		NULL  AS "orderSplitInfo.goodTypeName",	
+		NULL  AS "orderSplitInfo.timeoutFlag",  
+        NULL  AS "orderSplitInfo.pendingProduced",  
+        NULL  AS "orderSplitInfo.activationTime",
+        NULL  AS "orderOriginalInfo.id", 
+		NULL  AS "orderOriginalInfo.orderNumber",
+		NULL  AS "orderOriginalInfo.buyDate",
+		NULL  AS "orderOriginalInfo.shopId",
+		NULL  AS "orderOriginalInfo.shopName",
+		esi.`name` AS "shopName",
+		NULL  AS "orderOriginalInfo.agentName",
+		NULL  AS "orderOriginalInfo.orderType",
+		NULL  AS "orderOriginalInfo.contactName",
+		NULL  AS "orderOriginalInfo.contactNumber",
+		NULL  AS "orderOriginalInfo.promoteContact",
+		NULL  AS "orderOriginalInfo.promotePhone",
+		NULL  AS "orderOriginalInfo.orderVersion",
+		esi.id AS "shop.id",
+		esi.zhangbei_id AS "shop.zhangbeiId",
+		esi.zhangbei_state AS "shop.zhangbeiState",
+		esi.zhangbei_remark AS "shop.zhangbeiRemark",
+		esi.wechatpay_state AS "shop.wechatpayState",
+		esi.wechatpay_remark AS "shop.wechatpayRemark",
+		esi.unionpay_state AS "shop.unionpayState",
+		v2.machine_tool_number AS "shop.machineToolNumber",
+		esi.unionpay_remark AS "shop.unionpayRemark",
+		esi.`name` AS "shop.name",
+		esi.service_provider AS "shop.serviceProvider",
+		NULL AS "sdiFlow.sdiId",
+		epi.id AS "payInto.id",
+		epi.shop_id AS "payInto.shopId",
+		epi.store_id AS "payInto.storeId",
+		epi.intopieces_name AS "payInto.intopiecesName",
+		epi.create_date AS "payInto.createDate",
+		IFNULL(arae.task_date_hours,0) AS "act.taskDateHours",
+		IFNULL(arae.urgent_task_date_hours,0) AS "act.urgentTaskDateHours",
+		arae.task_user_role AS "act.taskUserRole",
+		arae.task_user_role2 AS "act.taskUserRole2"
+	</sql>
+	
+		<sql id="promotionFlowColumns">
+		art.ID_ AS "act.taskId",
+		art.TASK_DEF_KEY_ AS "act.taskDefKey",
+		art.PROC_DEF_ID_ AS "act.procDefId",
+		art.ASSIGNEE_ AS "act.assignee",
+		art.NAME_ AS "act.taskName",
+		art.PROC_INST_ID_ AS "act.businessId",
+		art.PROC_INST_ID_ AS "act.procInsId",
+		art.EXECUTION_ID_ AS "act.executionId",
+		arp.KEY_ AS "act.procDefKey",
+		aht.START_TIME_ AS "act.taskStarterDate",
+		NULL  AS "taskExt.status",
+		NULL  AS "taskExt.pendingProdFlag",
+		NULL  AS "jykFlow.splitId",
+		NULL  AS "jykFlow.promotionTime",
+		esa.update_date AS "orderDate",
+		NULL  AS "orderSplitInfo.id",
+		NULL  AS "orderSplitInfo.id",
+		NULL  AS "orderSplitInfo.promotionTime",
+		NULL  AS "orderSplitInfo.nextContactTime",
+		NULL  AS "orderSplitInfo.nextLicenseTime",
+		NULL  AS "orderSplitInfo.nextQualificationTime",
+		NULL  AS "orderSplitInfo.hurryFlag",
+		NULL  AS "orderSplitInfo.suspendFlag",
+		NULL  AS "orderSplitInfo.orderId",
+		NULL  AS "orderSplitInfo.splitId",
+		NULL  AS "orderSplitInfo.goodName",
+		NULL  AS "orderSplitInfo.num",
+		NULL  AS "orderSplitInfo.goodTypeName",	
+		NULL  AS "orderSplitInfo.timeoutFlag",  
+        NULL  AS "orderSplitInfo.pendingProduced",  
+        NULL  AS "orderSplitInfo.activationTime", 
+		esa.account_no  AS "orderOriginalInfo.orderNumber",
+		NULL  AS "orderOriginalInfo.buyDate",
+		NULL  AS "orderOriginalInfo.shopId",
+		NULL  AS "orderOriginalInfo.shopName",
+		NULL  AS "orderOriginalInfo.agentName",
+		NULL  AS "orderOriginalInfo.orderType",
+		NULL  AS "orderOriginalInfo.contactName",
+		NULL  AS "orderOriginalInfo.contactNumber",
+		NULL  AS "orderOriginalInfo.promoteContact",
+		NULL  AS "orderOriginalInfo.promotePhone",
+		NULL  AS "orderOriginalInfo.orderVersion",
+		esi.id AS "shop.id",
+		esi.zhangbei_id AS "shop.zhangbeiId",
+		esi.zhangbei_state AS "shop.zhangbeiState",
+		esi.zhangbei_remark AS "shop.zhangbeiRemark",
+		esi.wechatpay_state AS "shop.wechatpayState",
+		esi.wechatpay_remark AS "shop.wechatpayRemark",
+		esi.unionpay_state AS "shop.unionpayState",
+		NULL AS "shop.machineToolNumber",
+		esi.unionpay_remark AS "shop.unionpayRemark",
+		NULL AS "shopName",
+		esi.`name` AS "shop.name",
+		esi.service_provider AS "shop.serviceProvider",
+		NULL AS "sdiFlow.sdiId",
+		NULL AS "payInto.id",
+		NULL AS "payInto.shopId",
+		NULL AS "payInto.storeId",
+		NULL AS "payInto.intopiecesName",
+		NULL AS "payInto.createDate",
+		IFNULL(arae.task_date_hours,0) AS "act.taskDateHours",
+		IFNULL(arae.urgent_task_date_hours,0) AS "act.urgentTaskDateHours",
+		arae.task_user_role AS "act.taskUserRole",
+		arae.task_user_role2 AS "act.taskUserRole2"
+	</sql>
+	
+	<sql id="microblogPromotionFlowJoins">
+		INNER JOIN 
+			ACT_RE_PROCDEF arp
+		ON
+			art.proc_def_id_ = arp.id_ AND (arp.key_ = 'microblog_promotion_flow')
+		LEFT JOIN
+			ACT_HI_TASKINST aht
+		ON 
+			art.ID_ = aht.ID_
+		LEFT JOIN 
+			ACT_RE_ACTDEF_EXT arae
+		ON 
+			arp.KEY_ = arae.process_define_key AND art.TASK_DEF_KEY_ = arae.act_id
+		LEFT JOIN erp_store_advertiser_weibo esa ON art.proc_inst_id_ = esa.proc_ins_id
+		LEFT JOIN erp_store_info v1 ON v1.advertiser_weibo_id = esa.id
+		LEFT JOIN erp_shop_info esi
+		ON v1.shop_info_id = esi.id AND esa.del_flag = 0
+	</sql>
+	<sql id="friendsPromotionFlowJoins">
+				INNER JOIN 
+			ACT_RE_PROCDEF arp
+		ON
+			art.proc_def_id_ = arp.id_ AND (arp.key_ = 'friends_promotion_flow')
+		LEFT JOIN
+			ACT_HI_TASKINST aht
+		ON 
+			art.ID_ = aht.ID_
+		LEFT JOIN 
+			ACT_RE_ACTDEF_EXT arae
+		ON 
+			arp.KEY_ = arae.process_define_key AND art.TASK_DEF_KEY_ = arae.act_id
+		LEFT JOIN erp_store_advertiser_friends esa ON art.proc_inst_id_ = esa.proc_ins_id
+		LEFT JOIN erp_store_info v1 ON v1.advertiser_friends_id = esa.id
+		LEFT JOIN erp_shop_info esi
+		ON v1.shop_info_id = esi.id AND esa.del_flag = 0
+	</sql>
+	
+	<sql id="payFlowJoins">
+		INNER JOIN 
+			ACT_RE_PROCDEF arp
+		ON
+			art.proc_def_id_ = arp.id_ AND (arp.key_ = 'wechatpay_intopieces_flow' OR arp.key_ = 'unionpay_intopieces_flow')
+		LEFT JOIN
+			ACT_HI_TASKINST aht
+		ON 
+			art.ID_ = aht.ID_
+		LEFT JOIN 
+			ACT_RE_ACTDEF_EXT arae
+		ON 
+			arp.KEY_ = arae.process_define_key AND art.TASK_DEF_KEY_ = arae.act_id
+		LEFT JOIN
+			erp_pay_intopieces epi
+		ON
+			art.proc_inst_id_ = epi.proc_ins_id
+		LEFT JOIN erp_store_info v1 ON
+			v1.id = epi.store_id
+		LEFT JOIN erp_store_pay_unionpay v2 ON
+			v2.id = v1.unionpay_id
+		LEFT JOIN
+			erp_shop_info esi
+		ON
+			epi.shop_id = esi.id AND esi.del_flag = 0
+	</sql>
+	
+	<sql id="payFlowWhere">
+		<if test="orderNumber != null and orderNumber != ''">
+			AND epi.intopieces_name LIKE CONCAT('%', #{orderNumber}, '%')
+		</if>
+		<if test="shopName != null and shopName != ''">
+			AND epi.short_name LIKE CONCAT('%', #{shopName}, '%')
+		</if>
+	</sql>
+
+	<sql id="orderBy">
+		<choose>
+			<when test="orderBy != null and orderBy != ''">
+				ORDER BY ${orderBy} DESC
+			</when>
+			<otherwise>
+				ORDER BY orderDate DESC
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<sql id="todoTasks">
+		SELECT
+			<include refid="jykFlowColumns"/>
+		FROM ACT_RU_TASK art
+			<include refid="jykFlowJoins"/>
+		WHERE
+			art.ASSIGNEE_ = #{assignee}
+			AND arte.`pending_prod_flag` = 'N'
+			AND arae.act_type='jyk_pro'
+			<include refid="jykFlowWhere"/>
+	</sql>
+	
+	<select id="findTodoTasks" resultType="com.yunnex.ops.erp.modules.workflow.flow.from.FlowForm">
+		SELECT * FROM (
+			<include refid="todoTasks"/>
+		) flow
+		<include refid="orderBy"/>
+		<if test="isPage != 0">
+			LIMIT #{startIndex}, #{pageSize}
+		</if>
+	</select>
+	
+	
+	<select id="findTodoTaskCount" resultType="int">
+		SELECT count(*) FROM (
+			<include refid="todoTasks"/>
+		) flow
+	</select>
+	
+	
+	<sql id="distinctJykFlow">
+		SELECT
+			DISTINCT eosi.proc_ins_id
+		FROM
+			erp_order_split_info eosi
+		LEFT JOIN 
+			erp_order_original_info eooi
+		ON 
+			eosi.order_id = eooi.id AND eooi.del_flag = 0
+		LEFT JOIN
+			erp_order_flow_user eofu
+		ON
+			eosi.id = eofu.split_id AND eofu.del_flag = 0
+		WHERE
+			eofu.user_id = #{assignee}
+		AND
+			eosi.`status` = 0
+		AND
+			eooi.cancel = 0
+	</sql>
+	
+	<sql id="distinctSdiFlow">
+		SELECT DISTINCT
+			esdi.proc_ins_id
+		FROM
+			erp_shop_data_input esdi
+			LEFT JOIN erp_order_original_info eooi ON esdi.order_id = eooi.id
+			LEFT JOIN sdi_flow sf ON esdi.order_id = sf.order_id
+		WHERE
+			(
+				sf.operation_manager = #{assignee}
+				OR sf.operation_adviser = #{assignee}
+			)
+		AND eooi.cancel = 0
+	</sql>
+	
+	<sql id="followTasks">
+		SELECT
+			<include refid="jykFlowColumns"/>
+		FROM (
+			<include refid="distinctJykFlow"/>
+		) inst
+		INNER JOIN
+			ACT_RU_TASK art
+		ON 
+			inst.proc_ins_id = art.proc_inst_id_ 
+		<include refid="jykFlowJoins"/>
+		WHERE
+			art.assignee_ != #{assignee}
+		AND
+			art.proc_inst_id_ IS NOT NULL
+		AND 
+			arte.`pending_prod_flag` = 'N'
+			<include refid="jykFlowWhere"/>
+	</sql>
+	
+	<select id="findFollowTasks" resultType="com.yunnex.ops.erp.modules.workflow.flow.from.FlowForm">
+		SELECT * FROM (
+			<include refid="followTasks"/>
+		) flow
+		<include refid="orderBy"/>
+		<if test="isPage != 0">
+			LIMIT #{startIndex}, #{pageSize}
+		</if>
+	</select>
+	
+	
+	<select id="findFollowTaskCount" resultType="int">
+		SELECT count(*) FROM (
+			<include refid="followTasks"/>
+		) flow
+	</select>
+	
+	<sql id="pendingProductionTasks">
+		SELECT
+			<include refid="jykFlowColumns"/>
+		FROM ACT_RU_TASK art
+			<include refid="jykFlowJoins"/>
+		WHERE
+			art.ASSIGNEE_ = #{assignee}
+		AND arte.`pending_prod_flag` = 'Y'
+		<include refid="jykFlowWhere"/>
+	</sql>
+	
+	<select id="findPendingProductionTasks" resultType="com.yunnex.ops.erp.modules.workflow.flow.from.FlowForm">
+		SELECT * FROM (
+			<include refid="pendingProductionTasks"/>
+		) flow
+		<include refid="orderBy"/>
+		<if test="isPage != 0">
+			LIMIT #{startIndex}, #{pageSize}
+		</if>
+	</select>
+	
+	<select id="findPendingProductionTaskCount" resultType="int">
+		SELECT COUNT(*) FROM (
+			<include refid="pendingProductionTasks"/>
+		) flow
+	</select>
+	
+	<sql id="teamTasks">
+		SELECT
+			<include refid="jykFlowColumns"/>
+		FROM ACT_RU_TASK art
+			<include refid="jykFlowJoins"/>
+		WHERE
+			arte.`pending_prod_flag` = #{pendingProdFlag}
+		<if test="userIds != null and userIds.size > 0">
+			AND art.ASSIGNEE_ IN
+			<foreach collection="userIds" index="index" item="item"
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<include refid="jykFlowWhere"/>
+		
+		<if test='pendingProdFlag != null and pendingProdFlag == "N"'>
+		
+			UNION
+			
+			SELECT
+				<include refid="sdiFlowColumns"/>
+			FROM ACT_RU_TASK art
+				<include refid="sdiFlowJoins"/>
+			WHERE
+				1 = 1 
+			<if test="userIds != null and userIds.size > 0">
+				AND art.ASSIGNEE_ IN
+				<foreach collection="userIds" index="index" item="item"
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+				AND (sf.operation_manager IN
+				<foreach collection="userIds" index="index" item="item"
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+				OR sf.operation_adviser IN
+				<foreach collection="userIds" index="index" item="item"
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+				)
+			</if>
+			<include refid="sdiFlowWhere"/>
+			
+			UNION
+			
+			SELECT
+				<include refid="payFlowColumns"/>
+			FROM ACT_RU_TASK art
+				<include refid="payFlowJoins"/>
+			WHERE
+				1 = 1
+			<if test="userIds != null and userIds.size > 0">
+				AND art.ASSIGNEE_ IN
+				<foreach collection="userIds" index="index" item="item"
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+				AND epi.charge_person IN
+				<foreach collection="userIds" index="index" item="item"
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<include refid="payFlowWhere"/>
+			
+		</if>
+	</sql>
+	
+	<select id="findTeamTasks" resultType="com.yunnex.ops.erp.modules.workflow.flow.from.FlowForm">
+		SELECT * FROM (
+			<include refid="teamTasks"/>
+		) flow
+		<include refid="orderBy"/>
+		<if test="isPage != 0">
+			LIMIT #{startIndex}, #{pageSize}
+		</if>
+	</select>
+	
+	<select id="findTeamTaskCount" resultType="int">
+		SELECT count(*) FROM (
+			<include refid="teamTasks"/>
+		) flow 
+	</select>
+	
+	<select id="findTaskIdByProcInsId" resultType="String">
+		SELECT a.ID_ FROM ACT_RU_TASK a 
+		where a.PROC_INST_ID_ = #{procInsId}
+	</select>
+	
+	<select id="findTaskKeyByProcInsId" resultType="String">
+		SELECT a.TASK_DEF_KEY_ FROM ACT_RU_TASK a 
+		where a.PROC_INST_ID_ = #{procInsId}
+	</select>
+	
+	<select id="findTaskNameByProcInsId" resultType="String">
+		SELECT a.NAME_ FROM ACT_RU_TASK a 
+		where a.PROC_INST_ID_ = #{procInsId}
+	</select>
+	
+	<select id="findTidByProcInsId" resultType="String">
+		SELECT a.id_ FROM ACT_RU_TASK a 
+		where a.PROC_INST_ID_ = #{procInsId}
+	</select>
+	
+	<select id="getTaskRole" resultType="String">
+		SELECT arae.role_name
+			FROM ACT_RU_TASK art 
+			LEFT JOIN ACT_RE_ACTDEF_EXT arae ON art.TASK_DEF_KEY_ = arae.act_id
+    		WHERE arae.process_define_key IS NOT NULL
+    		AND arae.process_define_key = #{processKey}
+    		AND art.ID_ = #{taskId}
+	</select>
+	
+	<select id="findRoleTasks" resultType="String">
+		SELECT art.ID_
+			FROM ACT_RU_TASK art 
+			LEFT JOIN ACT_RE_ACTDEF_EXT arae ON art.TASK_DEF_KEY_ = arae.act_id
+		    WHERE arae.process_define_key IS NOT NULL
+		    AND arae.process_define_key = #{processKey}
+		    AND art.PROC_INST_ID_ = #{procInsId}
+		    AND arae.role_name = #{roleName}
+	</select>
+	
+	<select id="queryTaskListPage" resultType="com.yunnex.ops.erp.modules.workflow.flow.dto.FlowTaskDto">
+			
+			<!-- 服务启动 -->
+			<if test="actType == 'service_startup'">
+				<include refid="queryTaskListServiceStartUp" />
+			</if>
+			<!-- 账号支付开通 -->
+			<if test="actType == 'account_pay_open'">
+				<include refid="queryTaskListAccountPayOpen" />
+			</if>
+			<!-- 营销策划 -->
+			<if test="actType == 'marketing_planning'">
+				<include refid="queryTaskListPlaning" />
+			</if>
+			<!-- 培训服务 -->
+			<if test="actType == 'training_service'">
+				<include refid="queryTaskListTraining" />
+			</if>
+			<!-- 物料服务 -->
+			<if test="actType == 'material_service'">
+				<include refid="queryTaskListMaterial" />
+			</if>
+			<!-- 售后上门 -->
+			<if test="actType == 'aftersale_visit'">
+				<include refid="queryTaskListVisit" />
+			</if>
+			<!-- 广告主开通 -->
+			<if test="actType == 'advertiser_open'">
+				<include refid="queryTaskListAdvertiserOpen" />
+			</if>
+			<!-- 聚引客交付 -->
+			<if test="actType == 'jyk_delivery'">
+				<include refid="queryTaskListJykDelivery" />
+			</if>
+			<!-- 审核上门申请 -->
+			<if test="actType == 'review_visit'">
+				<include refid="queryTaskListReviewVisit" />
+			</if>
+			<!-- 智慧上门流程 -->
+			<if test="actType == 'wisdom_shop'">
+				<include refid="queryTaskListWisdomShop" />
+			</if>
+			where 1=1
+			<if test="null != taskState and taskState != ''">
+					AND result.status =#{taskState}
+			</if>
+			<if test="orderNumber != null and orderNumber != ''">
+					AND result.orderNumber LIKE CONCAT('%',#{orderNumber},'%')
+			</if>
+			<if test="shopName != null and shopName != ''">
+					AND result.shopName LIKE CONCAT('%',#{shopName},'%')
+			</if>
+			<if test="null != taskRef and taskRef != ''">
+					AND result.taskRef =#{taskRef}
+			</if>
+			order by result.taskStartDate DESC
+		<if test="isPage != 0">
+			LIMIT #{startIndex}, #{pageSize}
+		</if>
+	</select>
+	
+	
+	<select id="queryTaskListCount" resultType="int">
+			
+			SELECT 
+				COUNT(* )
+			 FROM 
+			 	(
+					<!-- 服务启动 -->
+					<if test="actType == 'service_startup'">
+						<include refid="queryTaskListServiceStartUp" />
+					</if>
+					<!-- 账号支付开通 -->
+					<if test="actType == 'account_pay_open'">
+						<include refid="queryTaskListAccountPayOpen" />
+					</if>
+					<!-- 营销策划 -->
+					<if test="actType == 'marketing_planning'">
+						<include refid="queryTaskListPlaning" />
+					</if>
+					<!-- 培训服务 -->
+					<if test="actType == 'training_service'">
+						<include refid="queryTaskListTraining" />
+					</if>
+					<!-- 物料服务 -->
+					<if test="actType == 'material_service'">
+						<include refid="queryTaskListMaterial" />
+					</if>
+					<!-- 售后上门 -->
+					<if test="actType == 'aftersale_visit'">
+						<include refid="queryTaskListVisit" />
+					</if>
+					<!-- 广告主开通 -->
+					<if test="actType == 'advertiser_open'">
+						<include refid="queryTaskListAdvertiserOpen" />
+					</if>
+					<!-- 聚引客交付 -->
+					<if test="actType == 'jyk_delivery'">
+						<include refid="queryTaskListJykDelivery" />
+					</if>
+					<!-- 审核上门申请 -->
+					<if test="actType == 'review_visit'">
+						<include refid="queryTaskListReviewVisit" />
+					</if>
+					<!-- 智慧上门流程 -->
+					<if test="actType == 'wisdom_shop'">
+						<include refid="queryTaskListWisdomShop" />
+					</if>		
+					where 1=1
+				 	<if test="null != taskStates and taskStates.size > 0">
+						AND result.status =#{taskState}
+					</if>
+					<if test="orderNumber != null and orderNumber != ''">
+						AND result.orderNumber LIKE CONCAT('%',#{orderNumber},'%')
+					</if>
+					<if test="shopName != null and shopName != ''">
+						AND result.shopName LIKE CONCAT('%',#{shopName},'%')
+					</if>
+					<if test="null != taskRef and taskRef != ''">
+						AND result.taskRef =#{taskRef}
+					</if>
+					
+			 	) as res
+			 	
+	</select>
+
+	<sql id="sqlShopDataInputFlow">
+		
+		SELECT 
+				art.ID_ as taskId,
+				art.PROC_INST_ID_ as  procInsId,
+				art.NAME_ as  taskName ,
+				art.CREATE_TIME_ as  taskStartDate ,
+				art.TASK_DEF_KEY_ as taskRef,
+				arae.process_define_key processDefineKey,
+				arae.task_date_hours taskHour,
+				arae.urgent_task_date_hours urgentTaskHour,
+				'0' hurryFlag,
+				sp.order_number orderNumber,
+				sp.shop_name as shopName,
+				arte.`status` status,
+				arae.act_type actType,
+				 arte.remark AS remark,
+				'history' flowMark
+			 FROM 
+			 	ACT_RU_TASK art 
+			 	INNER JOIN ACT_RE_ACTDEF_EXT arae ON art.TASK_DEF_KEY_ = arae.act_id  AND arae.process_define_key = 'shop_data_input_flow'
+				LEFT  JOIN erp_shop_data_input sp on art.PROC_INST_ID_ = sp.PROC_INS_ID 
+				LEFT JOIN ACT_RU_TASK_EXT arte ON art.ID_ = arte.task_id		
+				<where>
+					1 = 1
+					<if test="actType != null">
+				         AND arae.act_type = #{actType}
+				    </if> 
+				    <if test="assignee != null">
+				        AND art.ASSIGNEE_ = #{assignee}
+				    </if>
+				</where>
+			
+	</sql>
+	
+	<sql id="sqlDeliveryServiceFlow">
+		
+		SELECT 
+				art.ID_ as taskId,
+				art.PROC_INST_ID_ as  procInsId,
+				art.NAME_ as  taskName ,
+				art.CREATE_TIME_ as  taskStartDate ,
+				art.TASK_DEF_KEY_ as taskRef,
+				arae.process_define_key processDefineKey,
+				arae.task_date_hours taskHour,
+				arae.urgent_task_date_hours urgentTaskHour,
+				'0' hurryFlag,
+				sp.order_number orderNumber,
+				sp.shop_name as shopName,
+				arte.`status` status,
+				arae.act_type actType,
+				 arte.remark as remark,
+				'add' flowMark
+			FROM 
+			 	ACT_RU_TASK art 
+			 	INNER JOIN ACT_RE_ACTDEF_EXT arae ON art.TASK_DEF_KEY_ = arae.act_id  AND arae.process_define_key in ('delivery_service_flow','visit_service_zhct_flow')
+				LEFT  JOIN erp_delivery_service sp on art.PROC_INST_ID_ = sp.PROC_INS_ID 
+				LEFT JOIN ACT_RU_TASK_EXT arte ON art.ID_ = arte.task_id		
+				<where>
+					1 = 1
+					<if test="actType != null">
+				         AND ( arae.act_type = #{actType} OR  arte.remark= #{actType})
+				    </if> 
+				    <if test="assignee != null">
+				        AND art.ASSIGNEE_ = #{assignee}
+				    </if>
+				</where>
+	</sql>
+	
+	
+	<sql id="sqlJykFlow">
+		
+		SELECT 
+				art.ID_ as taskId,
+				art.PROC_INST_ID_ as  procInsId,
+				art.NAME_ as  taskName ,
+				art.CREATE_TIME_ as  taskStartDate ,
+				art.TASK_DEF_KEY_ as taskRef,
+				arae.process_define_key processDefineKey,
+				arae.task_date_hours taskHour,
+				arae.urgent_task_date_hours urgentTaskHour,
+				sp.hurry_flag hurryFlag,
+				IF(sp.split_id = 0,sp.order_number,CONCAT(sp.order_number,'-',sp.split_id)) orderNumber,
+				(select shop.name from erp_shop_info shop where shop.zhangbei_id=sp.shop_id and del_flag = 0) as shopName,
+				arte.`status` status,
+				arae.act_type actType,
+				 arte.remark AS remark,
+				'history' flowMark
+			 FROM 
+			 	ACT_RU_TASK art 
+			 	INNER JOIN ACT_RE_ACTDEF_EXT arae ON art.TASK_DEF_KEY_ = arae.act_id  AND arae.process_define_key in ('jyk_flow','jyk_flow_3.2','jyk_flow_new_3.2','jyk_flow_new')
+				LEFT  JOIN erp_order_split_info sp on art.PROC_INST_ID_ = sp.PROC_INS_ID <!-- and sp.status = 0 -->	
+				LEFT JOIN ACT_RU_TASK_EXT arte ON art.ID_ = arte.task_id	
+			 	<where>
+					1 = 1
+					<if test="actType != null">
+				         AND arae.act_type = #{actType}
+				    </if> 
+				    <if test="assignee != null">
+				        AND art.ASSIGNEE_ = #{assignee}
+				    </if>
+				</where>	
+			
+	</sql>
+	
+	
+	<sql id="sqlPayIntopiecesFlow">
+		
+		SELECT 
+				art.ID_ as taskId,
+				art.PROC_INST_ID_ as  procInsId,
+				art.NAME_ as  taskName ,
+				art.CREATE_TIME_ as  taskStartDate ,
+				art.TASK_DEF_KEY_ as taskRef,
+				arae.process_define_key processDefineKey,
+				arae.task_date_hours taskHour,
+				arae.urgent_task_date_hours urgentTaskHour,
+				'0' hurryFlag,
+				sp.intopieces_name orderNumber,
+				(select shop.name from erp_shop_info shop where shop.zhangbei_id=sp.shop_id and del_flag = 0) as shopName,
+				arte.`status` status,
+				arae.act_type actType,
+				 arte.remark AS remark,
+				'history' flowMark
+			 FROM 
+			 	ACT_RU_TASK art 
+			 	INNER JOIN ACT_RE_ACTDEF_EXT arae ON art.TASK_DEF_KEY_ = arae.act_id  AND arae.process_define_key in ('unionpay_intopieces_flow','wechatpay_intopieces_flow')
+				LEFT  JOIN erp_pay_intopieces sp on art.PROC_INST_ID_ = sp.PROC_INS_ID 	
+				LEFT JOIN ACT_RU_TASK_EXT arte ON art.ID_ = arte.task_id	
+			 	<where>
+			 		1 = 1
+					<if test="actType != null">
+				         AND arae.act_type = #{actType}
+				    </if> 
+				    <if test="assignee != null">
+				        AND art.ASSIGNEE_ = #{assignee}
+				    </if>
+				</where>			
+			
+	</sql>
+	
+	<sql id="sqlAfterSaleVisitServiceFlow">
+	
+		SELECT  DISTINCT
+				art.ID_ as taskId,
+				art.PROC_INST_ID_ as  procInsId,
+				art.NAME_ as  taskName ,
+				art.CREATE_TIME_ as  taskStartDate ,
+				art.TASK_DEF_KEY_ as taskRef,
+				arae.process_define_key processDefineKey,
+				arae.task_date_hours taskHour,
+				arae.urgent_task_date_hours urgentTaskHour,
+				'0' hurryFlag,
+				sp.shop_info_id orderNumber,
+				(select shop.name from erp_shop_info shop where shop.id=sp.shop_info_id and del_flag = 0) as shopName,
+				arte.`status` status,
+				arae.act_type actType,
+				 arte.remark AS remark,
+				'add' flowMark
+			 FROM 
+			 	ACT_RU_TASK art 
+			 	INNER JOIN ACT_RE_ACTDEF_EXT arae ON art.TASK_DEF_KEY_ = arae.act_id  AND arae.process_define_key in ('visit_service_flow')
+				LEFT  JOIN erp_visit_service_info sp on art.PROC_INST_ID_ = sp.PROC_INS_ID 	
+				LEFT JOIN ACT_RU_TASK_EXT arte ON art.ID_ = arte.task_id	
+			 	<where>
+					1 = 1
+					<if test="actType != null">
+				         AND arae.act_type = #{actType}
+				    </if> 
+				    <if test="assignee != null">
+				        AND art.ASSIGNEE_ = #{assignee}
+				    </if>
+				</where>
+	
+	</sql>
+	
+	<sql id="sqlPromotionFlow">
+			SELECT 
+				art.ID_ as taskId,
+				art.PROC_INST_ID_ as  procInsId,
+				art.NAME_ as  taskName ,
+				art.CREATE_TIME_ as  taskStartDate ,
+				art.TASK_DEF_KEY_ as taskRef,
+				arae.process_define_key processDefineKey,
+				arae.task_date_hours taskHour,
+				arae.urgent_task_date_hours urgentTaskHour,
+				'0' hurryFlag,
+				sp.account_no orderNumber,
+				(select shop.name from erp_shop_info shop where shop.id=v1.shop_info_id and del_flag = 0) as shopName,
+				arte.`status` status,
+				arae.act_type actType,
+				 arte.remark AS remark,
+				'history' flowMark
+			 FROM 
+			 	ACT_RU_TASK art 
+			 	INNER JOIN ACT_RE_ACTDEF_EXT arae ON art.TASK_DEF_KEY_ = arae.act_id  AND arae.process_define_key ='friends_promotion_flow'
+				INNER  JOIN erp_store_advertiser_friends sp on art.PROC_INST_ID_ = sp.PROC_INS_ID
+				LEFT  JOIN erp_store_info v1 ON v1.advertiser_friends_id = sp.id 
+				LEFT JOIN ACT_RU_TASK_EXT arte ON art.ID_ = arte.task_id
+				<where>
+					1 = 1
+					<if test="actType != null">
+				         AND arae.act_type = #{actType}
+				    </if> 
+				    <if test="assignee != null">
+				        AND art.ASSIGNEE_ = #{assignee}
+				    </if>
+				</where>	
+			UNION
+			SELECT 
+				art.ID_ as taskId,
+				art.PROC_INST_ID_ as  procInsId,
+				art.NAME_ as  taskName ,
+				art.CREATE_TIME_ as  taskStartDate ,
+				art.TASK_DEF_KEY_ as taskRef,
+				arae.process_define_key processDefineKey,
+				arae.task_date_hours taskHour,
+				arae.urgent_task_date_hours urgentTaskHour,
+				'0' hurryFlag,
+				sp.account_no orderNumber,
+				(select shop.name from erp_shop_info shop where shop.id=v1.shop_info_id and del_flag = 0) as shopName,
+				arte.`status` status,
+				arae.act_type actType,
+				 arte.remark AS remark,
+				'history' flowMark
+			 FROM 
+			 	ACT_RU_TASK art 
+			 	INNER JOIN ACT_RE_ACTDEF_EXT arae ON art.TASK_DEF_KEY_ = arae.act_id  AND arae.process_define_key ='microblog_promotion_flow'
+				INNER JOIN erp_store_advertiser_weibo sp on art.PROC_INST_ID_ = sp.PROC_INS_ID 
+				LEFT  JOIN erp_store_info v1 ON v1.advertiser_weibo_id = sp.id
+				LEFT  JOIN ACT_RU_TASK_EXT arte ON art.ID_ = arte.task_id
+				<where>
+					1 = 1
+					<if test="actType != null">
+				         AND arae.act_type = #{actType}
+				    </if> 
+				    <if test="assignee != null">
+				        AND art.ASSIGNEE_ = #{assignee}
+				    </if>
+				</where>
+	</sql>
+	
+	<!-- 聚引客生产 -->
+	<sql id="queryTaskListJykPro">	
+			SELECT * FROM (
+			<include refid="sqlJykFlow" /> 	
+			 ) as result
+			 	
+	</sql>
+	<!-- 服务启动 -->
+	<sql id="queryTaskListServiceStartUp">
+			SELECT * FROM (
+				<include refid="sqlShopDataInputFlow" /> 	
+			 	UNION
+			 	<include refid="sqlDeliveryServiceFlow" />
+			 ) as result
+	</sql>
+	
+	<!-- 账号支付开通 -->
+	<sql id="queryTaskListAccountPayOpen">
+			SELECT * FROM (		
+				<include refid="sqlShopDataInputFlow" />
+			UNION
+				<include refid="sqlDeliveryServiceFlow" />
+			UNION 
+				<include refid="sqlJykFlow" />	
+			UNION
+			 	<include refid="sqlPayIntopiecesFlow" />
+			) as result
+	</sql>
+	<!--  营销策划服务 -->
+	<sql id="queryTaskListPlaning">
+			 SELECT * FROM (
+			 <include refid="sqlDeliveryServiceFlow" />	
+			 ) as result
+	</sql>
+	<!-- 培训服务 -->
+	<sql id="queryTaskListTraining">
+			SELECT * FROM (
+			 <include refid="sqlDeliveryServiceFlow" />	
+			 ) as result
+	</sql>
+	<!-- 物料制作服务 -->
+	<sql id="queryTaskListMaterial">
+			SELECT * FROM (
+			 <include refid="sqlDeliveryServiceFlow" />	
+			 ) as result
+	</sql>
+	<!-- 售后上门 -->
+	<sql id="queryTaskListVisit">
+			SELECT * FROM (
+			 <include refid="sqlAfterSaleVisitServiceFlow" />
+			 UNION
+			 <include refid="sqlDeliveryServiceFlow" />	
+			 ) as result
+	</sql>
+	<!-- 广告主开通 -->
+	<sql id="queryTaskListAdvertiserOpen">
+			SELECT * FROM (
+			 <include refid="sqlJykFlow" />
+			 UNION
+			 <include refid="sqlDeliveryServiceFlow" />
+			 UNION
+			 <include refid="sqlPromotionFlow" />
+			 ) as result
+	</sql>
+	<!-- 聚引客上门交付 -->
+	<sql id="queryTaskListJykDelivery">
+			SELECT * FROM (
+			 <include refid="sqlDeliveryServiceFlow" />	
+			 ) as result
+	</sql>
+	<!-- 审核上门服务 -->
+	<sql id="queryTaskListReviewVisit">
+			SELECT * FROM (
+			 <include refid="sqlDeliveryServiceFlow" />
+			 UNION
+			 <include refid="sqlAfterSaleVisitServiceFlow" />	
+			 ) as result
+	</sql>
+	
+	<!-- 智慧上门流程 -->
+	<sql id="queryTaskListWisdomShop">
+			SELECT * FROM (
+			 <include refid="sqlDeliveryServiceFlow" />
+			 ) as result
+	</sql>
+	
+	<select id="queryTaskKeyList" resultType="java.util.HashMap">
+			select result.taskRef,result.taskName from (
+			<!-- 服务启动 -->
+			<if test="actType == 'service_startup'">
+				<include refid="queryTaskListServiceStartUp" />
+			</if>
+			<!-- 账号支付开通 -->
+			<if test="actType == 'account_pay_open'">
+				<include refid="queryTaskListAccountPayOpen" />
+			</if>
+			<!-- 营销策划 -->
+			<if test="actType == 'marketing_planning'">
+				<include refid="queryTaskListPlaning" />
+			</if>
+			<!-- 培训服务 -->
+			<if test="actType == 'training_service'">
+				<include refid="queryTaskListTraining" />
+			</if>
+			<!-- 物料服务 -->
+			<if test="actType == 'material_service'">
+				<include refid="queryTaskListMaterial" />
+			</if>
+			<!-- 售后上门 -->
+			<if test="actType == 'aftersale_visit'">
+				<include refid="queryTaskListVisit" />
+			</if>
+			<!-- 广告主开通 -->
+			<if test="actType == 'advertiser_open'">
+				<include refid="queryTaskListAdvertiserOpen" />
+			</if>
+			<!-- 聚引客交付 -->
+			<if test="actType == 'jyk_delivery'">
+				<include refid="queryTaskListJykDelivery" />
+			</if>
+			<!-- 审核上门申请 -->
+			<if test="actType == 'review_visit'">
+				<include refid="queryTaskListReviewVisit" />
+			</if>
+			<!-- 智慧上门流程 -->
+			<if test="actType == 'wisdom_shop'">
+				<include refid="queryTaskListWisdomShop" />
+			</if>
+			<if test="isPage != 0">
+				LIMIT #{startIndex}, #{pageSize}
+			</if>
+			) as result group by result.taskRef
+	</select>
+	
+	
+	<select id="queryOperatingStatistics" resultType="java.util.HashMap">
+
+ 		<!-- 聚引客生产 -->
+		<!-- 服务启动 -->
+			select 'service_startup' as name, COUNT(*) as total  from (
+			<include refid="queryTaskListServiceStartUp" />
+			where result.actType='service_startup' OR  result.remark= 'service_startup'
+			) as t2
+		<!-- 账号支付开通 -->
+			UNION
+			select 'account_pay_open' as name, COUNT(*) as total  from (
+			<include refid="queryTaskListAccountPayOpen" />
+			where result.actType='account_pay_open'  OR  result.remark= 'account_pay_open'
+			) as t3
+		<!-- 营销策划 -->
+			UNION
+			select 'marketing_planning' as name, COUNT(*) as total  from (
+			<include refid="queryTaskListPlaning" />
+			where result.actType='marketing_planning' OR  result.remark= 'marketing_planning'
+			) as t4
+		<!-- 培训服务 -->
+			UNION
+			select 'training_service' as name, COUNT(*) as total  from (
+			<include refid="queryTaskListTraining" />
+			where result.actType='training_service' OR  result.remark= 'training_service'
+			) as t5
+		<!-- 物料服务 -->
+			UNION
+			select 'material_service' as name, COUNT(*) as total  from (
+			<include refid="queryTaskListMaterial" />
+			where result.actType='material_service'  OR  result.remark= 'material_service'
+			) as t6
+		<!-- 售后上门 -->
+			UNION
+			select 'aftersale_visit' as name, COUNT(*) as total  from (
+			<include refid="queryTaskListVisit" />
+			where result.actType='aftersale_visit'  OR  result.remark= 'aftersale_visit'
+			) as t7
+		<!-- 广告主开通 -->
+			UNION
+			select 'advertiser_open' as name, COUNT(*) as total  from (
+			<include refid="queryTaskListAdvertiserOpen" />
+			where result.actType='advertiser_open'  OR  result.remark= 'advertiser_open'
+			) as t8
+		<!-- 聚引客交付 -->
+			UNION
+			select 'jyk_delivery' as name, COUNT(*) as total  from (
+			<include refid="queryTaskListJykDelivery" />
+			where result.actType='jyk_delivery' OR  result.remark= 'jyk_delivery'
+			) as t9
+		<!-- 审核上门申请 -->
+			UNION
+			select 'review_visit' as name, COUNT(*) as total  from (
+			<include refid="queryTaskListReviewVisit" />
+			where result.actType='review_visit'  OR  result.remark= 'review_visit'
+			)	as t10
+			UNION
+			select 'wisdom_shop' as name, COUNT(*) as total  from (
+			<include refid="queryTaskListWisdomShop" />
+			where result.actType='wisdom_shop'  OR  result.remark= 'wisdom_shop'
+			)	as t10		
+	</select>
+	
+	<update id="updateAssigneeByZhangbeiId">
+		UPDATE ACT_RU_TASK a 
+		JOIN erp_order_flow_user b 
+		ON a.proc_inst_id_=b.flow_id and b.flow_user_id='OperationAdviser' and b.del_flag='0'
+		JOIN erp_order_original_info c 
+		ON b.order_id=c.id and c.shop_id=#{zhangbeiId} and c.del_flag='0'
+		JOIN ACT_RE_ACTDEF_EXT d
+		ON a.task_def_key_ = d.act_id and d.assignee='OperationAdviser' 
+		SET a.ASSIGNEE_=#{operationAdviserId}
+	</update>
+	
+	<!-- 流程id中任务节点是否已完成 -->
+	<select id="getFinishTaskCount" resultType="int">
+		select count(*) from ACT_HI_TASKINST 
+		where 	PROC_INST_ID_ = #{procInsId} 
+				AND TASK_DEF_KEY_ = #{taskDefKey} 
+				AND DELETE_REASON_ = 'completed'
+	</select>
+	
+	
+	<select id="getRunTaskCount" resultType="int">
+		select count(1) from ACT_RU_TASK D 
+	   where D.TASK_DEF_KEY_ in 
+			<foreach collection="taskDefKeys" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+	      and D.PROC_INST_ID_ = #{procInsId} 
+	</select>
+	
+	<select id="overJyk" resultType="String">
+		SELECT PROC_INST_ID_ as flowId from ACT_RU_TASK where 
+		PROC_INST_ID_ in( 
+		SELECT PROC_INST_ID_ from ACT_HI_TASKINST 
+		where TASK_DEF_KEY_ = 'work_promotional_data_archiving' and DELETE_REASON_ = 'completed') 
+		GROUP BY PROC_INST_ID_
+	</select>
+</mapper>

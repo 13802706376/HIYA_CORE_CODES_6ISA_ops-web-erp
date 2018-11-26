@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpPromoteDao">
+	<select id="findPromoteOrder" resultType="com.yunnex.ops.erp.modules.order.entity.PromoteOrderSplit">
+		select
+			v2.order_number AS orderNumber,
+			(select group_concat(case when v11.promote_status IS NULL then 'running' when v11.promote_status = '' then 'running' else v11.promote_status END) from jyk_order_promotion_channel v11 where v11.split_id = v1.id GROUP BY v11.split_id and v11.del_flag=0) as promoteStatus,
+			v2.shop_name AS shopName,
+			date_format( v2.buy_date, '%Y-%m-%d %T' ) AS buyDate,
+			v2.contact_number AS contactNumber,
+			(
+				case
+					when v2.order_type = 1 THEN '直销'
+					when v2.order_type = 2 then '服务商'
+					else '-'
+				end
+			) as orderType,
+			v3.company_name AS companyName,
+			v2.agent_name AS agentName,
+			(select
+				group_concat(concat(og.good_name,"*",og.num))
+				from
+					erp_order_original_good og where og.order_id=v2.id
+				 GROUP BY og.order_id) as goodNames,
+			(select count(1) as rowcount from erp_order_split_info v10 where v10.order_id=v2.id) as rowCount
+		from
+			erp_order_split_info v1
+		 LEFT JOIN erp_order_original_info v2 on
+			v1.order_id = v2.id
+		 LEFT join sys_service_operationmanager v3 on
+		    v2.agent_id = v3.service_no
+		where
+			v2.del_flag=0 
+			and v2.buy_date &gt;= #{startDate}
+			and v2.buy_date &lt;= #{endDate}
+			<if test="order_type != null and order_type != ''">
+				and v2.order_type = #{order_type}
+			</if>
+		GROUP BY v2.order_number
+	</select>
+	<select id="findPromoteSplit" resultType="com.yunnex.ops.erp.modules.order.entity.PromoteOrderSplit">
+		select
+			v2.order_number as orderNumber,
+			v1.id as splitId,
+			(select group_concat(
+				DISTINCT(CASE
+					WHEN v6.promotion_channel = 1 THEN '朋友圈'
+					WHEN v6.promotion_channel = 2 THEN '微博'
+					WHEN v6.promotion_channel = 3 THEN '陌陌'
+				END)
+			) from jyk_order_promotion_channel v6 where v6.split_id = v1.id and v6.del_flag=0) as promotionChannel,
+			(select
+				group_concat(concat(vg.good_name,"*",vg.num))
+				from
+					erp_order_split_good vg where v1.id=vg.original_split_id
+				 GROUP BY vg.original_split_id) as goodName,
+			(select group_concat(case when v11.promote_status IS NULL then 'running' when v11.promote_status = '' then 'running' else v11.promote_status END) from jyk_order_promotion_channel v11 where v11.split_id = v1.id and v11.del_flag=0 GROUP BY v11.split_id) as promoteStatus,
+			(select date_format(MAX(v4.promote_start_date),'%Y-%m-%d %T') from jyk_order_promotion_channel v4 where v4.split_id=v1.id and v4.del_flag=0) as promoteStartDate,
+			(select date_format(MAX(v5.promote_end_date),'%Y-%m-%d %T') from jyk_order_promotion_channel v5 where v5.split_id=v1.id and v5.del_flag=0) as promoteEndDate,
+			(select SUM(CASE WHEN v7.expenditure IS NULL THEN 0 ELSE v7.expenditure END) from erp_promote_data_friends v7 where v7.split_order_id=v1.id and v7.del_flag=0) as expenditurePy,
+			(select SUM(CASE WHEN v8.expenditure IS NULL THEN 0 ELSE v8.expenditure END) from erp_promote_data_weibo v8 where v8.split_order_id=v1.id and v8.del_flag=0) as expenditureWb,
+			(select SUM(CASE WHEN v9.expenditure IS NULL THEN 0 ELSE v9.expenditure END) from erp_promote_data_momo v9 where v9.split_order_id=v1.id and v9.del_flag=0) as expenditureMm,
+			(select count(1) as rowcount from erp_order_split_info v10 where v10.order_id=v2.id) as rowCount
+		from
+			erp_order_split_info v1
+		LEFT JOIN erp_order_original_info v2 on
+			v2.id = v1.order_id
+		LEFT JOIN jyk_order_promotion_channel v3 on
+			v3.split_id = v1.id
+		LEFT JOIN erp_promote_data_friends v4 on 
+			v4.split_order_id=v1.id
+		LEFT JOIN erp_promote_data_weibo v5 on 
+			v5.split_order_id=v1.id
+		LEFT JOIN erp_promote_data_momo v6 on 
+			v6.split_order_id=v1.id
+		where
+			v1.order_id in(
+				select
+					v2.id
+				from erp_order_original_info v2 
+				where
+					v2.buy_date &gt;= #{startDate}
+					and v2.buy_date &lt;= #{endDate}
+					<if test="order_type != null and order_type != ''">
+						and v2.order_type = #{order_type}
+					</if>
+					AND v2.del_flag=0
+			) 
+		GROUP BY v1.id
+	</select>
+</mapper>

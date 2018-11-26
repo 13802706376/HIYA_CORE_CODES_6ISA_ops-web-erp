@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpOrderSplitCommentAConfDao">
+    
+	<sql id="erpOrderSplitCommentAConfColumns">
+		a.id AS "id",
+		a.question_id AS "questionId",
+		a.content AS "content",
+		a.rank AS "rank",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate"
+	</sql>
+	
+	<sql id="erpOrderSplitCommentAConfJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpOrderSplitCommentAConf">
+		SELECT 
+			<include refid="erpOrderSplitCommentAConfColumns"/>
+		FROM erp_order_split_comment_a_conf a
+		<include refid="erpOrderSplitCommentAConfJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpOrderSplitCommentAConf">
+		SELECT 
+			<include refid="erpOrderSplitCommentAConfColumns"/>
+		FROM erp_order_split_comment_a_conf a
+		<include refid="erpOrderSplitCommentAConfJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpOrderSplitCommentAConf">
+		SELECT 
+			<include refid="erpOrderSplitCommentAConfColumns"/>
+		FROM erp_order_split_comment_a_conf a
+		<include refid="erpOrderSplitCommentAConfJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_order_split_comment_a_conf(
+			id,
+			question_id,
+			content,
+			rank,
+			remarks,
+			del_flag,
+			create_by,
+			create_date,
+			update_by,
+			update_date
+		) VALUES (
+			#{id},
+			#{questionId},
+			#{content},
+			#{rank},
+			#{remarks},
+			#{delFlag},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_order_split_comment_a_conf SET 	
+			question_id = #{questionId},
+			content = #{content},
+			rank = #{rank},
+			remarks = #{remarks},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_order_split_comment_a_conf SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 根据问题配置id获取回答配置信息集合 -->
+	<select id="findListByQuestionId" resultType="com.yunnex.ops.erp.modules.order.entity.ErpOrderSplitCommentAConf">
+		SELECT 
+			<include refid="erpOrderSplitCommentAConfColumns"/>
+		FROM erp_order_split_comment_a_conf a 
+		Where a.question_id = #{questionId}
+		ORDER BY a.rank
+	</select>
+</mapper>

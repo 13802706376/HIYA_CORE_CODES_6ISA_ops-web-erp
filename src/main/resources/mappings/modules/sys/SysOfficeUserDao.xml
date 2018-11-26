@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.sys.dao.SysOfficeUserDao">
+    
+    <sql id="sysOfficeUserColumns">
+        a.id AS "id",
+        a.office_id AS "office.id",
+        a.user_id AS "user.id",
+        a.office_dn AS "officeDn",
+        a.user_cn AS "userCn",
+        a.remarks AS "remarks",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_by AS "updateBy.id",
+        a.update_date AS "updateDate",
+        a.del_flag AS "delFlag",
+        o2.name AS "office.name",
+        u3.name AS "user.name"
+    </sql>
+
+    <sql id="sysOfficeUserJoins">
+        LEFT JOIN sys_office o2 ON o2.id = a.office_id
+        LEFT JOIN sys_user u3 ON u3.id = a.user_id
+    </sql>
+    
+    <select id="get" resultType="SysOfficeUser">
+        SELECT
+            <include refid="sysOfficeUserColumns"/>
+        FROM sys_office_user a
+        <include refid="sysOfficeUserJoins"/>
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findList" resultType="SysOfficeUser">
+        SELECT
+            <include refid="sysOfficeUserColumns"/>
+        FROM sys_office_user a
+        <include refid="sysOfficeUserJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="SysOfficeUser">
+        SELECT
+            <include refid="sysOfficeUserColumns"/>
+        FROM sys_office_user a
+        <include refid="sysOfficeUserJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO sys_office_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="office.id != null">office_id,</if>
+			<if test="user.id != null">user_id,</if>
+			<if test="officeDn != null">office_dn,</if>
+			<if test="userCn != null">user_cn,</if>
+			<if test="remarks != null">remarks,</if>
+			<if test="createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+			<if test="updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+			<if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="office.id != null">#{office.id},</if>
+			<if test="user.id != null">#{user.id},</if>
+			<if test="officeDn != null">#{officeDn},</if>
+			<if test="userCn != null">#{userCn},</if>
+			<if test="remarks != null">#{remarks},</if>
+			<if test="createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+			<if test="updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE sys_office_user
+            <set>
+                <if test="office.id != null">office_id = #{office.id},</if>
+                <if test="user.id != null">user_id = #{user.id},</if>
+                <if test="officeDn != null">office_dn = #{officeDn},</if>
+                <if test="userCn != null">user_cn = #{userCn},</if>
+                <if test="remarks != null">remarks = #{remarks},</if>
+                <if test="updateBy.id != null">update_by = #{updateBy.id},</if>
+                <if test="updateDate != null">update_date = #{updateDate},</if>
+            </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete">
+        UPDATE sys_office_user SET
+            del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

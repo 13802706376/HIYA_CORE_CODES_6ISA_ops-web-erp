@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.hat.dao.HatAreaDao">
+    
+	<sql id="hatAreaColumns">
+		a.id AS "id",
+		a.area_id AS "areaId",
+		a.area AS "area",
+		a.father AS "father"
+	</sql>
+	
+	<sql id="hatAreaJoins">
+		LEFT JOIN sys_area a2 ON a2.id = a.area_id
+	</sql>
+    
+	<select id="get" resultType="HatArea">
+		SELECT 
+			<include refid="hatAreaColumns"/>
+		FROM hat_area a
+		<include refid="hatAreaJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="HatArea">
+		SELECT 
+			<include refid="hatAreaColumns"/>
+		FROM hat_area a
+		<include refid="hatAreaJoins"/>
+		<where>
+			<if test="null != id">
+                AND a.id = #{id}
+            </if>
+           <if test="null != areaId">
+                AND a.area_id = #{areaId}
+            </if>
+           <if test="null != area">
+                AND a.area = #{area}
+            </if>
+           <if test="null != father">
+                AND a.father = #{father}
+            </if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.id ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="HatArea">
+		SELECT 
+			<include refid="hatAreaColumns"/>
+		FROM hat_area a
+		<include refid="hatAreaJoins"/>
+		<where>
+			<if test="null != id">
+                AND a.id = #{id}
+            </if>
+           <if test="null != areaId">
+                AND a.area_id = #{areaId}
+            </if>
+           <if test="null != area">
+                AND a.area = #{area}
+            </if>
+           <if test="null != father">
+                AND a.father = #{father}
+            </if>
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.id ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO hat_area(
+			id,
+			area_id,
+			area,
+			father
+		) VALUES (
+			#{id},
+			#{areaId},
+			#{area},
+			#{father}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE hat_area SET 	
+			area_id = #{areaId},
+			area = #{area},
+			father = #{father}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM hat_area
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getByCode" resultType="string">
+		SELECT 
+			area
+		FROM 
+			hat_area
+		WHERE
+			area_id = #{code}
+	</select>
+	
+</mapper>

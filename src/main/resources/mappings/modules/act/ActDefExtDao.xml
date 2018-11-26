@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.act.dao.ActDefExtDao">
+    
+	<sql id="actDefExtColumns">
+		a.id AS "id",
+		a.process_define_key AS "processDefineKey",
+		a.act_id AS "actId",
+		a.role_id AS "roleId",
+		a.role_name AS "roleName",
+		a.assignee AS "assignee",
+		a.form_template AS "formTemplate",
+		a.email_template AS "emailTemplate",
+		a.callback_service AS "callbackService",
+		a.remark AS "remark",
+		a.create_by AS "createUser",
+		a.create_date AS "createDate",
+		a.update_by AS "updateUser",
+		a.update_date AS "updateDate",
+		
+	    a.task_date_hours AS "taskDateHours",
+		a.urgent_task_date_hours AS "urgentTaskDateHours",
+		a.task_user_role AS "taskUserRole",
+		a.task_user_role2 AS "taskUserRole2",
+		
+		a.is_key_point AS "isKeyPoint",
+		a.normal_task_hours AS "normalTaskHours",
+		a.urgent_task_hours AS "urgentTaskHours",
+		a.activation_normal_task_hours AS "activationNormalTaskHours",
+		a.act_type AS "actType",
+		a.activation_urgent_task_hours AS "activationUrgentTaskHours",
+		a.up_del_file_flag AS  upDelFileFlag
+	</sql>
+	
+	<sql id="actDefExtJoins">
+	</sql>
+    
+	<select id="get" resultType="ActDefExt">
+		SELECT 
+			<include refid="actDefExtColumns"/>
+		FROM ACT_RE_ACTDEF_EXT a
+		<include refid="actDefExtJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="getByActId" resultType="ActDefExt">
+		SELECT 
+			<include refid="actDefExtColumns"/>
+		FROM ACT_RE_ACTDEF_EXT a
+		<include refid="actDefExtJoins"/>
+		WHERE a.act_id = #{actId}
+	</select>
+	
+	<select id="findList" resultType="ActDefExt">
+		SELECT 
+			<include refid="actDefExtColumns"/>
+		FROM ACT_RE_ACTDEF_EXT a
+		<include refid="actDefExtJoins"/>
+		<where>
+			
+			<if test="processDefineKey != null and processDefineKey != ''">
+				AND a.process_define_key = #{processDefineKey}
+			</if>
+			<if test="actId != null and actId != ''">
+				AND a.act_id LIKE 
+					<if test="dbName == 'oracle'">'%'||#{actId}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{actId}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{actId},'%')</if>
+			</if>
+			<if test="roleName != null and roleName != ''">
+				AND a.role_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{roleName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{roleName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{roleName},'%')</if>
+			</if>
+			<if test="assignee != null and assignee != ''">
+				AND a.assignee LIKE 
+					<if test="dbName == 'oracle'">'%'||#{assignee}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{assignee}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{assignee},'%')</if>
+			</if>
+			<if test="callbackService != null and callbackService != ''">
+				AND a.callback_service = #{callbackService}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ActDefExt">
+		SELECT 
+			<include refid="actDefExtColumns"/>
+		FROM ACT_RE_ACTDEF_EXT a
+		<include refid="actDefExtJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ACT_RE_ACTDEF_EXT(
+			id,
+			process_define_key,
+			act_id,
+			role_id,
+			role_name,
+			assignee,
+			form_template,
+			email_template,
+			callback_service,
+			remark,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			task_date_hours ,
+			urgent_task_date_hours ,
+			task_user_role ,
+			task_user_role2,
+		    is_key_point,
+			normal_task_hours,
+			urgent_task_hours,
+			activation_normal_task_hours,
+			activation_urgent_task_hours,
+			up_del_file_flag
+		) VALUES (
+			#{id},
+			#{processDefineKey},
+			#{actId},
+			#{roleId},
+			#{roleName},
+			#{assignee},
+			#{formTemplate},
+			#{emailTemplate},
+			#{callbackService},
+			#{remark},
+			#{createUser},
+			#{createDate},
+			#{updateUser},
+			#{updateDate},
+			#{taskDateHours},
+			#{urgentTaskDateHours},
+			#{taskUserRole},
+			#{taskUserRole2},
+			#{isKeyPoint},
+			#{normalTaskHours},
+			#{urgentTaskHours},
+			#{activationNormalTaskHours},
+			#{activationUrgentTaskHours},
+			#{upDelFileFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ACT_RE_ACTDEF_EXT SET 	
+			process_define_key = #{processDefineKey},
+			act_id = #{actId},
+			role_id = #{roleId},
+			role_name = #{roleName},
+			assignee = #{assignee},
+			form_template = #{formTemplate},
+			email_template = #{emailTemplate},
+			callback_service = #{callbackService},
+			remark = #{remark},
+			update_by = #{updateUser},
+			update_date = #{updateDate},
+			task_date_hours = #{taskDateHours},
+			urgent_task_date_hours = #{urgentTaskDateHours},
+			task_user_role = #{taskUserRole},
+			task_user_role2 = #{taskUserRole2},
+			is_key_point = #{isKeyPoint},
+			normal_task_hours = #{normalTaskHours},
+			urgent_task_hours = #{urgentTaskHours},
+			<if test="upDelFileFlag != null and upDelFileFlag != ''">up_del_file_flag = #{upDelFileFlag},</if>
+			activation_normal_task_hours = #{activationNormalTaskHours},
+			activation_urgent_task_hours = #{activationUrgentTaskHours}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM ACT_RE_ACTDEF_EXT
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findByProcDefKeyAndActId" resultType="ActDefExt">
+		SELECT
+			<include refid="actDefExtColumns"/>
+		FROM 
+			ACT_RE_ACTDEF_EXT a
+		WHERE
+			process_define_key = #{procDefKey}
+		AND
+			act_id = #{actId}
+	</select>
+	
+</mapper>

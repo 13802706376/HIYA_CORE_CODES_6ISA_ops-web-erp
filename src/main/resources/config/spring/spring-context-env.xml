@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd">
+
+    <description>Spring Env Configuration</description>
+
+    <!-- 由于代码中需要直接访问配置，所以将所有配置复制到一个全局对象中 -->
+
+    <beans profile="development">
+        <bean id="devProps" class="com.yunnex.ops.erp.common.config.PropertyPlaceholder">
+            <property name="locations">
+                <list>
+                    <value>classpath:config/common/erp.properties</value>
+                    <value>classpath:config/common/scheduler.properties</value>
+                    <value>classpath:config/common/api.properties</value>
+                    <value>classpath:config/development/*.properties</value>
+                </list>
+            </property>
+        </bean>
+    </beans>
+
+    <beans profile="test">
+        <bean id="testProps" class="com.yunnex.ops.erp.common.config.PropertyPlaceholder">
+            <property name="locations">
+                <list>
+                    <value>classpath:config/common/erp.properties</value>
+                    <value>classpath:config/common/scheduler.properties</value>
+                    <value>classpath:config/common/api.properties</value>
+                    <value>classpath:config/test/*.properties</value>
+                </list>
+            </property>
+        </bean>
+    </beans>
+
+    <beans profile="hotfix">
+        <bean id="hotfixProps" class="com.yunnex.ops.erp.common.config.PropertyPlaceholder">
+            <property name="locations">
+                <list>
+                    <value>classpath:config/common/erp.properties</value>
+                    <value>classpath:config/common/scheduler.properties</value>
+                    <value>classpath:config/common/api.properties</value>
+                    <value>classpath:config/hotfix/*.properties</value>
+                </list>
+            </property>
+        </bean>
+    </beans>
+    
+    <beans profile="production">
+        <bean id="prodProps" class="com.yunnex.ops.erp.common.config.PropertyPlaceholder">
+            <property name="locations">
+                <list>
+                    <value>classpath:config/common/erp.properties</value>
+                    <value>classpath:config/common/scheduler.properties</value>
+                    <value>classpath:config/common/api.properties</value>
+                    <value>classpath:config/production/*.properties</value>
+                </list>
+            </property>
+        </bean>
+    </beans>
+
+
+</beans>

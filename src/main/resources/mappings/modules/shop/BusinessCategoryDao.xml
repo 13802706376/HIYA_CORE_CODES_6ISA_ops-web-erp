@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.shop.dao.BusinessCategoryDao">
+    
+	<sql id="businessCategoryColumns">
+		a.id AS "id",
+		a.category_id AS "categoryId",
+		a.category_name AS "categoryName",
+		a.father AS "father",
+		a.category_type AS "categoryType",
+		a.is_new AS "isNew"
+	</sql>
+	
+	<sql id="businessCategoryJoins">
+	</sql>
+    
+	<select id="get" resultType="BusinessCategory">
+		SELECT 
+			<include refid="businessCategoryColumns"/>
+		FROM business_category a
+		<include refid="businessCategoryJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="BusinessCategory">
+		SELECT 
+			<include refid="businessCategoryColumns"/>
+		FROM business_category a
+		<include refid="businessCategoryJoins"/>
+		<where>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="BusinessCategory">
+		SELECT 
+			<include refid="businessCategoryColumns"/>
+		FROM business_category a where a.father!=0
+<!-- 		<include refid="businessCategoryJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose> -->
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO business_category(
+			id,
+			category_id,
+			category_name,
+			father,
+			category_type,
+			is_new
+		) VALUES (
+			#{id},
+			#{categoryId},
+			#{categoryName},
+			#{father},
+			#{categoryType},
+			#{isNew}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE business_category SET 	
+			category_id = #{categoryId},
+			category_name = #{categoryName},
+			father = #{father},
+			category_type = #{categoryType},
+			is_new = #{isNew}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM business_category
+		WHERE id = #{id}
+	</update>
+	
+	<select id="whereCategoryId" resultType="BusinessCategory">
+		SELECT 
+			<include refid="businessCategoryColumns"/>
+		FROM business_category a
+		where a.category_id=#{cid}
+	</select>
+	
+</mapper>

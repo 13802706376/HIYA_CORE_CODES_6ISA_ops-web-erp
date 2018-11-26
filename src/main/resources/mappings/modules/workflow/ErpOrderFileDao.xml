@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.flow.dao.ErpOrderFileDao">
+
+	<sql id="erpOrderFileColumns">
+		a.id AS "id",
+		a.proc_ins_id AS "procInsId",
+		a.file_name AS
+		"fileName",
+		a.file_path AS "filePath",
+		a.file_type AS "fileType",
+		a.file_title AS "fileTitle",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.del_flag AS "delFlag", 
+		a.task_def_key AS "taskDefKey",
+		a.sub_task_id AS "subTaskId"
+	</sql>
+
+	<sql id="erpOrderFileJoins">
+	</sql>
+
+	<select id="get" resultType="ErpOrderFile">
+		SELECT
+		<include refid="erpOrderFileColumns" />
+		FROM erp_order_file a
+		<include refid="erpOrderFileJoins" />
+		WHERE a.id = #{id} 
+	</select>
+
+	<select id="findList" resultType="ErpOrderFile">
+		SELECT
+		<include refid="erpOrderFileColumns" />
+		FROM erp_order_file a
+		<include refid="erpOrderFileJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByProcInsId" resultType="ErpOrderFile">
+		SELECT
+		<include refid="erpOrderFileColumns" />,
+		s.name AS createName
+		FROM erp_order_file a
+		LEFT JOIN sys_user s
+		ON s.id=a.create_by
+		<include refid="erpOrderFileJoins" />
+		where a.del_flag = '0' and a.proc_ins_id=#{procInsId}
+		ORDER BY a.create_date
+	</select>
+	
+	
+
+	<select id="findAllList" resultType="ErpOrderFile">
+		SELECT
+		<include refid="erpOrderFileColumns" />
+		FROM erp_order_file a
+		<include refid="erpOrderFileJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<insert id="insert">
+		INSERT INTO erp_order_file(
+		id,
+		proc_ins_id,
+		file_name,
+		file_path,
+		file_type,
+		file_title,
+		create_by,
+		create_date,
+		update_date,
+		update_by,
+		remark,
+		del_flag,
+		task_def_key,
+		sub_task_id
+		) VALUES (
+		#{id},
+		#{procInsId},
+		#{fileName},
+		#{filePath},
+		#{fileType},
+		#{fileTitle},
+		#{createBy.id},
+		#{createDate},
+		#{updateDate},
+		#{updateBy.id},
+		#{remark},
+		#{delFlag},
+		#{taskDefKey},
+		#{subTaskId}
+		)
+	</insert>
+
+	<update id="update">
+		UPDATE erp_order_file SET
+		proc_ins_id = #{procInsId},
+		file_name = #{fileName},
+		file_path = #{filePath},
+		file_type = #{fileType},
+		file_title = #{fileTitle},
+		update_date = #{updateDate},
+		update_by = #{updateBy.id},
+		remark = #{remark},
+		del_flag = #{delFlag},
+		task_def_key = #{taskDefKey},
+		sub_task_id = #{subTaskId}
+		WHERE id = #{id}
+	</update>
+
+	<update id="delete">
+		UPDATE erp_order_file SET
+		del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	<update id="deleteByProcInsId">
+		UPDATE erp_order_file SET
+		del_flag = 1
+		WHERE file_title = #{fileTitle}
+		and proc_ins_id=#{procInsId}
+	</update>
+	
+	<select id="findListSubTask" resultType="ErpOrderFile">
+		SELECT
+		<include refid="erpOrderFileColumns" />
+		FROM erp_order_file a
+		<include refid="erpOrderFileJoins" />
+		<where>
+			a.del_flag = 0
+			<if test="erpOrderFile.procInsId != null and erpOrderFile.procInsId != ''">
+				and a.proc_ins_id=#{erpOrderFile.procInsId}
+			</if>
+			<if test="erpOrderFile.taskDefKey != null and erpOrderFile.taskDefKey != ''">
+				and a.task_def_key=#{erpOrderFile.taskDefKey}
+			</if>
+			<if test="erpOrderFile.subTaskId != null and erpOrderFile.subTaskId != ''">
+				and a.sub_task_id=#{erpOrderFile.subTaskId}
+			</if>
+		</where>
+		ORDER BY a.update_date DESC
+	</select>
+	
+	<select id="findByProcInsIdAndTileName" resultType="ErpOrderFile">
+		SELECT
+		<include refid="erpOrderFileColumns" />
+		FROM erp_order_file a
+		<include refid="erpOrderFileJoins" />
+		WHERE	a.del_flag = 0
+				and a.proc_ins_id=#{procInsId}
+				and a.file_title=#{fileTitle}
+	</select>
+	
+	<select id="findByProcInsIdAndTileNameAll" resultType="ErpOrderFile">
+		SELECT
+		<include refid="erpOrderFileColumns" />
+		FROM erp_order_file a
+		<include refid="erpOrderFileJoins" />
+		WHERE	a.del_flag = 1
+				and a.proc_ins_id=#{procInsId}
+				and a.file_title=#{fileTitle}
+	</select>
+	
+	<select id="findListByIds" resultType="ErpOrderFile">
+		SELECT
+			<include refid="erpOrderFileColumns" />
+		FROM
+			erp_order_file a
+		WHERE a.id IN
+	  	<foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	
+	<delete id="batchDelete">
+	  delete from erp_order_file where
+	  id IN
+	  <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	
+</mapper>

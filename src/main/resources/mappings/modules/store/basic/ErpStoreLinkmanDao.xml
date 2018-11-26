@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.store.basic.dao.ErpStoreLinkmanDao">
+    
+	<sql id="erpStoreLinkmanColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.phone AS "phone",
+		a.email AS "email",
+		a.address AS "address",
+		a.store_info_id AS "storeInfoId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpStoreLinkmanJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpStoreLinkman">
+		SELECT 
+			<include refid="erpStoreLinkmanColumns"/>
+		FROM erp_store_linkman a
+		<include refid="erpStoreLinkmanJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpStoreLinkman">
+		SELECT 
+			<include refid="erpStoreLinkmanColumns"/>
+		FROM erp_store_linkman a
+		<include refid="erpStoreLinkmanJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="phone != null and phone != ''">
+				AND a.phone LIKE 
+					<if test="dbName == 'oracle'">'%'||#{phone}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{phone}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{phone},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpStoreLinkman">
+		SELECT 
+			<include refid="erpStoreLinkmanColumns"/>
+		FROM erp_store_linkman a
+		<include refid="erpStoreLinkmanJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_store_linkman(
+			id,
+			name,
+			phone,
+			email,
+			<if test="address != null">address,</if>
+			store_info_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{name},
+			#{phone},
+			#{email},
+			<if test="address != null">#{address},</if>
+			#{storeInfoId},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_store_linkman 
+		<set> 	
+			<if test="name != null">name = #{name},</if>	
+			<if test="phone != null">phone = #{phone},</if>	
+			<if test="email != null">email = #{email},</if>	
+			<if test="address != null">address = #{address},</if>	
+			<if test="storeInfoId != null">store_info_id = #{storeInfoId},</if>	
+			<if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>	
+			<if test="updateDate != null">update_date = #{updateDate},</if>	
+			<if test="remarks != null">remarks = #{remarks}</if>	
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<delete id="delete">
+		DELETE FROM erp_store_linkman WHERE id = #{id}
+	</delete>
+	
+	<select id="findWhereStoreId" resultType="ErpStoreLinkman">
+		SELECT 
+			<include refid="erpStoreLinkmanColumns"/>
+		FROM erp_store_linkman a
+		<where>
+			a.del_flag = #{del} AND a.store_info_id=#{id}
+		</where>		
+	</select>
+	
+	<select id="getBySplitId" resultType="ErpStoreLinkman">
+		SELECT
+			<include refid="erpStoreLinkmanColumns"/>
+		FROM
+			erp_store_linkman a
+		WHERE
+			a.store_info_id = (
+				SELECT
+					jocs.choice_store
+				FROM
+					jyk_order_choice_store jocs
+				WHERE
+					jocs.split_id = #{splitId}
+				AND
+					jocs.del_flag = 0
+			)
+	</select>
+	
+</mapper>

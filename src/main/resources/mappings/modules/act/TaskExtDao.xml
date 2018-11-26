@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.act.dao.TaskExtDao">
+    
+	<sql id="taskExtColumns">
+		a.id AS "id",
+		a.task_id AS "taskId",
+		a.pending_prod_flag AS "pendingProdFlag",
+		a.status AS "status",
+		a.remark AS "remark",
+		a.create_by AS "createBy",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy",
+		a.update_date AS "updateDate"
+	</sql>
+	
+	<sql id="taskExtJoins">
+	</sql>
+    
+	<select id="get" resultType="TaskExt">
+		SELECT 
+			<include refid="taskExtColumns"/>
+		FROM ACT_RU_TASK_EXT a
+		<include refid="taskExtJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="TaskExt">
+		SELECT 
+			<include refid="taskExtColumns"/>
+		FROM ACT_RU_TASK_EXT a
+		<include refid="taskExtJoins"/>
+		<where>
+			
+			<if test="taskId != null and taskId != ''">
+				AND a.task_id = #{taskId}
+			</if>
+			<if test="pendingProdFlag != null and pendingProdFlag != ''">
+				AND a.pending_prod_flag = #{pendingProdFlag}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TaskExt">
+		SELECT 
+			<include refid="taskExtColumns"/>
+		FROM ACT_RU_TASK_EXT a
+		<include refid="taskExtJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO ACT_RU_TASK_EXT(
+			id,
+			task_id,
+			pending_prod_flag,
+			status,
+			remark,
+			create_by,
+			create_date,
+			update_by,
+			update_date
+		) VALUES (
+			#{id},
+			#{taskId},
+			#{pendingProdFlag},
+			#{status},
+			#{remark},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ACT_RU_TASK_EXT SET 	
+			task_id = #{taskId},
+			pending_prod_flag = #{pendingProdFlag},
+			status = #{status},
+			remark = #{remark}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM ACT_RU_TASK_EXT
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateTaskState">
+		UPDATE ACT_RU_TASK_EXT 
+			<set>
+				<if test="pendingProdFlag != null">pending_prod_flag = #{pendingProdFlag},</if>
+				<if test="status != null">status = #{status}</if>
+			</set>
+		WHERE task_id = #{taskId}
+	</update>
+	
+	<update id="updateTaskExtInfoByTaskId" parameterType="TaskExt">
+		UPDATE ACT_RU_TASK_EXT 
+			<set>
+			 <if test="updateBy != null and updateBy!=''">update_by = #{updateBy.id},</if>
+			 <if test="updateDate != null and updateDate!=''">update_date = #{updateDate},</if>
+				<if test="pendingProdFlag != null and pendingProdFlag!=''">pending_prod_flag = #{pendingProdFlag},</if>
+				<if test="status != null and status!=''">status = #{status}</if>
+			</set>
+		WHERE task_id = #{taskId}
+	</update>
+	
+	<delete id="deleteTaskExtsByProcInsId">
+				delete from ACT_RU_TASK_EXT   where task_id in 
+				(
+				     select id_ from ACT_HI_TASKINST aht where  aht.proc_inst_id_ = #{procInsId}   
+				)
+	</delete>
+	
+	<select id="findOverTime" resultType="java.lang.Integer">
+		SELECT 
+			Count(*)
+		FROM ACT_RU_TASK b
+		LEFT JOIN ACT_RU_TASK_EXT a ON b.`ID_`=a.`task_id`
+		WHERE a.status=3 AND b.PROC_INST_ID_ IN
+		<foreach collection="templist" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+		
+	</select>
+	
+	<select id="findOverTimeByOrder" resultType="java.lang.Integer">
+	    SELECT 
+		    COUNT(DISTINCT hi.id)
+		FROM
+		    (
+		        SELECT
+		            eosi.id, eosi.proc_ins_id
+		        FROM
+		            erp_order_split_info eosi
+		        INNER JOIN
+		            erp_order_original_info eooi 
+		        ON
+		            eosi.order_id = eooi.id
+		        INNER JOIN 
+		            erp_order_original_good eoog 
+		        ON 
+		            eooi.id = eoog.order_id 
+		        INNER JOIN
+		            ACT_HI_TASKINST aht
+		        ON
+		            eosi.PROC_INS_ID = aht.PROC_INST_ID_
+		        WHERE 
+		            eoog.good_type_id = 5 
+		        AND 
+		            eooi.cancel = 0
+		        AND
+		            eosi.`status` = 0
+		        <if test="null != userIds and userIds.size > 0">
+		            AND aht.ASSIGNEE_ IN 
+		            <foreach collection="userIds" index="index" item="item"
+		                open="(" separator="," close=")">
+		                #{item}
+		            </foreach>
+		        </if>
+		    ) hi
+		INNER JOIN
+		    ACT_RU_TASK art
+		ON
+		    hi.proc_ins_id = art.PROC_INST_ID_
+		INNER JOIN
+		    ACT_RU_TASK_EXT arte
+		ON
+		    art.ID_ = arte.task_id
+		WHERE
+		    arte.`status` = 3
+	</select>
+
+
+    <select id="findJykFlow" resultType="map">
+        SELECT art.* FROM `ACT_RU_TASK` art LEFT JOIN ACT_RU_TASK_EXT arte ON art.ID_ = arte.task_id 
+        WHERE arte.pending_prod_flag = 'Y' AND art.PROC_DEF_ID_ LIKE #{flow}
+    </select>
+
+    <select id="findByProcInstIds" resultType="map">
+        <if test="null != ids and ids.size > 0">
+            select * from erp_order_split_info where PROC_INS_ID IN
+            <foreach collection="ids" index="index" item="item"
+                open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+    
+    <select id="findByTaskIds" resultType="TaskExt">
+        <if test="null != ids and ids.size > 0">
+            select * from ACT_RU_TASK_EXT where task_id IN
+            <foreach collection="ids" index="index" item="item"
+                open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+    
+</mapper>

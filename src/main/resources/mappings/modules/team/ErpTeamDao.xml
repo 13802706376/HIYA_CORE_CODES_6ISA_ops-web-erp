@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.team.dao.ErpTeamDao">
+    
+	<sql id="erpTeamColumns">
+		a.id AS "id",
+		a.team_name AS "teamName",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.company_type AS "companyType",
+		a.agent_id AS "agentId",
+		a.agent_team_flag AS "agentTeamFlag",
+		a.sort AS "sort"
+	</sql>
+	
+	<sql id="erpTeamJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpTeam">
+		SELECT 
+			<include refid="erpTeamColumns"/>
+		FROM erp_team a
+		<include refid="erpTeamJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpTeam">
+		SELECT 
+			<include refid="erpTeamColumns"/>
+			<!-- ,GROUP_CONCAT(d.`name`) AS "leaderNames" , GROUP_CONCAT(e.`name`) AS "memberNames" 
+		FROM erp_team a 
+		LEFT JOIN erp_team_user b ON a.id = b.`team_id` AND b.`leader_flag` = 0 
+	LEFT JOIN sys_user d ON b.`user_id` = d.`id`
+	 LEFT JOIN erp_team_user c ON a.`id` = c.team_id  AND c.`leader_flag` = 1 
+	 LEFT JOIN sys_user e ON c.`user_id` = e.`id` -->
+
+		,(SELECT GROUP_CONCAT(c.name) FROM erp_team_user b LEFT JOIN sys_user c ON b.user_id = c.id AND c.del_flag = '0'
+		WHERE b.`leader_flag` = 0 AND b.`team_id` = a.id
+		GROUP BY b.team_id) AS "memberNames" ,
+		(SELECT GROUP_CONCAT(c.name) FROM erp_team_user b LEFT JOIN sys_user c ON b.user_id = c.id AND c.del_flag = '0'
+		WHERE b.`leader_flag` = 1 AND b.`team_id` = a.id
+		GROUP BY b.team_id) AS "leaderNames"
+		FROM erp_team a
+		<include refid="erpTeamJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} AND company_type IN ('head', 'branch')
+			<if test="teamName != null and teamName != ''">
+				AND a.team_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{teamName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{teamName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{teamName},'%')</if>
+			</if>
+		</where>
+		GROUP BY a.id
+		ORDER BY a.sort DESC, a.update_date DESC
+	</select>
+	
+	<select id="findAllList" resultType="ErpTeam">
+		SELECT 
+			<include refid="erpTeamColumns"/>
+		FROM erp_team a
+		<include refid="erpTeamJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_team
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">id,</if>
+			<if test="teamName != null">team_name,</if>
+			<if test="createBy != null and createBy.id != null">create_by,</if>
+			<if test="createDate != null">create_date,</if>
+			<if test="updateBy != null and updateBy.id != null">update_by,</if>
+			<if test="updateDate != null">update_date,</if>
+			<if test="remarks != null">remarks,</if>
+			<if test="companyType != null">company_type,</if>
+			<if test="agentId != null">agent_id,</if>
+			<if test="agentTeamFlag != null">agent_team_flag,</if>
+			<if test="sort != null">sort,</if>
+			<if test="delFlag != null">del_flag,</if>
+		</trim>
+		<trim prefix="values(" suffix=")" suffixOverrides=",">
+			<if test="id != null">#{id},</if>
+			<if test="teamName != null">#{teamName},</if>
+			<if test="createBy != null and createBy.id != null">#{createBy.id},</if>
+			<if test="createDate != null">#{createDate},</if>
+			<if test="updateBy != null and updateBy.id != null">#{updateBy.id},</if>
+			<if test="updateDate != null">#{updateDate},</if>
+			<if test="remarks != null">#{remarks},</if>
+			<if test="companyType != null">#{companyType},</if>
+			<if test="agentId != null">#{agentId},</if>
+			<if test="agentTeamFlag != null">#{agentTeamFlag},</if>
+			<if test="sort != null">#{sort},</if>
+			<if test="delFlag != null">#{delFlag},</if>
+		</trim>
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_team
+		<set>
+			<if test="companyType != null">company_type = #{companyType},</if>
+			<if test="agentId != null">agent_id = #{agentId},</if>
+			<if test="sort != null">sort = #{sort},</if>
+			<if test="teamName != null">team_name = #{teamName},</if>
+			<if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+			<if test="updateDate != null">update_date = #{updateDate},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_team SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findteam" resultType="java.lang.Integer">
+		SELECT 
+			COUNT(*)
+		FROM erp_team a
+		<where>
+			a.del_flag = #{del} AND a.id=#{teamid}
+		</where>		
+	</select>
+
+	<select id="findAgentTeam" resultType="ErpTeam">
+		SELECT
+		<include refid="erpTeamColumns"/>
+		FROM erp_team a
+		WHERE a.agent_id = #{agentId} and agent_team_flag = 'Y'
+	</select>
+	
+	<!-- 根据userId 获取团队列表 -->
+	<select id="findByUserId" resultType="ErpTeam">
+		SELECT
+		<include refid="erpTeamColumns"/>
+		FROM erp_team a LEFT JOIN erp_team_user tu on a.id = tu.team_id 
+		where a.del_flag = 0 and tu.del_flag =0 
+			and tu.user_id = #{userId}
+		GROUP BY a.id
+	</select>
+	
+	<!-- 根据userId 获取团队列表 -->
+	<select id="findByUserId1" resultType="ErpTeam">
+		select
+			<include refid="erpTeamColumns"/>
+		from
+			erp_team a
+		where
+			a.del_flag = '0'
+			and (
+			<trim prefixOverrides="or">
+				<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:all")'>
+					or a.company_type in ('agent','branch')
+				</if>
+				<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:serviceCompany")'>
+					or a.company_type = 'agent'
+				</if>
+				<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:branchCompany")'>
+					or a.company_type = 'branch'
+				</if>
+				<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("order:erpDeliveryServiceStatistics:company")'>
+					or a.id in (
+						SELECT
+							team1.id
+						from
+							erp_team team1
+						LEFT JOIN erp_team_user teamUser1 on
+							team1.id = teamUser1.team_id
+							and teamUser1.del_flag = '0'
+						where
+							teamUser1.user_id = #{userId}
+							and teamUser1.leader_flag = '1'
+					)
+				</if>
+			</trim>
+			)
+	</select>
+	
+	<select id="findByService" resultType="map">
+		SELECT
+			company_type as serviceCode,
+			CASE
+				company_type
+				when 'head' then '总部'
+				when 'branch' then '分公司'
+				when 'agent' then '服务商'
+				ELSE 'OTHERS'
+			END AS serviceName
+		from
+			erp_team
+		GROUP by
+			company_type
+	</select>
+	
+	<select id="findTeamByService" resultType="map">
+		select
+			team.id as teamId,
+			team.team_name as teamName,
+			team.agent_id as agentId
+		from
+			erp_team team,
+			erp_team_user teamUser
+		where
+			team.del_flag = 0
+			and team.id=teamUser.team_id
+			and teamUser.user_id = #{userId}
+	</select>
+	
+	<select id="findTeamByType" resultType="map">
+		select
+			team.id as teamId,
+			team.team_name as teamName,
+			team.agent_id as agentId
+		from
+			erp_team team,
+			erp_team_user teamUser
+		where
+			team.del_flag = 0
+			and teamUser.del_flag=0
+			and team.company_type=#{serviceType}
+			and team.id=teamUser.team_id
+			GROUP BY team.id
+	</select>
+	
+	<select id="findUserByService" resultType="map">
+		SELECT
+			us.id userId,
+			us.name as userName
+		from
+			erp_team_user teamUserAll,
+			sys_user us
+		where
+			teamUserAll.team_id in(
+				select
+					team.id as teamId
+				from
+					erp_team team,
+					erp_team_user teamUser
+				where
+					teamUser.team_id = team.id
+					and team.del_flag = 0
+					and teamUser.team_id = #{userId}
+				GROUP BY
+					team.id
+			)
+			and us.id = teamUserAll.user_id
+			and us.del_flag=0
+			and teamUserAll.del_flag=0
+		GROUP BY
+			teamUserAll.user_id
+	</select>
+
+	<select id="findTeamUsersByUserId" resultType="string">
+		SELECT
+			DISTINCT etu.user_id
+		FROM
+			erp_team_user etu
+		WHERE
+			etu.team_id IN (
+				SELECT
+					et.id
+				FROM
+					erp_team et
+				INNER JOIN
+					erp_team_user etu ON et.id = etu.team_id
+				WHERE
+					etu.user_id = #{userId} AND et.del_flag = '0' AND etu.del_flag = '0'
+			)
+	</select>
+	
+</mapper>

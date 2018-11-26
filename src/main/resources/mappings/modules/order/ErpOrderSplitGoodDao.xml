@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.order.dao.ErpOrderSplitGoodDao">
+
+    <sql id="erpOrderSplitGoodColumns">
+        a.id AS "id",
+		a.original_split_id AS "originalSplitId",
+		a.original_good_id AS "originalGoodId",
+		a.good_name AS "goodName",
+		a.good_type_id AS "goodTypeId",
+		a.good_type_name AS "goodTypeName",
+		a.num AS "num",
+		a.price AS "price",
+		a.buy_exposure AS "buyExposure",
+        a.donate_exposure AS "donateExposure",
+		a.is_promote AS "isPromote",
+		a.del_flag AS "delFlag"
+    </sql>
+    
+    
+    <select id="get" resultType="com.yunnex.ops.erp.modules.order.entity.ErpOrderSplitGood">
+		SELECT
+		<include refid="erpOrderSplitGoodColumns" />
+		FROM erp_order_split_good a
+		WHERE a.id = #{id} and a.del_flag=0
+	</select>
+
+	<insert id="insert">
+		INSERT INTO erp_order_split_good(
+		id,
+		original_split_id,
+		original_good_id,
+		good_name,
+		good_type_id,
+		good_type_name,
+		num,
+		price,
+		buy_exposure,
+		donate_exposure,
+		is_promote,
+		create_by,
+		update_by,
+		remarks,
+		del_flag
+		) VALUES (
+		#{id},
+		#{originalSplitId},
+		#{originalGoodId},
+		#{goodName},
+		#{goodTypeId},
+		#{goodTypeName},
+		#{num},
+		#{price},
+		#{buyExposure},
+		#{donateExposure},
+		#{isPromote},
+		#{createBy.id},
+		#{updateBy.id},
+		#{remarks},
+		#{delFlag}
+		)
+	</insert>
+
+    
+	<update id="update">
+		UPDATE erp_order_split_good SET
+		original_split_id =#{originalSplitId},
+		original_good_id = #{originalGoodId},
+		good_name =#{goodName},
+		good_type_id = #{goodTypeId},
+		good_type_name = #{goodTypeName},
+		num = #{num},
+		price = #{price},
+		buy_exposure = #{buyExposure},
+		donate_exposure = #{donateExposure},
+		is_promote = #{isPromote},
+		update_date = #{updateDate},
+		update_by = #{updateBy.id},
+		remarks =#{remarks}
+		WHERE id =#{id}
+	</update>
+	
+	<update id="updateNum">
+		UPDATE erp_order_split_good SET
+		num = #{num}
+		WHERE id =
+		#{id}
+	</update>
+	
+	<update id="updateExposureById" parameterType="ErpOrderSplitGood">
+		UPDATE erp_order_split_good SET
+		update_date = #{updateDate},
+		update_by = #{updateBy.id},
+		buy_exposure = #{buyExposure},
+		donate_exposure = #{donateExposure}
+		WHERE id =#{id}
+	</update>
+
+	<update id="updatePromotionBySplitId" parameterType="ErpOrderSplitGood">
+		UPDATE erp_order_split_good SET
+		is_promote = #{isPromote},
+		update_date = #{updateDate},
+		update_by = #{updateBy.id}
+		WHERE original_split_id = #{originalSplitId}
+	</update>
+
+	<update id="updatePromotionByIds" parameterType="List">
+		UPDATE erp_order_split_good SET
+		is_promote = 'Y'
+		WHERE id IN
+		<foreach collection="ids" index="index" item="item"
+				 open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<update id="delete">
+		UPDATE erp_order_split_good SET
+		del_flag =
+		#{DEL_FLAG_DELETE},num=0 
+		WHERE id = #{id}
+	</update>
+
+	<select id="getErpOrderSplitGoodBySplitId" resultType="com.yunnex.ops.erp.modules.order.entity.ErpOrderSplitGood">
+		SELECT
+			id as id ,
+			original_split_id as originalSplitId,
+			original_good_id as originalGoodId,
+			good_name as goodName,
+			good_type_id as goodTypeId,
+			good_type_name as goodTypeName,
+			num as num,
+			price as price,
+			remarks as remarks,
+			del_flag as delFlag,
+			is_promote as isPromote
+		FROM erp_order_split_good  
+		WHERE original_split_id = #{originalSplitId} and del_flag=0
+	</select>
+	
+    <select id="findBySplitId" resultType="ErpOrderSplitGood">
+        SELECT 
+		    <include refid="erpOrderSplitGoodColumns"/>,
+		    eooi.order_version AS "orderVersion"
+		FROM 
+		    erp_order_split_good a 
+		LEFT JOIN
+		    erp_order_original_good eoog
+		ON
+		    a.original_good_id = eoog.id
+		LEFT JOIN
+		    erp_order_original_info eooi
+		ON
+		    eoog.order_id = eooi.id
+		WHERE 
+		    a.original_split_id = #{splitId}
+		AND
+		    a.del_flag = 0
+    </select>
+    
+    <update id="deleteBySplitId">
+		UPDATE erp_order_split_good SET
+			del_flag = '1'
+		WHERE original_split_id = #{splitId}
+	</update>
+	
+</mapper>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.agent.dao.SysServiceOperationManagerDao">
+    
+	<sql id="sysServiceOperationManagerColumns">
+		a.id AS "id",
+		a.service_no AS "serviceNo",
+		a.company_name AS "companyName",
+		a.server_address AS "serverAddress",
+		a.role_name AS "roleName",
+		a.default_manager AS "defaultManager",
+		a.default_manager_id AS "defaultManagerId",
+		a.alternative_manager AS "alternativeManager",
+		a.alternative_manager_id AS "alternativeManagerId",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="sysServiceOperationManagerJoins">
+	</sql>
+    
+	<select id="get" resultType="SysServiceOperationManager">
+		SELECT 
+			<include refid="sysServiceOperationManagerColumns"/>
+		FROM sys_service_operationmanager a
+		<include refid="sysServiceOperationManagerJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="SysServiceOperationManager">
+		SELECT 
+			<include refid="sysServiceOperationManagerColumns"/>
+		FROM sys_service_operationmanager a
+		<include refid="sysServiceOperationManagerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="serviceNo != null and serviceNo != ''">
+				AND a.service_no = #{serviceNo}
+			</if>
+			<if test="companyName != null and companyName != ''">
+				AND a.company_name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{companyName}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{companyName}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{companyName},'%')</if>
+			</if>
+			<if test="serverAddress != null and serverAddress != ''">
+				AND a.server_address LIKE 
+					<if test="dbName == 'oracle'">'%'||#{serverAddress}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{serverAddress}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{serverAddress},'%')</if>
+			</if>
+			<if test="defaultManager != null and defaultManager != ''">
+				AND a.default_manager LIKE 
+					<if test="dbName == 'oracle'">'%'||#{defaultManager}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{defaultManager}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{defaultManager},'%')</if>
+			</if>
+			<if test="alternativeManager != null and alternativeManager != ''">
+				AND a.alternative_manager LIKE 
+					<if test="dbName == 'oracle'">'%'||#{alternativeManager}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{alternativeManager}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{alternativeManager},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="SysServiceOperationManager">
+		SELECT 
+			<include refid="sysServiceOperationManagerColumns"/>
+		FROM sys_service_operationmanager a
+		<include refid="sysServiceOperationManagerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO sys_service_operationmanager(
+			id,
+			service_no,
+			company_name,
+			server_address,
+			role_name,
+			default_manager,
+			default_manager_id,
+			alternative_manager,
+			alternative_manager_id,
+			update_date,
+			update_by,
+			remark,
+			sort,
+			del_flag
+		) VALUES (
+			#{id},
+			#{serviceNo},
+			#{companyName},
+			#{serverAddress},
+			#{roleName},
+			#{defaultManager},
+			#{defaultManagerId},
+			#{alternativeManager},
+			#{alternativeManagerId},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{sort},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_service_operationmanager SET 	
+			service_no = #{serviceNo},
+			company_name = #{companyName},
+			server_address = #{serverAddress},
+			role_name = #{roleName},
+			default_manager = #{defaultManager},
+			default_manager_id = #{defaultManagerId},
+			alternative_manager = #{alternativeManager},
+			alternative_manager_id = #{alternativeManagerId},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remark = #{remark},
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE sys_service_operationmanager SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<select id="findByServiceNo" resultType="SysServiceOperationManager">
+		SELECT
+		<include refid="sysServiceOperationManagerColumns"/>
+		FROM sys_service_operationmanager a
+		WHERE a.service_no = #{serviceNo} and del_flag = '0'
+	</select>
+	
+</mapper>

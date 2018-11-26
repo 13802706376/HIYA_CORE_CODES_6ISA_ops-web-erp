@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.promotion.dao.ErpOrderCouponReceiveRecordDao">
+    
+	<select id="get" resultType="ErpOrderCouponReceiveRecord">
+		SELECT 
+			a.id AS "id",
+			a.split_order_id AS "splitOrderId",
+			a.coupon_output_id AS "couponOutputId",
+			a.receive_date AS "receiveDate",
+			a.receive_num AS "receiveNum",
+			a.create_by AS "createBy.id",
+			a.create_date AS "createDate",
+			a.update_by AS "updateBy.id",
+			a.update_date AS "updateDate",
+			a.del_flag AS "delFlag",
+			a.remark AS "remark"
+		FROM erp_order_coupon_receive_record a
+		WHERE a.id = #{id}
+	</select>
+	
+	
+	<insert id="insert">
+		INSERT INTO erp_order_coupon_receive_record(
+			id,
+			split_order_id,
+			coupon_output_id,
+			receive_date,
+			receive_num,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			remark
+		) VALUES (
+			#{id},
+			#{splitOrderId},
+			#{couponOutputId},
+			#{receiveDate},
+			#{receiveNum},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{remark}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_order_coupon_receive_record SET 	
+			receive_date = #{receiveDate},
+			receive_num = #{receiveNum},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remark = #{remark}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_order_coupon_receive_record SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="queryCouponData" parameterType="java.lang.String" resultMap="couponDataResult">
+		select
+			a.id as coupon_output_id,
+			a.coupon_name as coupon_name,
+			(select sd.label from sys_dict sd where sd.id = a.coupon_link_category) as link_category_name,
+			a.coupon_link as coupon_link,
+			d.id as receive_record_id,
+			d.receive_date as receive_date,
+			d.receive_num as receive_num
+		from
+			erp_order_coupon_output a 
+		left join 
+			erp_order_coupon_receive_record d 
+		on
+			a.id = d.coupon_output_id and d.del_flag = '0'
+		where
+			a.split_id = #{splitOrderId}
+		and
+			a.del_flag = '0'
+		order by
+			a.update_date desc,d.receive_date asc
+	</select>
+	
+	<resultMap id="couponDataResult" type="com.yunnex.ops.erp.modules.order.entity.ErpOrderCouponOutput">  
+	    <id property="id" column="coupon_output_id"/>  
+	    <result property="couponName" column="coupon_name"/>  
+	    <result property="couponLinkCategoryName" column="link_category_name"/>  
+	    <result property="couponLink" column="coupon_link"/>  
+	    <collection property="ErpOrderCouponReceiveRecords" ofType="com.yunnex.ops.erp.modules.promotion.entity.ErpOrderCouponReceiveRecord">  
+	        <id property="id" column="receive_record_id"/>  
+	        <result property="receiveDate" column="receive_date"/>  
+	        <result property="receiveNum" column="receive_num"/>  
+	    </collection>  
+    </resultMap>  
+	
+</mapper>

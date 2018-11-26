@@ -1,0 +1,746 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.sys.dao.UserDao">
+
+    <sql id="userColumnsPure">
+        a.id,
+        a.company_id AS "company.id",
+        a.office_id AS "office.id",
+        a.login_name,
+        a.password,
+        a.no,
+        a.name,
+        a.email,
+        a.phone,
+        a.mobile,
+        a.user_type,
+        a.photo,
+        a.login_ip,
+        a.login_date,
+        a.login_flag,
+        a.create_by AS "createBy.id",
+        a.create_date,
+        a.update_by AS "updateBy.id",
+        a.update_date,
+        a.remarks,
+        a.del_flag,
+        a.type AS "type",
+        a.agent_user_flag AS "agentUserFlag",
+        a.agent_id AS "agentId",
+        a.salt AS "salt",
+        a.employee_id AS "employeeId",
+        a.sort AS "sort"
+    </sql>
+    
+    <sql id="userColumnsByTask">
+        a.id,
+        a.company_id AS "company.id",
+        a.office_id AS "office.id",
+        a.login_name,
+        a.password,
+        a.no,
+        a.name,
+        a.email,
+        a.phone,
+        a.mobile
+    </sql>
+
+    <sql id="userColumns">
+        a.id,
+        a.company_id AS "company.id",
+        a.office_id AS "office.id",
+        a.login_name,
+        a.password,
+        a.no,
+        a.name,
+        a.email,
+        a.phone,
+        a.mobile,
+        a.user_type,
+        a.login_ip,
+        a.login_date,
+        a.remarks,
+        a.login_flag,
+        a.photo,
+        a.create_by AS "createBy.id",
+        a.create_date,
+        a.update_by AS "updateBy.id",
+        a.update_date,
+        a.del_flag,
+        a.type AS "type",
+        a.agent_user_flag AS "agentUserFlag",
+        a.agent_id AS "agentId",
+        a.salt AS "salt",
+        a.employee_id AS "employeeId",
+        a.sort AS "sort",
+        c.name AS "company.name",
+        c.parent_id AS "company.parent.id",
+        c.parent_ids AS "company.parentIds",
+        ca.id AS "company.area.id",
+        ca.name AS "company.area.name",
+        ca.parent_id AS "company.area.parent.id",
+        ca.parent_ids AS "company.area.parentIds",
+        o.name AS "office.name",
+        o.parent_id AS "office.parent.id",
+        o.parent_ids AS "office.parentIds",
+        oa.id AS "office.area.id",
+        oa.name AS "office.area.name",
+        oa.parent_id AS "office.area.parent.id",
+        oa.parent_ids AS "office.area.parentIds",
+        cu.id AS "company.primaryPerson.id",
+        cu.name AS "company.primaryPerson.name",
+        cu2.id AS "company.deputyPerson.id",
+        cu2.name AS "company.deputyPerson.name",
+        ou.id AS "office.primaryPerson.id",
+        ou.name AS "office.primaryPerson.name",
+        ou2.id AS "office.deputyPerson.id",
+        ou2.name AS "office.deputyPerson.name"<!-- ,
+        r.id AS "roleList.id",
+        r.office_id AS "roleList.office.id",
+        r.name AS "roleList.name",
+        r.enname AS "roleList.enname",
+        r.role_type AS "roleList.roleType",
+        r.data_scope AS "roleList.dataScope" -->
+    </sql>
+
+    <sql id="userJoins">
+    	LEFT JOIN sys_office_user officeUser on officeUser.user_id = a.id and officeUser.del_flag = '0'
+        LEFT JOIN sys_office c ON c.id = a.company_id
+        LEFT JOIN sys_area ca ON ca.id = c.area_id
+        LEFT JOIN sys_office o ON o.id = officeUser.office_id
+        LEFT JOIN sys_area oa ON oa.id = o.area_id
+        LEFT JOIN sys_user cu ON cu.id = c.primary_person
+        LEFT JOIN sys_user cu2 ON cu2.id = c.deputy_person
+        LEFT JOIN sys_user ou ON ou.id = o.primary_person
+        LEFT JOIN sys_user ou2 ON ou2.id = o.deputy_person<!--
+		LEFT JOIN sys_user_role ur ON ur.user_id = a.id
+        LEFT JOIN sys_role r ON r.id = ur.role_id -->
+    </sql>
+
+    <!-- 根据编号获得用户 -->
+    <select id="get" resultType="User">
+        SELECT
+        <include refid="userColumns"/><!-- ,
+			ro.office_id AS "roleList.officeList.id" -->
+        FROM sys_user a
+        <include refid="userJoins"/><!--
+		LEFT JOIN sys_role_office ro ON ro.role_id = r.id -->
+        WHERE a.id = #{id}
+    </select>
+
+    <!-- 根据登录名查询用户 -->
+    <select id="getByLoginName" resultType="User" parameterType="User">
+        SELECT
+        <include refid="userColumns"/><!-- ,
+			ro.office_id AS "roleList.officeList.id" -->
+        FROM sys_user a
+        <include refid="userJoins"/><!--
+		LEFT JOIN sys_role_office ro ON ro.role_id = r.id -->
+        WHERE a.login_name = #{loginName} AND a.del_flag = #{DEL_FLAG_NORMAL}
+    </select>
+    
+    <select id="getUserByTaskId" resultType="User">
+    	SELECT <include refid="userColumnsByTask"/> from sys_user a,ACT_RU_TASK task where ID_=#{taskId} and a.id=task.ASSIGNEE_ and a.del_flag=0
+    </select>
+
+    <!-- 分页查询用户信息 -->
+    <select id="findList" resultType="User">
+        SELECT
+        <include refid="userColumns"/>
+        FROM sys_user a
+        <include refid="userJoins"/>
+        <if test="role != null and role.id != null and role.id != ''">
+            JOIN sys_user_role ur ON ur.user_id = a.id AND ur.role_id = #{role.id} AND ur.del_flag = '0'
+        </if>
+        WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+        <if test="company != null and company.id != null and company.id != ''">
+            AND (c.id = #{company.id} OR c.parent_ids LIKE
+            <if test="dbName == 'oracle'">'%,'||#{company.id}||',%')</if>
+            <if test="dbName == 'mssql'">'%,'+#{company.id}+',%')</if>
+            <if test="dbName == 'mysql'">CONCAT('%,', #{company.id}, ',%'))</if>
+        </if>
+        <if test="office != null and office.id != null and office.id != ''">
+            AND (o.id = #{office.id} OR o.parent_ids LIKE
+            <if test="dbName == 'oracle'">'%,'||#{office.id}||',%')</if>
+            <if test="dbName == 'mssql'">'%,'+#{office.id}+',%')</if>
+            <if test="dbName == 'mysql'">CONCAT('%,', #{office.id}, ',%'))</if>
+        </if>
+        <!-- 如果不是超级管理员，则不显示超级管理员用户 -->
+        <if test="!currentUser.admin">
+            AND a.id != '1'
+        </if>
+        <if test="loginName != null and loginName != ''">
+            AND a.login_name like
+            <if test="dbName == 'oracle'">'%'||#{loginName}||'%'</if>
+            <if test="dbName == 'mssql'">'%'+#{loginName}+'%'</if>
+            <if test="dbName == 'mysql'">CONCAT('%', #{loginName}, '%')</if>
+        </if>
+        <if test="name != null and name != ''">
+            AND a.name like
+            <if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+            <if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+            <if test="dbName == 'mysql'">CONCAT('%', #{name}, '%')</if>
+        </if>
+        <if test="type != null and type != ''">
+            AND a.type = #{type}
+        </if>
+        <!-- 数据范围过滤 -->
+        ${sqlMap.dsf}
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY c.code, o.code, a.name
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 根据OfficeId获取用户（树查询用户时用） -->
+    <select id="findUserByOfficeId" resultType="User" useCache="true">
+		SELECT
+			a.id, a.name, a.login_name
+		FROM sys_user a
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+			AND a.office_id = #{office.id}
+		ORDER BY a.name
+	</select>
+
+    <!-- 查询全部用户 -->
+    <select id="findAllList" resultType="User">
+        SELECT
+        <include refid="userColumns"/>
+        FROM sys_user a
+        <include refid="userJoins"/>
+        WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+         	<if test="type != null">
+         		AND a.type = #{type}
+			</if>
+        ORDER BY c.code, o.code, a.name
+    </select>
+
+    <!-- 查询全部用户数目 -->
+    <select id="findAllCount" resultType="long">
+		SELECT
+			COUNT(1)
+		FROM sys_user a
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+	</select>
+
+    <!-- 查询用户密码状态 -->
+    <select id="getUpdatePasswordFlag" resultType="int">
+		SELECT update_password_flag
+		FROM sys_user 
+		WHERE id = #{userid}
+	</select>
+
+    <!-- 插入用户 -->
+    <insert id="insert">
+        INSERT INTO sys_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="company != null and company.id != null">company_id,</if>
+            <if test="office != null and office.id != null">office_id,</if>
+            <if test="loginName != null">login_name,</if>
+            <if test="password != null">password,</if>
+            <if test="no != null">no,</if>
+            <if test="name != null">name,</if>
+            <if test="email != null">email,</if>
+            <if test="phone != null">phone,</if>
+            <if test="mobile != null">mobile,</if>
+            <if test="userType != null">user_type,</if>
+            <if test="createBy != null and createBy.id != null">create_by,</if>
+            <if test="createDate != null">create_date,</if>
+            <if test="updateBy != null and updateBy.id != null">update_by,</if>
+            <if test="updateDate != null">update_date,</if>
+            <if test="remarks != null">remarks,</if>
+            <if test="loginFlag != null">login_flag,</if>
+            <if test="photo != null">photo,</if>
+            <if test="type != null">type,</if>
+            <if test="agentUserFlag != null">agent_user_flag,</if>
+            <if test="agentId != null">agent_id,</if>
+            <if test="salt != null">salt,</if>
+            <if test="employeeId != null">employee_id,</if>
+            <if test="sort != null">sort,</if>
+            <if test="delFlag != null">del_flag,</if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="company != null and company.id != null">#{company.id},</if>
+            <if test="office != null and office.id != null">#{office.id},</if>
+            <if test="loginName != null">#{loginName},</if>
+            <if test="password != null">#{password},</if>
+            <if test="no != null">#{no},</if>
+            <if test="name != null">#{name},</if>
+            <if test="email != null">#{email},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="mobile != null">#{mobile},</if>
+            <if test="userType != null">#{userType},</if>
+            <if test="createBy != null and createBy.id != null">#{createBy.id},</if>
+            <if test="createDate != null">#{createDate},</if>
+            <if test="updateBy != null and updateBy.id != null">#{updateBy.id},</if>
+            <if test="updateDate != null">#{updateDate},</if>
+            <if test="remarks != null">#{remarks},</if>
+            <if test="loginFlag != null">#{loginFlag},</if>
+            <if test="photo != null">#{photo},</if>
+            <if test="type != null">#{type},</if>
+            <if test="agentUserFlag != null">#{agentUserFlag},</if>
+            <if test="agentId != null">#{agentId},</if>
+            <if test="salt != null">#{salt},</if>
+            <if test="employeeId != null">#{employeeId},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+        </trim>
+    </insert>
+
+    <!-- 更新用户 -->
+    <update id="update">
+        UPDATE sys_user
+        <set>
+            <if test="company != null and company.id != null">company_id = #{company.id},</if>
+            <if test="office != null and office.id != null">office_id = #{office.id},</if>
+            <if test="loginName != null">login_name = #{loginName},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="no != null">no = #{no},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="mobile != null">mobile = #{mobile},</if>
+            <if test="userType != null">user_type = #{userType},</if>
+            <if test="updateBy != null and updateBy.id != null">update_by = #{updateBy.id},</if>
+            <if test="updateDate != null">update_date = #{updateDate},</if>
+            <if test="remarks != null">remarks = #{remarks},</if>
+            <if test="loginFlag != null">login_flag = #{loginFlag},</if>
+            <if test="photo != null">photo = #{photo},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="agentUserFlag != null">agent_user_flag = #{agentUserFlag},</if>
+            <if test="agentId != null">agent_id = #{agentId},</if>
+            <if test="salt != null">salt = #{salt},</if>
+            <if test="employeeId != null">employee_id = #{employeeId},</if>
+            <if test="sort != null">sort = #{sort},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除用户和角色关联表数据 -->
+    <delete id="deleteUserRole">
+		DELETE FROM sys_user_role WHERE user_id = #{id}
+	</delete>
+
+    <delete id="delUserRoleByUidAndRid">
+        DELETE FROM sys_user_role WHERE user_id = #{userId} and role_id = #{roleId}
+    </delete>
+
+    <!-- 插入用户和角色关联表数据 -->
+    <insert id="insertUserRole">
+        INSERT INTO sys_user_role(user_id, role_id)
+        <foreach collection="roleList" item="role" separator=" union all ">
+            SELECT #{id}, #{role.id}
+            <if test="dbName != 'mssql'">
+                FROM dual
+            </if>
+        </foreach>
+    </insert>
+
+    <!-- 更新用户信息  -->
+    <update id="updateUserInfo">
+		UPDATE sys_user SET 
+			email = #{email}, 
+			phone = #{phone}, 
+			mobile = #{mobile}, 
+			update_by = #{updateBy.id}, 
+			update_date = #{updateDate}, 
+			remarks = #{remarks},
+			photo = #{photo}
+		WHERE id = #{id}
+	</update>
+
+    <!-- 更新用户密码 -->
+    <update id="updatePasswordById">
+		UPDATE sys_user SET 
+			password = #{password},update_password_flag=#{updatePasswordFlag} 
+		WHERE id = #{id}
+	</update>
+
+    <!-- 更新登录信息，如登录IP、登录时间 -->
+    <update id="updateLoginInfo">
+		UPDATE sys_user SET 
+			login_ip = #{loginIp}, 
+			login_Date = #{loginDate} 
+		WHERE id = #{id}
+	</update>
+
+    <!-- 逻辑删除用户 -->
+    <update id="delete">
+	UPDATE sys_user SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+
+    <select id="findAllNormalUserIdList" resultType="String">
+		SELECT login_name 
+		FROM sys_user 
+		WHERE user_type = 3
+	</select>
+
+ <select id="getUserByRoleName" resultType="User">
+		SELECT
+			u.id, u.name
+		FROM
+			sys_user u
+		INNER JOIN 
+			sys_user_role ur 
+		ON 
+			u.id = ur.user_id
+		INNER JOIN
+			sys_role r
+		ON
+			ur.role_id = r.id
+		WHERE
+			r.enname = #{roleName} and u.del_flag=0
+	</select>
+	
+<select id="getUserByRoleNameIn" resultType="User" parameterType="Object[]">
+		SELECT
+			u.id, u.name,u.login_name
+		FROM
+			sys_user u
+		INNER JOIN 
+			sys_user_role ur 
+		ON 
+			u.id = ur.user_id
+		INNER JOIN
+			sys_role r
+		ON
+			ur.role_id = r.id
+			<where>
+			  <if test="name!=null and name!=''">
+			    and u.name like concat('%',#{name},'%')
+			  </if>
+					<if test="array!=null">
+							<foreach collection="array" index="index" item="item" open="and r.enname IN(" separator="," close=")">
+							    #{item} 
+							</foreach>
+					</if>
+      and u.del_flag=0
+		</where>
+</select>
+
+<select id="getOperationAdviserByShopInfoId" resultType="User">
+    select f.id,f.name,f.login_name 
+				from erp_shop_info a 
+				join erp_team b
+				on a.agent_id=b.agent_id and a.del_flag='0' and b.del_flag='0' and a.id=#{shopInfoId} and a.agent_id!=-1
+				join erp_team_user c
+				on c.team_id=b.id and c.del_flag='0'
+				join sys_user_role d 
+				on c.user_id=d.user_id and d.del_flag='0'
+				join sys_role e
+				on d.role_id = e.id and e.del_flag='0' and e.enname in ('ops_adviser_agent','ops_adviser')
+				join sys_user f 
+				on c.user_id=f.id and f.del_flag='0'
+</select>
+
+<select id="getOpsAdviserByRight" resultType="User">
+   select u.id,u.name,u.login_name from sys_user u 
+   join sys_user_role ur 
+   on u.id = ur.user_id and ur.del_flag='0' and u.del_flag='0'
+   join sys_role r 
+   on r.id = ur.role_id and r.del_flag='0' and r.enname in ('ops_adviser','ops_adviser_agent')
+   <where>
+    <choose><!-- 权限判断 -->
+						<when test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:view")'>
+							<trim prefixOverrides="and |or" prefix="and (" suffix=")">
+								<if test= '@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:all")'>
+									1=1
+								</if>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:branchCompany")'>
+									or exists (select 1 from sys_service_operationmanager sso where sso.del_flag = '0' and sso.service_no = u.agent_id)
+								</if>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:serviceCompany")'>
+									or exists (select 1 from erp_agent_info ai where ai.del_flag = '0' and ai.agent_id = u.agent_id)
+								</if>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:company")'>
+									or exists (select 1 from (select e.user_id from erp_team_user a 
+																				join erp_team b 
+																				on a.team_id = b.id and a.user_id=#{userId} and a.del_flag='0' and b.del_flag='0'
+																				join erp_team c
+																				on b.id = c.id and c.del_flag='0' and c.agent_id!=-1
+																				join erp_team d
+																				on c.agent_id = d.agent_id and d.del_flag='0'
+																				join erp_team_user e
+																				on e.team_id = d.id and e.del_flag='0') temp where temp.user_id = u.id)
+								</if>
+								<if test='@org.apache.shiro.SecurityUtils@getSubject().isPermitted("shop:erpShopInfo:personal")'>
+									and 1=2
+								</if>
+							</trim>
+						</when>
+						<otherwise>
+							and 1=2
+						</otherwise>
+				</choose>
+   </where>
+</select>
+
+    <!-- 根据团队id 获取团队人员信息 -->
+    <select id="findByTeamId" resultType="com.yunnex.ops.erp.modules.sys.entity.User">
+        select u.id,u.name
+        from sys_user u
+        LEFT JOIN erp_team_user teamUser on u.id = teamUser.user_id AND u.del_flag = 0 AND teamUser.del_flag = 0
+        where teamUser.team_id = #{teamId}
+        <if test="leaderFlag != null">
+            AND teamUser.leader_flag = #{leaderFlag}
+        </if>
+    </select>
+
+    <!-- 服务商唯一对应的管理员用户 -->
+    <select id="findAgentUser" resultType="User">
+        select
+        <include refid="userColumnsPure"/>
+        from sys_user a
+        where agent_id = #{agentId} and agent_user_flag = 'Y' and del_flag = '0'
+    </select>
+
+    <select id="countUserRole" resultType="java.lang.Integer">
+        select count(*) from sys_user_role where user_id = #{userId} and role_id = #{roleId}
+    </select>
+
+    <insert id="saveUserRole" parameterType="User">
+        insert into sys_user_role (user_id, role_id) values (#{user.id}, #{user.role.id})
+    </insert>
+
+    <update id="changeAgentUserState">
+        UPDATE sys_user SET
+			login_flag = #{loginFlag},
+			update_date = #{updateDate}
+		WHERE agent_id = #{agentId}
+    </update>
+
+    <update id="changeAgentUserRoleState">
+        UPDATE sys_user_role SET del_flag = #{delFlag}
+        WHERE user_id IN (SELECT id FROM sys_user WHERE agent_id = #{agentId})
+    </update>
+
+    <select id="countAgentUsers" resultType="Integer">
+        select count(*) from sys_user where agent_id = #{agentId} and del_flag = '0'
+    </select>
+
+    <!-- 逻辑删除的也统计 -->
+    <select id="countAllAgentUsers" resultType="Integer">
+        select count(*) from sys_user where agent_id = #{agentId}
+    </select>
+
+    <resultMap id="agentUserRoleMap" type="com.yunnex.ops.erp.modules.sys.dto.AgentUserResponseDto">
+        <id column="id" property="id"/>
+        <result column="employeeId" property="employeeId"/>
+        <result column="userName" property="userName"/>
+        <result column="mobile" property="mobile"/>
+        <result column="email" property="email"/>
+        <result column="loginName" property="loginName"/>
+        <result column="agentId" property="agentId"/>
+        <result column="jobId" property="jobId"/>
+        <result column="jobNumber" property="jobNumber"/>
+        <result column="jobIconImg" property="jobIconImg"/>
+        <result column="jobScore" property="jobScore"/>
+        <collection property="userRoles" ofType="com.yunnex.ops.erp.modules.sys.dto.UserRoleResponseDto">
+            <result column="userId" property="userId"/>
+            <result column="roleId" property="roleId"/>
+        </collection>
+    </resultMap>
+
+    <select id="findAgentUserRoleInfo" resultMap="agentUserRoleMap">
+        SELECT
+            su.id,
+            su.employee_id AS "employeeId",
+            su.name AS "userName",
+            su.mobile,
+            su.email,
+            su.login_name AS "loginName",
+            su.agent_id AS "agentId",
+            sjni.id AS "jobId",
+            sjni.job_number AS "jobNumber",
+            sjni.icon_img AS "jobIconImg",
+            sjni.score AS "jobScore",
+            sur.user_id AS "userId",
+            sur.role_id AS "roleId"
+        FROM sys_user su
+        LEFT JOIN sys_job_number_info sjni ON su.id = sjni.user_id AND sjni.del_flag = '0'
+        LEFT JOIN sys_user_role sur ON su.id = sur.user_id AND sur.del_flag = '0'
+        WHERE su.id = #{userId} AND su.del_flag = '0'
+    </select>
+
+    <sql id="agentUsersSql">
+        SELECT
+        <if test="page">
+            su.id,
+            su.employee_id AS "employeeId",
+            su.name AS "userName",
+            su.mobile,
+            su.email,
+            su.login_name AS "loginName",
+            su.agent_user_flag AS "agentUserFlag",
+            sjni.id AS "jobId",
+            sjni.job_number AS "jobNumber",
+            sjni.icon_img AS "jobIconImg",
+            sjni.score AS "jobScore"
+        </if>
+        <if test="!page">
+            count(*)
+        </if>
+        FROM sys_user su
+        LEFT JOIN sys_job_number_info sjni ON su.id = sjni.user_id AND sjni.del_flag = '0'
+        <where>
+            su.del_flag = '0'
+            <!-- 有权限查看并且没有指定agentId时（或者说不确定哪个服务商时），查询所有服务商用户 -->
+            <if test="agentId == null">
+                AND su.type = 'agent'
+            </if>
+            <if test="agentId != null">
+                AND su.agent_id = #{agentId}
+            </if>
+            <if test="q != null and q != ''">
+                AND (
+                su.name LIKE concat('%',#{q},'%')
+                OR su.mobile LIKE concat('%',#{q},'%')
+                OR su.login_name LIKE concat('%',#{q},'%')
+                OR sjni.job_number LIKE concat('%',#{q},'%')
+                )
+            </if>
+        </where>
+        <if test="page">
+            ORDER BY su.sort DESC, su.update_date DESC
+            LIMIT #{firstResult}, #{maxResults}
+        </if>
+    </sql>
+
+    <select id="findAgentUsersByPage" resultType="com.yunnex.ops.erp.modules.sys.dto.AgentUserResponseDto">
+        <include refid="agentUsersSql"/>
+    </select>
+
+    <select id="countAgentUsersPage" resultType="Long">
+        <include refid="agentUsersSql"/>
+    </select>
+
+    <select id="findUserRoles" resultType="com.yunnex.ops.erp.modules.sys.dto.UserRoleResponseDto">
+        SELECT
+            sur.user_id AS "userId",
+            sur.role_id AS "roleId",
+            sr.name AS "roleName"
+        FROM sys_user_role sur LEFT JOIN sys_role sr ON sur.role_id = sr.id
+        WHERE sur.user_id = #{userId} AND sur.del_flag = '0' AND sr.del_flag = '0'
+    </select>
+
+    <select id="getUserByRoleNameAndAgentId" resultType="User">
+		SELECT
+			u.id, u.name
+		FROM
+			sys_user u
+		INNER JOIN 
+			sys_user_role ur 
+		ON 
+			u.id = ur.user_id
+		INNER JOIN
+			sys_role r
+		ON
+			ur.role_id = r.id
+		WHERE
+			u.agent_id = #{agentId} and r.enname = #{roleName}
+			and u.del_flag='0' and r.del_flag = '0' and ur.del_flag = '0'
+	</select>
+
+
+    <select id="findByLoginName" resultType="User">
+        select
+        <include refid="userColumnsPure"/>,
+        eai.id AS "agentInfo.id",
+        eai.name AS "agentInfo.name"
+        from sys_user a
+        left join erp_agent_info eai on a.agent_id = eai.agent_id and eai.del_flag = '0'
+        where a.login_name = #{loginName} and a.del_flag = '0'
+    </select>
+
+    <update id="updatePwdByLoginName">
+        update sys_user set password = #{password}, salt = #{salt}, update_password_flag = '1', update_date = #{updateDate}
+        where login_name = #{loginName}
+    </update>
+
+    <!--  -->
+    <select id="findByTeamIds" resultType="User">
+        select u.id,u.name
+        from sys_user u
+        LEFT JOIN erp_team_user teamUser on u.id = teamUser.user_id AND u.del_flag = 0 AND teamUser.del_flag = 0
+        where 1=1
+        <if test="teamIdList !=null and teamIdList.size() > 0">
+            AND teamUser.team_id in
+            <foreach item="iteamTeamId" collection="teamIdList" open="(" separator="," close=")">
+                #{iteamTeamId}
+            </foreach>
+        </if>
+        <if test="leaderFlag != null">
+            AND teamUser.leader_flag = #{leaderFlag}
+        </if>
+        group by u.id
+    </select>
+    
+    <!--  -->
+    <select id="findByTeamIds1" resultType="User">
+        select u.id,u.name
+        from sys_user u
+        LEFT JOIN erp_team_user teamUser on u.id = teamUser.user_id AND u.del_flag = 0 AND teamUser.del_flag = 0
+        where 1=1
+        <if test="teamIdList !=null and teamIdList.size() > 0">
+            AND teamUser.team_id in
+            <foreach item="iteamTeamId" collection="teamIdList" open="(" separator="," close=")">
+                #{iteamTeamId}
+            </foreach>
+        </if>
+        group by u.id
+    </select>
+
+    <select id="isUserRole" resultType="Integer">
+        SELECT count(*)
+        FROM sys_user_role sur
+        LEFT JOIN sys_role sr ON sur.role_id = sr.id AND sr.del_flag = '0'
+        WHERE sur.user_id = #{userId}
+        AND sr.enname = #{roleEnName}
+        AND sur.del_flag = '0'
+    </select>
+
+    <update id="updateOfficeIdByOfficeId">
+        update sys_user set office_id = #{newOfficeId}, update_date = #{updateDate} where office_id = #{oldOfficeId}
+    </update>
+
+    <select id="findAllByAgentId" resultType="User">
+        select
+        <include refid="userColumnsPure"/>
+        from sys_user a
+        where agent_id = #{agentId}
+    </select>
+
+	<select id="findManagerFlow" resultType="User">
+		SELECT 
+			<include refid="userColumnsPure"/> 
+		from erp_order_flow_user erpFlowUser,sys_user a 
+		where 
+		a.id=erpFlowUser.user_id 
+		and a.del_flag=0 
+		and erpFlowUser.flow_id = #{procInsId}
+		and erpFlowUser.flow_user_id='operationManager'
+	</select>
+
+    <select id="findRoleUsersByAgent" resultType="User">
+        SELECT
+            DISTINCT su.id, su.`name`
+        FROM erp_team et
+            INNER JOIN erp_team_user etu ON et.id = etu.team_id AND etu.del_flag = '0'
+            INNER JOIN sys_user su ON etu.user_id = su.id AND su.del_flag = '0'
+            INNER JOIN sys_user_role sur ON su.id = sur.user_id AND sur.del_flag = '0'
+            INNER JOIN sys_role sr ON sur.role_id = sr.id AND sr.del_flag = '0'
+        WHERE
+            et.agent_id = #{agentId}
+            AND sr.enname = #{roleEnName}
+            AND et.del_flag = '0'
+    </select>
+</mapper>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.holiday.dao.ErpHolidaysDao">
+    
+	<sql id="erpHolidaysColumns">
+		a.id AS "id",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag",
+		a.holiday_date AS "holidayDate"
+	</sql>
+	
+	<sql id="erpHolidaysJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpHolidays">
+		SELECT 
+			<include refid="erpHolidaysColumns"/>
+		FROM erp_holidays a
+		<include refid="erpHolidaysJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ErpHolidays">
+		SELECT 
+			<include refid="erpHolidaysColumns"/>
+		FROM erp_holidays a
+		<include refid="erpHolidaysJoins"/> 
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="holidayDate != null and holidayDate != ''">
+				AND a.holiday_date = #{holidayDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.holiday_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ErpHolidays">
+		SELECT 
+			<include refid="erpHolidaysColumns"/>
+		FROM erp_holidays a
+		<include refid="erpHolidaysJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.holiday_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_holidays(
+			id,
+			create_date,
+			create_by,
+			update_date,
+			update_by,
+			remark,
+			sort,
+			del_flag,
+			holiday_date
+		) VALUES (
+			#{id},
+			#{createDate},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{sort},
+			#{delFlag},
+			#{holidayDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_holidays SET 	
+			remark = #{remark},
+			holiday_date = #{holidayDate}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_holidays SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+		<select id="getholiday" resultType="java.lang.Integer">
+		SELECT 
+			COUNT(*)
+		FROM erp_holidays a
+		<include refid="erpHolidaysJoins"/>
+		WHERE holiday_date &gt;= #{stardate} AND holiday_date &lt;=#{enddate} AND del_flag=#{del}
+	</select>
+	
+		<select id="wheredate" resultType="java.lang.Integer">
+		SELECT 
+			COUNT(*)
+		FROM erp_holidays a
+		<include refid="erpHolidaysJoins"/>
+		WHERE holiday_date = #{inputdate} AND del_flag=#{del}
+	</select>
+	
+	<!-- 根据开始时间和结束时间 获取假期列表 -->
+	<select id="findByStartEnd" resultType="ErpHolidays">
+		SELECT 
+			<include refid="erpHolidaysColumns"/>
+		FROM erp_holidays a
+		WHERE holiday_date &gt; #{startTime} AND holiday_date &lt;=#{endTime} AND del_flag=0
+	</select>
+	
+	<!-- 根据开始时间和结束时间获取 假期总天数（startTime< data <= endTime） -->
+	<select id="getCountByStartEnd" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM erp_holidays
+		WHERE holiday_date &gt; #{startTime} AND holiday_date &lt;=#{endTime} AND del_flag=0
+	</select>
+	
+</mapper>

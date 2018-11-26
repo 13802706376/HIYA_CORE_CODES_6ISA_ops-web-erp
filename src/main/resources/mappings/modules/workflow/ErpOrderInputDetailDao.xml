@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yunnex.ops.erp.modules.workflow.flow.dao.ErpOrderInputDetailDao">
+    
+	<sql id="erpOrderInputDetailColumns">
+		a.id AS "id",
+		a.split_id AS "splitId",
+		a.input_task_name AS "inputTaskName",
+		a.input_task_key AS "inputTaskKey",
+		a.input_detail AS "inputDetail",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remark AS "remark",
+		a.sort AS "sort",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="erpOrderInputDetailJoins">
+	</sql>
+    
+	<select id="get" resultType="ErpOrderInputDetail">
+		SELECT 
+			<include refid="erpOrderInputDetailColumns"/>
+		FROM erp_order_input_detail a
+		<include refid="erpOrderInputDetailJoins"/>
+		WHERE a.id = #{id} and a.del_flag='0'
+	</select>
+	
+	<select id="getBySplitId" resultType="ErpOrderInputDetail">
+		SELECT 
+			<include refid="erpOrderInputDetailColumns"/>
+		FROM erp_order_input_detail a
+		<include refid="erpOrderInputDetailJoins"/>
+		WHERE a.split_id = #{splitId}
+		and a.input_task_name=#{inputTaskName}
+		and a.del_flag = 0
+	</select>
+	
+	<select id="findList" resultType="ErpOrderInputDetail">
+		SELECT 
+			<include refid="erpOrderInputDetailColumns"/>
+		FROM erp_order_input_detail a
+		<include refid="erpOrderInputDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBySplitId" resultType="ErpOrderInputDetail">
+		SELECT
+		<include refid="erpOrderInputDetailColumns" />,s.name AS createName
+		FROM erp_order_input_detail a
+		LEFT JOIN sys_user s
+		ON s.id=a.create_by
+		<include refid="erpOrderInputDetailJoins" />
+		<where>
+			a.del_flag = '0'
+			and a.split_id=#{splitId}
+		</where>
+		ORDER BY a.update_date DESC
+	</select>
+	
+	
+	<select id="findListByInputKey" resultType="ErpOrderInputDetail">
+		SELECT
+		<include refid="erpOrderInputDetailColumns" />
+		FROM erp_order_input_detail a
+		<include refid="erpOrderInputDetailJoins" />
+		<where>
+			a.del_flag = 0
+			and a.split_id=#{splitId}
+			and a.input_task_key=#{inputTaskKey} 
+		</where>
+		ORDER BY a.update_date DESC
+	</select>
+	
+	
+	
+	
+	<select id="findAllList" resultType="ErpOrderInputDetail">
+		SELECT 
+			<include refid="erpOrderInputDetailColumns"/>
+		FROM erp_order_input_detail a
+		<include refid="erpOrderInputDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO erp_order_input_detail(
+			id,
+			split_id,
+			input_task_name,
+			input_task_key,
+			input_detail,
+			create_by,
+			create_date,
+			update_date,
+			update_by,
+			remark,
+			sort,
+			del_flag
+		) VALUES (
+			#{id},
+			#{splitId},
+			#{inputTaskName},
+			#{inputTaskKey},
+			#{inputDetail},
+			#{createBy.id},
+			#{createDate},
+			#{updateDate},
+			#{updateBy.id},
+			#{remark},
+			#{sort},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE erp_order_input_detail SET 	
+			split_id = #{splitId},
+			input_task_name = #{inputTaskName},
+			input_task_key = #{inputTaskKey},
+			input_detail = #{inputDetail},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remark = #{remark},
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE erp_order_input_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>
